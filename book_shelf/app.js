@@ -4,13 +4,14 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var subdomain = require('express-subdomain');
+var config = require('./config.js').dev; //dev: development, real: real service
 
-var index = require('./routes/index');
-var users = require('./routes/users');
-var bookshelf = require('./book_shelf/app');
+var dbController = require('./lib/db_controller.js');
 
-var app = express();
+//var dbInit = require('./lib/db_init.js');
+//dbInit(config.db);
+//console.log("Done");
+app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -24,13 +25,29 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', index);
-app.use('/users', users);
-app.use('/bookshelf', bookshelf);
+
+app.get('/', function (req, res, next) {
+    res.render('main', {"title": "Bookshelf"});
+});
+
+app.get('/addread', function(req, res, next){
 
 
-// subdomain
-app.use(subdomain('bookshelf', bookshelf));
+    res.render('addread', {
+        "title": "Add Book"
+    });
+});
+
+app.get('/search', function(req, res){
+    res.render('main');
+});
+
+app.post('/addread', function(req, res, next){
+    jsonString='';
+
+    console.log(req.body);
+    console.log(req.body.Body);
+});
 
 
 // catch 404 and forward to error handler
@@ -50,5 +67,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
 
 module.exports = app;
