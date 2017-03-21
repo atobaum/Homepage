@@ -1,77 +1,51 @@
 extends ../../views/layout
 block head
-    style.
-        input {
-            float: left;
-            font-size: 12px;
-            padding: 2px 2px;
-            border: solid 1px #aacfe4;
-            width: 140px;
-            margin: 2px 0 2px 10px;
-        }
-        label {
-            display: block;
-            font-weight: bold;
-            text-align: right;
-            float: left;
-            font-family: tahoma;
-        }
-        br {
-            height: 20px;
-        }
-
-    script.
-        function DelayedHandler(){
-        //execute handler after millisec if the event not aroused until millisec.
-        //var test = new DelayedHandler(); $('#id').keyon(test.start(handler, milliseconds));
-            this.timer = null;
-            this.handler= '';
-            this.millisec = '';
-
-            this.start = function(handler, millisec){
-                return function(){
-                    if(this.timer){
-                        clearInterval(this.timer);
-                    }
-                    this.timer = setTimeout(handler, millisec);
-                }
-            }
-        };
-        var delayedHnadlerForTitle = new DelayedHandler();
-        $(document).ready(function(){
-            $('#addread-title').keyup(delayedHnadlerForTitle.start(function(){
-                var title = $('#addread-title').val();
-                console.log(title);
-            }, 1000));
-        });
+    link(rel="stylesheet" type="text/css" href="stylesheets/addread.css")
+    script(src='javascripts/addread.js')
 
 
 block content
     h1= title
     p Welcome to #{title}
-    form(method='post')
-        input(type="date", name="start-date", id="addread-start-date")
-        label ~
-        input(type="date", name="end-date", id="addread-end-date")
-        br
-        br
-        label(for="addread-title") 제목
-        input(name='title', id='addread-title')
 
-        label(for="addread-isbn") ISBN
-        input(name='isbn', id='addread-isbn')
-        br
-        br
-        label(for="addread-author") 작가
-        input(name='author', id='addread-author')
-        br
-        br
-        label(for="addread-translator") 번역자
-        input(name='translator', id='addread-translator')
-        br
-        br
-        label(for="addread-publisher") 출판사
-        input(name='publisher', id='addread-publisher')
-        br
-        br
+    li(id="dummy_book", style="display:none;", class="book")
+
+    div
+        input(type="text", id="book_search", class="block", list='ttt')
+        div(id='book_list_panel', style="display: none;")
+            ul(id="book_list", style="float:left;")
+            div(id='book_info', style="float:left;")
+                table
+                    tbody
+                        tr
+                            td
+                                img
+                            td
+                                strong 제목
+                                ul
+                                    li 저자
+                                    li 출판사|날짜
+                                           
+    form(method='post', action='api/addread', id="input_form", onsubmit="return check_form()")
+        input(type="hidden", name="isbn13", id="form_isbn13")
+        input(type="date", name="start_date", id="form_start_date")
+        label ~
+        input(type="date", name="finished_date", id="form_finished_date")
+
+        label(for="addread_rating") 평점
+        select(name='rating', id='form_rating')
+            option 0
+            option 1
+            option 2
+            option 3
+            option 4
+            option 5
+            option 6
+            option 7
+            option 8
+            option 9
+            option 10
+
+        label(for="form_comment") 소감
+        textarea(name='comment', id='form_comment')
         button 입력

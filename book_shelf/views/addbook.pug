@@ -23,6 +23,44 @@ block head
 
 
 
+    script.
+        function DelayedHandler(){
+            //execute handler after millisec if the event not aroused until millisec.
+        //var test = new DelayedHandler(); $('#id').keyon(test.start(handler, milliseconds));
+            this.timer = null;
+            this.handler= '';
+            this.millisec = '';
+
+            this.start = function(handler, millisec){
+                return function(){
+                    if(this.timer){
+                        clearInterval(this.timer);
+                    }
+                    this.timer = setTimeout(handler, millisec);
+                }
+            }
+        };
+        var delayedHnadlerForTitle = new DelayedHandler();
+        $(document).ready(function(){
+            $('#addread-title').keyup(delayedHnadlerForTitle.start(function(){
+                var title = $('#searchbar').val();
+                console.log(title);
+                $.get(
+                    "searchbook/",
+                    {type:'Keyword', word:title},
+                    function(data){
+                        console.log(data);
+                    },
+                    'json'
+                );
+            }, 2000));
+        });
+
+    script.
+
+
+
+
 block content
     h1= title
     p Welcome to #{title}
@@ -51,11 +89,5 @@ block content
         button 입력
         input(type="submit", value="입력")
 
-    form(method='post')
-        input(type='submit', name='Submit', value='회원가입')
-
-        input(type="date", id="start-date")
-        label ~
-        input(type="date", id="end-date")
-        button 입력
-        input(type='submit', name='Submit', value='회원가입')
+    div
+        input(type="text", id="searchbar")
