@@ -53,7 +53,7 @@ app.get('/search', function(req, res){
 
 app.get('/api/searchbook', function(req, res){
     res.writeHead(200, {'Content-Type' : "application/json;charset=UTF-8"});
-    aladin.search(req.query.word ,"Keyword", function(data){
+    aladin.search("Keyword", req.query.word, function(data){
         res.end(JSON.stringify(data));
     });
 });
@@ -67,7 +67,7 @@ app.post('/api/addread', function(req, res, next){
     },
     function(){
         aladin.bookInfo(data.isbn13, function(book){
-            dbController.addTitle(book, function(){
+            dbController.addBook(book, function(){
                 dbController.addRead(data);
                 res.redirect('/bookshelf');
             });

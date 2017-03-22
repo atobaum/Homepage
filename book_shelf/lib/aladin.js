@@ -78,8 +78,8 @@ module.exports = function(config){
     /**
     * search books from aladin and arrange.
     * @function search
+    * @param {string} type - It could be one of Keyword, Title, Author, Publisher
     * @param {string} keyword - search keyword.
-    * @param {string} type - Keyword, Title, Author, Publisher
     * @param {function} callback - run callback(books) after query.
     * @property {object[]} books - book info.
     * @property {string} books[].title
@@ -88,24 +88,7 @@ module.exports = function(config){
     * @property {string} books[].isbn13
     * @property {string} books[].coverURL
     */
-    this.search = function(keyword, type, callback){
-        /*
-        Search books from aladin and arrange
-        type shoud be one of : Keyword, Title, Author, Publisher
-        Using Keyword, you can search books by title and author both.
-
-        return
-        [
-        {
-            title,
-            author,
-            publishedDate,
-            isbn13,
-            coverURL
-        }
-        ]
-        */
-
+    this.search = function(type, keyword, callback){
         var queryOption = {
             output: 'js',
             Version: '20131101',
