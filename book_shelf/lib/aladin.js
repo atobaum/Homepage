@@ -1,30 +1,33 @@
 var request = require('request');
 var querystring = require('querystring');
 
+/** @module aladin
+* @author Hanjitori
+* @param {object} config - configure object of aladin api.
+* @version 20170322
+*/
 module.exports = function(config){
     this.TTBKey = config.TTBKey;
     this.host = 'http://www.aladin.co.kr/ttb/api/';
 
+    /**
+    * get book information.
+    * @function bookInfo
+    * @param {(string|int)} isbn
+    * @param {function} callback - run after processing is finished with book info.
+    * @property {object} book - book info.
+    * @property {string} book.title
+    * @property {string} book.subtitle
+    * @property {string} book.page
+    * @property {object[]} book.authors
+    * @property {string} book.authors[].name
+    * @property {string} book.authors[].type
+    * @property {string} book.publisher
+    * @property {string} book.publishedDate
+    * @property {string} book.isbn13
+    * @property {string} book.coverURL
+    */
     this.bookInfo = function(isbn, callback){
-        //Search and parse detail book info using isbn13
-        /*
-        return
-        {
-            title,
-            subTitle,
-            originalTitle,
-            page,
-            authors: [
-                        {
-                            name, type
-                        }
-                    ]
-            publisher,
-            publishedDate,
-            isbn13,
-            coverURL
-        }
-        */
         var queryOption = {
             output: 'js',
             ttbkey: this.TTBKey,
@@ -64,7 +67,7 @@ module.exports = function(config){
                 callback(result);
 
             } else {
-                console.log({
+                callback({
                     error: error,
                     statusCode: statusCode
                 });
@@ -72,6 +75,19 @@ module.exports = function(config){
         });
     };
 
+    /**
+    * search books from aladin and arrange.
+    * @function search
+    * @param {string} keyword - search keyword.
+    * @param {string} type - Keyword, Title, Author, Publisher
+    * @param {function} callback - run callback(books) after query.
+    * @property {object[]} books - book info.
+    * @property {string} books[].title
+    * @property {string} books[].author
+    * @property {string} books[].publishedDate
+    * @property {string} books[].isbn13
+    * @property {string} books[].coverURL
+    */
     this.search = function(keyword, type, callback){
         /*
         Search books from aladin and arrange
