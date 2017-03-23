@@ -39,8 +39,6 @@ app.get('/addread', function(req, res, next){
 });
 
 app.get('/addread', function(req, res, next){
-
-
     res.render('addread', {
         "title": "Add Book"
     });

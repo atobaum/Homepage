@@ -64,8 +64,7 @@ module.exports = function(config){
                     cover_URL: item.cover,
                     pages: item.bookinfo.itemPage,
                 };
-                callback(result);
-
+            callback(result);
             } else {
                 callback({
                     error: error,

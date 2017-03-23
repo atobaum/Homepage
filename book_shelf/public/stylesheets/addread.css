@@ -23,12 +23,14 @@ input{
     float:none
 }
 #book_list{
-    width:300px;
+    width:150px;
     height:300px;
     list-style:none;
 }
 
 #book_list>li{
+    overflow:hidden;
+    text-overflow:ellipsis;
     white-space:nowrap;
 }
 
