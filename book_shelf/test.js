@@ -37,4 +37,5 @@ var test_book = {
 
 //dbController.addBook(test_book);
 //dbController.addAuthors('0123456789123', test_book.authors);
-aladin.bookInfo('9788950969103', console.log);
+//aladin.bookInfo('9788950969103', console.log);
+dbController.searchAuthorsForBooks([{isbn13:1234325473879}, {isbn13: 9788950969103}])

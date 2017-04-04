@@ -28,6 +28,16 @@ app.use('/', index);
 app.use('/users', users);
 app.use('/bookshelf', bookshelf);
 
+//for test
+app.get('/echo', function(req, res, next){
+    res.render('echo');
+});
+
+app.post('/echo', function(req, res, next){
+    console.log('post');
+    var data = req.body;
+    console.log(req.body);
+});
 
 // subdomain
 app.use(subdomain('bookshelf', bookshelf));

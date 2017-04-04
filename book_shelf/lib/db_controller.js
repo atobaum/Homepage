@@ -7,6 +7,9 @@ var conn = mysql.createConnection({
   user: config.user,
   password: config.password,
   database: config.database
+}, function(err){
+    console.log('Error occured while making connection with MySql server: ');
+    console.log(err);
 });
 
 var env = 0; //0 for dev, 1 for
@@ -61,13 +64,13 @@ module.exports = {
         conn.query('INSERT INTO '+table+' '+generate_query_values(data), function(err, res, fields){
             if(!err){
                 if(callback)
-                    callback(res);
+                    callback(err, res);
                 else {
                     console.log("No callback funcion in a function: 'insertData'");
                 }
             }else{
                 console.log('Error while inserting data: '+JSON.stringify(data)+'to table: '+table+'. '+err);
-                console.log('query was :'+'INSERT INTO '+table+' '+generate_query_values(data));
+                callback(err);
             }
         });
     },
@@ -76,14 +79,39 @@ module.exports = {
         conn.query('INSERT INTO category (name) values (?)', name, function(err, res){
             if(err){
                 console.log(err);
+                callback(err);
             }
         });
+    },
+
+    editCategory: function(id, callback){
+
+    },
+
+    deleteCategory: function(id, callback){
+
     },
 
     addPerson: function(person, callback){
     },
 
+    editPerson: function(id, person, callback){
+
+    },
+
+    deletePerson: function(id, callback){
+
+    },
+
     addSeries: function(series, callback){
+
+    },
+
+    editSeries: function(id, callback){
+
+    },
+
+    deleteSeries: function(id, callback){
 
     },
 
@@ -110,24 +138,35 @@ module.exports = {
             else if(author.type == "그림" || author.type == "illustrator")
                 author.type = 4;
             else {
-                throw new Error("지원하지 않는 저자 타입: "+author.type);
+                callback(new Error("지원하지 않는 저자 타입: "+author.type));
+                //throw new Error("지원하지 않는 저자 타입: "+author.type);
             }
         }
         conn.query('SELECT * FROM people WHERE name_ko="'+author.name+'"', function(err, rows, fields){
             if(err)
-                throw err;
+                callback(err);
             if(rows.length >= 1){
-                thisClass.insertData('authors_people', {book_id: bookId, person_id: rows[0].id, type_id: author.type}, function(){
+                thisClass.insertData('author_to_person', {book_id: bookId, person_id: rows[0].id, type_id: author.type}, function(){
                     return thisClass.addAuthors(bookId, authors);
                 });
-                thisClass.addAuthors(bookId, authors);
+                thisClass.addAuthors(bookId, authors, callback);
+                callback(err);
             }else{
                 thisClass.insertData('people', {name_ko: author.name}, function(){
                     authors.push(author);
-                    thisClass.addAuthors(bookId, authors);
+                    thisClass.addAuthors(bookId, authors, callback);
+                    callback(err);
                 });
             }
         });
+    },
+
+    editAuthor: function(id, author, callback){
+
+    },
+
+    deleteAuthor: function(id, callback){
+
     },
 
     addBook: function(book, callback){
@@ -151,20 +190,23 @@ module.exports = {
         }
         */
         var thisClass = this;
-        conn.query('SELECT * from publisher where name="'+book.publisher+'"', function(err, rows, fields){
+        conn.query('SELECT * from publishers where name="'+book.publisher+'"', function(err, rows, fields){
+            //getting publisher id
             var publisherId;
             if (rows.length >= 1){
                 publisherId = rows[0].id;
-            }else{
-                conn.query('INSERT INTO publisher (name) values (?)', book.publisher, function(err, rows, fields){
+            }else{ //If there's no such book
+                conn.query('INSERT INTO publishers (name) values (?)', book.publisher, function(err, rows, fields){
                     if(!err)
-                        thisClass.addBook(book);
+                        thisClass.addBook(book, callback);
                     else {
                         console.log('Error while adding read.'+err);
+                        callback(err);
                     }
                 });
             }
 
+            //inserting book info
             var data = {
                 isbn13: book.isbn13,
                 title_ko: book.title,
@@ -178,12 +220,12 @@ module.exports = {
             conn.beginTransaction(function(err){
                 try{
                     thisClass.insertData('books', data, function(err, rows, fields){
-                        log('book added.');
-                        thisClass.addAuthors(book.isbn13, book.authors);
+                        thisClass.addAuthors(book.isbn13, book.authors, callback);
                         conn.commit(function (err) {
                             if (err) {
+                                callback(err);
                                 console.error(err);
-                                conn.rollback(function () {
+                                conn.rollback(function (err) {
                                        console.error('rollback error');
                                        throw err;
                                     });
@@ -192,6 +234,7 @@ module.exports = {
                     });
                 } catch (e){
                     connection.rollback(function () {
+                        callback(e);
                         console.error('rollback error');
                         throw e;
                     });
@@ -199,7 +242,15 @@ module.exports = {
             });
         });
         if(callback)
-            callback();
+            callback(err);
+    },
+
+    editBook: function(isbn13, book, callback){
+
+    },
+
+    deleteBook: function(isbn13, callback){
+
     },
 
     addRead: function(read, callback){
@@ -207,13 +258,19 @@ module.exports = {
         log(read);
         read.book_id = read.isbn13;
         delete read.isbn13;
-        this.insertData('read_list', read, function(result){
-            log('1');
+        this.insertData('readings', read, function(err, res){
             if(callback){
-                log('runcallback');
-                callback();
+                callback(err, res);
             }
         });
+    },
+
+    editRead: function(id, read, callback){
+
+    },
+
+    deleteRead: function(id, read, callback){
+
     },
 
     searchCategory: function(){
@@ -227,13 +284,14 @@ module.exports = {
     * @param callback
     */
     searchPerson: function(type, keyword, callback){
-        log('addPerson');
+        log('searchPerson');
         conn.query('select * from people where '+type+' LIKE "%'+keyword+'%"', function(err, rows, fields){
             if(!err){
                 if(callback)
-                    callback(rows);
+                    callback(err, rows);
             } else{
                 console.log('Error while performing Query.'+err);
+                callback(err);
             }
         });
     },
@@ -242,18 +300,52 @@ module.exports = {
 
     },
 
-    searchBookByISBN: function(isbn, callback){
+    searchBook: function(type, keyword, callback){
         var query = 'select * from books where isbn13 = ' + isbn;
         conn.query(query, function(err, rows, fields){
             if(!err){
                 if(callback)
-                    callback(rows[0]);
+                    callback(err, rows[0]);
                 else {
                     console.log("No callback function in searchBookByISBN");
                 }
             } else{
                 console.log('Error while performing Query.'+err);
+                callback(err);
             }
+        });
+    },
+
+    /**
+    * data is JSON of paires.
+    */
+    searchRead: function(data, callback){
+        var query = 'SELECT * FROM readings JOIN books ON books.isbn13 = readings.book_id JOIN publishers ON publishers.id = books.publisher_id LIMIT  10, '+data.page;
+        conn.query(quert, function(err, rows){
+            for(var i in rows){
+
+            }
+        });
+    },
+
+    searchAuthorsForBooks: function(books, callback){
+        console.log(books);
+        if(books.length == 0){
+            return [];
+        }
+        var thisClass = this;
+        var book = books[0];
+        books.shift();
+        console.log(books);
+
+        var query = 'SELECT people.name_ko, people.name_eng, author_type.name_ko, author_type.name_en FROM author_to_person JOIN people ON people.id = author_to_person.person_id JOIN author_type ON author_type.id = author_to_person.type_id WHERE book_id = '+book.isbn13;
+        conn.query(query, function(err, rows, fields){
+            if(err)
+                callback(err);
+            book.author = rows;
+            console.log(book);
+            console.log();
+            return thisClass.searchAuthorsForBooks(books).push(book);
         });
     },
 
@@ -270,21 +362,12 @@ module.exports = {
         conn.query(query, function(err, rows, fields){
             if(!err){
                 if(rows[0]['count(*)'] == 0)
-                    falseCallback(isbn);
+                    falseCallback(err, isbn);
                 else
-                    trueCallback(isbn);
+                    trueCallback(err, isbn);
             } else{
                 console.log('Error while performing Query.'+err);
             }
         });
-    },
-
-    searchBook: function(book){
-
-
-    },
-
-    searchRead: function(){
-
     }
 };

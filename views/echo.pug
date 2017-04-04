@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  h1= message
+  
+  form(method='post')
+    textarea(rows='30', cols='50' name='text')
+    input(type='text', name='title')
+    button(id='btn')
+
+  script.
+    $('#btn').onClick = function(){
+        $('form').submit();
+    };
