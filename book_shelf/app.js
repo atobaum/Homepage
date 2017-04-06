@@ -196,6 +196,17 @@ app.get('/api/searchbook', function(req, res){
     });
 });
 
+app.get('/api/recentreading', function(req, res){
+    var page = req.query.page || 1;
+    dbController.searchReading({page: page}, function(err, result){
+        if(err){
+            res.json({ok:0});
+        }else{
+            res.json({ok:1, result: result});
+        }
+    });
+});
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
