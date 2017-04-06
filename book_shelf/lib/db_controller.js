@@ -52,7 +52,6 @@ function generate_query_values(parameter){
 */
 module.exports = {
     insertData : function (table, data, callback){
-        console.log('insertData');
         /*
         data:
         {
@@ -64,7 +63,7 @@ module.exports = {
         */
         conn.query('INSERT INTO '+table+' '+generate_query_values(data), function(err, res, fields){
             if(callback){
-                callback(err);
+                callback(err, res);
                 console.log('inserting data:');
                 console.log(err);
                 console.log(res);
@@ -213,58 +212,72 @@ module.exports = {
         }
         */
         var thisClass = this;
-        conn.query('SELECT * from publishers where name="'+book.publisher+'"', function(err, rows, fields){
-            //getting publisher id
-            var publisherId;
-            if (rows.length >= 1){
-                publisherId = rows[0].id;
-            }else{ //If there's no such book
-                conn.query('INSERT INTO publishers (name) values (?)', book.publisher, function(err, rows, fields){
-                    if(!err)
-                        thisClass.addBook(book, callback);
-                    else {
-                        console.log('Error while adding read.'+err);
-                        callback(err);
+
+        async.waterfall([
+            function(next){ //add publisher
+                conn.query('SELECT * from publishers where name="'+book.publisher+'"', function(err, rows, fields){
+                    if(err){
+                        next(err);
+                    } else{
+                        if (rows.length >= 1){
+                            next(err, rows[0].id); //rows[0].id is the publisherId;
+                        }else{ //If there's no such publisher
+                            thisClass.insertData('publishers', {name: book.publisher}, function(err, result){
+                                if(err){
+                                    if(callback) callback(err);
+                                    else console.log('Error while adding book.'+err);
+                                }else{ //publisher addded
+                                    next(err, result.insertId); //result.insertID is the publisher id.
+                                }
+                            });
+                        }
                     }
                 });
-            }
-
-            //inserting book info
-            var data = {
-                isbn13: book.isbn13,
-                title_ko: book.title,
-                title_original: book.original_title,
-                subtitle: book.sub_title,
-                pages: book.pages,
-                publisher_id: publisherId,
-                published_date: book.published_date,
-                cover_URL: book.cover_URL
-            };
-            conn.beginTransaction(function(err){
-                try{
-                    thisClass.insertData('books', data, function(err, rows, fields){
-                        thisClass.addAuthors(book.isbn13, book.authors, callback);
-                        conn.commit(function (err) {
-                            if (err) {
-                                callback(err);
-                                console.error(err);
-                                conn.rollback(function (err) {
-                                       console.error('rollback error');
-                                       throw err;
-                                    });
+            },
+            function(publisherId, next){
+                //inserting book info
+                var data = {
+                    isbn13: book.isbn13,
+                    title_ko: book.title,
+                    title_original: book.original_title,
+                    subtitle: book.sub_title,
+                    pages: book.pages,
+                    publisher_id: publisherId,
+                    published_date: book.published_date,
+                    cover_URL: book.cover_URL
+                };
+                conn.beginTransaction(function(err){
+                    thisClass.insertData('books', data, function(err, result){
+                        if(err) {
+                            conn.rollback(function (rollerr) {
+                                if(rollerr) next(rollerr);
+                                else next(err);
+                            });
+                            return;
+                        }
+                        thisClass.addAuthors(book.isbn13, book.authors, function(err){
+                            if(err) {
+                                conn.rollback(function (rollerr) {
+                                    if(rollerr) next(rollerr);
+                                    else next(err);
+                                });
                             }
-                         });
+                            conn.commit(function (err) {
+                                if(err) {
+                                    conn.rollback(function (rollerr) {
+                                        if(rollerr) next(rollerr);
+                                        else next(err);
+                                    });
+                                }
+                            });
+                        });
                     });
-                } catch (e){
-                    connection.rollback(function () {
-                        callback(e);
-                        console.error('rollback error');
-                    });
-                }
-            });
+                });
+            }
+        ], function(err, result){
+            if(callback) callback(err);
+            else console.log(err);
         });
-        if(callback)
-            callback(err);
     },
 
     editBook: function(isbn13, book, callback){
@@ -352,22 +365,29 @@ module.exports = {
 
     searchAuthorsForBooks: function(books, callback){
         console.log(books);
-        if(books.length == 0){
-            return [];
-        }
         var thisClass = this;
-        var book = books[0];
-        books.shift();
-        console.log(books);
-
-        var query = 'SELECT people.name_ko, people.name_eng, author_type.name_ko, author_type.name_en FROM author_to_person JOIN people ON people.id = author_to_person.person_id JOIN author_type ON author_type.id = author_to_person.type_id WHERE book_id = '+book.isbn13;
-        conn.query(query, function(err, rows, fields){
-            if(err)
-                callback(err);
-            book.author = rows;
-            console.log(book);
-            console.log();
-            return thisClass.searchAuthorsForBooks(books).push(book);
+        async.map(books, function(book, callback){//mapping fuction
+            var query = 'SELECT people.name_ko, people.name_eng, author_type.name_ko, author_type.name_en FROM author_to_person JOIN people ON people.id = author_to_person.person_id JOIN author_type ON author_type.id = author_to_person.type_id WHERE book_id = '+book.isbn13;
+            conn.query(query, function(err, rows, fields){
+                if(err)
+                    callback(err);
+                else{
+                    book.authors = rows;
+                    callback(err, book);
+                }
+            });
+        }, function(err, results){
+            if(callback){
+                callback(err, results);
+            } else {
+                console.log('searchAuthorsForBooks');
+                if(err){
+                    console.error(err);
+                    return;
+                }
+                console.log(results);
+                console.log();
+            }
         });
     },
 
