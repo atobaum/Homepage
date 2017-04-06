@@ -9,6 +9,7 @@ var subdomain = require('express-subdomain');
 var index = require('./routes/index');
 var users = require('./routes/users');
 var bookshelf = require('./book_shelf/app');
+var wiki = require('./wiki/app');
 
 var app = express();
 
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', index);
 app.use('/users', users);
 app.use('/bookshelf', bookshelf);
+app.use('/wiki', wiki)
 
 //for test
 app.get('/echo', function(req, res, next){
