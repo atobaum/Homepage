@@ -1,5 +1,6 @@
 var mysql = require('mysql');
 var config = require('../config.js').dev.db;
+var async = require('async');
 
 var conn = mysql.createConnection({
   host: config.host,
@@ -51,7 +52,7 @@ function generate_query_values(parameter){
 */
 module.exports = {
     insertData : function (table, data, callback){
-        log('insertData');
+        console.log('insertData');
         /*
         data:
         {
@@ -62,15 +63,12 @@ module.exports = {
         insert into table (a, b) values (1, 2)
         */
         conn.query('INSERT INTO '+table+' '+generate_query_values(data), function(err, res, fields){
-            if(!err){
-                if(callback)
-                    callback(err, res);
-                else {
-                    console.log("No callback funcion in a function: 'insertData'");
-                }
-            }else{
-                console.log('Error while inserting data: '+JSON.stringify(data)+'to table: '+table+'. '+err);
+            if(callback){
                 callback(err);
+                console.log('inserting data:');
+                console.log(err);
+                console.log(res);
+                console.log();
             }
         });
     },
@@ -93,6 +91,9 @@ module.exports = {
     },
 
     addPerson: function(person, callback){
+        this.insertData('people', person, function(err){
+            callback(err);
+        });
     },
 
     editPerson: function(id, person, callback){
@@ -116,47 +117,69 @@ module.exports = {
     },
 
     addAuthors: function(bookId, authors, callback){
-        log('addAuthors');
-        if(authors.length == 0){
-            if(callback)
-                callback();
-            else {
-                console.log("No callback function in addAuthors");
-            }
-            return;
-        }
-
+        console.log('addAuthors');
         var thisClass = this;
-        var author = authors.pop();
-        if (typeof(author.type) == "string"){
-            if(author.type == "저자" || author.type == "author")
-                author.type = 1;
-            else if(author.type == "옮김" || author.type == "translator")
-                author.type = 2;
-            else if(author.type == "감수" || author.type == "supervisor")
-                author.type = 3;
-            else if(author.type == "그림" || author.type == "illustrator")
-                author.type = 4;
-            else {
-                callback(new Error("지원하지 않는 저자 타입: "+author.type));
-                //throw new Error("지원하지 않는 저자 타입: "+author.type);
+        async.each(authors, function(author, callback){
+            //refine author
+            if (typeof(author.type) == "string"){
+                if(author.type == "저자" || author.type == "author")
+                    author.type = 1;
+                else if(author.type == "옮김" || author.type == "translator")
+                    author.type = 2;
+                else if(author.type == "감수" || author.type == "supervisor")
+                    author.type = 3;
+                else if(author.type == "그림" || author.type == "illustrator")
+                    author.type = 4;
+                else {
+                    callback(new Error("지원하지 않는 저자 타입: "+author.type));
+                }
             }
-        }
-        conn.query('SELECT * FROM people WHERE name_ko="'+author.name+'"', function(err, rows, fields){
-            if(err)
-                callback(err);
-            if(rows.length >= 1){
-                thisClass.insertData('author_to_person', {book_id: bookId, person_id: rows[0].id, type_id: author.type}, function(){
-                    return thisClass.addAuthors(bookId, authors);
-                });
-                thisClass.addAuthors(bookId, authors, callback);
+
+
+            conn.query('SELECT * FROM people WHERE name_ko="'+author.name+'"', function(err, rows, fields){
+                if(err){
+                    callback(err); //failed to search athor.
+                    return;
+                }
+
+                if(rows.length >= 1){ //is there's a author
+                    thisClass.insertData('author_to_person', {book_id: bookId, person_id: rows[0].id, type_id: author.type}, function(err){
+                        callback(err);  //failed to insert data into author_to_person
+                    });
+                } else { // if there's no person
+                    thisClass.insertData('people', {name_ko: author.name}, function(err){
+                        if(err){
+                            callback(err);
+                            return;
+                        }
+
+                        conn.query('SELECT * FROM people WHERE name_ko="'+author.name+'"', function(err, rows, fields){
+                            if(err){
+                                callback(err);
+                                return;
+                            }
+
+                            if(rows.length >= 1){ //is there's a author
+                                thisClass.insertData('author_to_person', {book_id: bookId, person_id: rows[0].id, type_id: author.type}, function(err){
+                                    callback(err);
+                                });
+                            } else{ //no person.
+                                callback(new Error('No person after adding person.'));
+                            }
+                        });
+                    });
+                }
+            });
+        }, function(err){ //callback for async.each
+            if(callback){
                 callback(err);
             }else{
-                thisClass.insertData('people', {name_ko: author.name}, function(){
-                    authors.push(author);
-                    thisClass.addAuthors(bookId, authors, callback);
-                    callback(err);
-                });
+                if(err){
+                    console.log('Error occured when inserting in addAuthors: ');
+                    console.error(err);
+                }else{
+                    console.log("Finished addAuthors");
+                }
             }
         });
     },
@@ -170,8 +193,8 @@ module.exports = {
     },
 
     addBook: function(book, callback){
-        log('addBook');
-        log(book);
+        console.log('addBook');
+        console.log(book);
         /*book is form of
         {
             title,
@@ -236,7 +259,6 @@ module.exports = {
                     connection.rollback(function () {
                         callback(e);
                         console.error('rollback error');
-                        throw e;
                     });
                 }
             });
