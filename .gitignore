@@ -67,3 +67,6 @@ jspm_packages
 ### private data ###
 *.config
 *config.js
+
+### test files ###
+test.*

@@ -1,21 +1,39 @@
 doctype html
 html
-  head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-    link(rel="stylesheet", href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css")
-    script(src="//code.jquery.com/jquery-1.10.2.js")
-    script(src="//code.jquery.com/ui/1.11.4/jquery-ui.js")
-
+    head
+        title= title
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        script(src="https://code.jquery.com/jquery-3.1.1.min.js", integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=", crossorigin="anonymous")
+        link(rel='stylesheet', href='http://127.0.0.1:3000/semantic/semantic.min.css')
+        script(src="http://127.0.0.1:3000/semantic/semantic.min.js")
+        
+        
+    
     block head
-  body
-    nav
-      ul
-        li
-          a(href="/", class="nav-item") Home
-        li
-          a(href="/bookshelf", class="nav-item") 책장
-    block content
-
-    footer#footer
-      p Copyright (c) foobar
+    
+    body
+        nav.ui.top.sidebar.inverted.menu
+            a.item(href='/') Home
+            .ui.dropdown.item
+                .text 책장
+                i.dropdown.icon
+                .menu
+                    a.item(href="/bookshelf") 책장
+                    a.item(href="/bookshelf/addbook") 책추가
+            a.item 3
+        
+        
+        .pusher 
+            button.ui.button Follw
+            block content
+        
+        
+            footer#footer
+                p Copyright (c) foobar
+        script.
+            $('.ui.sidebar').sidebar('setting', 'transition', 'push');
+            $('button').click(function(){
+                $('.ui.sidebar').sidebar('toggle');
+                console.log('er');
+            });
+            $('ui.dropdown').dropdown();
