@@ -1,4 +1,15 @@
 extends ../../views/layout
 
+block head
+    script(src = "javascripts/main.js")
+    
 block content
-  h1 bookshelf/main
+    h1 bookshelf/main
+    table.ui.celled.table
+        thead
+            tr
+                th 책 제목
+                th 저자
+                th 읽기 시작한 날짜
+                th 다 읽은 날짜
+        tbody(id='tbdReadings')

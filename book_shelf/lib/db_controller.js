@@ -7,7 +7,8 @@ var conn = mysql.createConnection({
   port: config.port,
   user: config.user,
   password: config.password,
-  database: config.database
+  database: config.database,
+  dateStrings: 'date'
 }, function(err){
     console.log('Error occured while making connection with MySql server: ');
     console.log(err);
@@ -406,7 +407,7 @@ module.exports = {
 
     /**
     * @function searchReading
-    * @param data - 
+    * @param data -
     * @param callback
     */
     searchReading: function(data, callback){
