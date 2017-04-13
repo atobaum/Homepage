@@ -11,8 +11,10 @@ block content
     li(id="dummy_book", style="display:none;", class="book")
 
     div
-        input(type="text", id="book_search", class="block", list='ttt')
-        div(id='book_list_panel', style="display: none;")
+        div#book_search_bar.ui.icon.input
+            input(type="text", id="book_search", class="block", list='ttt', placeholder="책 검색...")
+            i.search.icon
+        div(id='book_list_wrapper', style="display: none; position: absolute;")
             ul(id="book_list", style="float:left;")
             div(id='book_info', style="float:left;")
                 table
@@ -25,12 +27,23 @@ block content
                                 ul
                                     li 저자
                                     li 출판사|날짜
+        div#book_panel
+            table
+                tbody
+                    tr
+                        td
+                            img#book_cover
+                        td
+                            strong#book_title 제목
+                            ul
+                                li#book_authors 저자
+                                li#book_publish 출판사|날짜
                                            
-    form(method='post', action='api/addread', id="input_form", onsubmit="return check_form()")
-        input(type="hidden", name="isbn13", id="form_isbn13")
-        input(type="date", name="start_date", id="form_start_date")
+    form(method='post', action='reading', id="input_form", onsubmit="return check_form()")
+        input(type="hidden", name="book", id="form_book")
+        input(type="date", name="date_started", id="form_start_date")
         label ~
-        input(type="date", name="finished_date", id="form_finished_date")
+        input(type="date", name="date_finished", id="form_finished_date")
 
         label(for="addread_rating") 평점
         select(name='rating', id='form_rating')

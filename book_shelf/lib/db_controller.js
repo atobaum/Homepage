@@ -47,6 +47,24 @@ function generate_query_values(parameter){
     return q1 + q2;
 }
 
+function generate_update_query_values(parameter){
+    var q = "";
+    for (var key in parameter){
+        if(parameter[key] === undefined){
+            continue;
+        }
+        q += key + '=';
+        if(typeof(parameter[key]) == "string"){
+            q += '"'+parameter[key]+'", ';
+        }
+        else {
+            q += parameter[key]+', ';
+        }
+    }
+    q = q.substring(0, q1.length - 2);
+    return q;
+}
+
 /**
 * @module db_controller
 * @todo write addPerson, addSeries, addTitle, searchCategory, searchSeries, searchTitle, searchRead
@@ -65,8 +83,8 @@ module.exports = {
         conn.query('INSERT INTO '+table+' '+generate_query_values(data), function(err, res, fields){
             if(callback){
                 callback(err, res);
-                console.log('inserting data:');
-                console.log(err);
+                console.log('inserting data:' + 'INSERT INTO '+table+' '+generate_query_values(data));
+                console.log('error: '+err);
                 console.log(res);
                 console.log();
             }
@@ -334,13 +352,30 @@ module.exports = {
             }
         });
     },
+    addReading: function(read, callback){
+        console.log('addRead');
+        console.log(read);
+        read.book_id = read.isbn13;
+        delete read.isbn13;
+        this.insertData('readings', read, function(err, res){
+            if(callback){
+                callback(err, res);
+            }
+        });
+    },
 
-    editRead: function(id, read, callback){
+    editReading: function(read, callback){
 
     },
 
-    deleteRead: function(id, read, callback){
+    deleteReading: function(read, callback){
+        var id = read.id;
+        delete read.id;
 
+        var query = 'UPDATE readings SET '+generate_update_query_values(read)+' WHERE id = '+id;
+        conn.query(query, function(err, rows, fields){
+            callback(err, rows);
+        });
     },
 
     searchCategory: function(){
@@ -472,7 +507,7 @@ module.exports = {
                 else
                     trueCallback(err, isbn);
             } else{
-                console.log('Error while performing Query.'+err);
+                trueCallback(err);
             }
         });
     }

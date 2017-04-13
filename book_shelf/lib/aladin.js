@@ -40,36 +40,48 @@ module.exports = function(config){
         query += querystring.stringify(queryOption);
         request(query, function(error, res, body){
             if(!error && res.statusCode == 200){
-                var item = JSON.parse(body.slice(0, -1).replace("\'", "\\")).item[0];
+                //console.log(body.replace('};', '}').replace("\'", "\\"));
+                var item = JSON.parse(body.replace('};', '}').replace(/\'/g, "\\"));
+                if(item.errorCode){
+                    callback(new Error(item.errorMessage));
+                    return;
+                }
+                item = item.item[0];
                 // slice(0, -1) is for deleting ';' in the end of string. JSON.parse can't parse correctily if string has single quotes. So I used replace("\'", "\\"))
                 //console.log("body: ", body);
                 //console.log(item);
                 var authors = [];
-                for (var i in item.bookinfo.authors) {
-                    var author = item.bookinfo.authors[i];
-                    authors.push({
-                        name: author.name,
-                        type: author.authorType
-                    });
-                }
-
                 var result = {
-                    title: item.title,
-                    sub_title: item.bookinfo.subTitle,
-                    original_title: item.bookinfo.originalTitle,
-                    authors: authors,
-                    publisher: item.publisher,
+                    title: item.title.replace(/\\/g, "\'"),
+                    publisher: item.publisher.replace(/\\/g, "\'"),
                     published_date: item.pubDate,
                     isbn13: item.isbn13,
                     cover_URL: item.cover,
-                    pages: item.bookinfo.itemPage,
                 };
-            callback(result);
+
+                //console.log(item);
+                if(item.bookinfo){
+                    result.subtitle = item.bookinfo.subTitle;
+                    result.original_title = item.bookinfo.originalTitle;
+                    result.pages = item.bookinfo.itemPage;
+
+                    for (var i in item.bookinfo.authors) {
+                        var author = item.bookinfo.authors[i];
+                        authors.push({
+                            name: author.name.replace(/\\/g, "\'"),
+                            type: author.authorType
+                        });
+                    }
+                } else{
+                    authors.push({
+                        name: item.author,
+                        type: 'author'
+                    });
+                }
+                result.authors = authors;
+                callback(null, result);
             } else {
-                callback({
-                    error: error,
-                    statusCode: statusCode
-                });
+                callback(error);
             }
         });
     };
@@ -102,7 +114,7 @@ module.exports = function(config){
 
         var query = this.host + "ItemSearch.aspx?";
         query += querystring.stringify(queryOption);
-
+        //console.log(query);
         request(query, function(error, res, body){
             if(!error && res.statusCode == 200){
                 var data = JSON.parse(body);
@@ -121,12 +133,10 @@ module.exports = function(config){
                         });
                     }
                 }
-                callback(result);
+                console.log(result);
+                callback(null, result);
             } else {
-                console.log({
-                    error: error,
-                    statusCode: statusCode
-                });
+                callback(error);
             }
         });
     };

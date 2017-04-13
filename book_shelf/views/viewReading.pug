@@ -1,0 +1,68 @@
+extends ../../views/layout
+
+block head
+    //script(src='javascripts/addread.js')
+    style.
+        .ui.accurate.star.widget {
+          background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAcklEQVQoz2P4//8/AzmYgWKN6KC4uFgYhGF8UjTqgjBJGqG2GUOxMF6NQAViQCwFxGpAbICk0QAqBpITw6ZRAUkxLqyA1akENCvg9SNQgRYWTVoEA4cSjTDFalAM5uPVCFTABY0/ASSDBKBiXNRNcqRiADBao1Bj6dJdAAAAAElFTkSuQmCC') repeat scroll 0% 0% transparent;
+          height: 0.875em;
+          width: 4.375em;
+        }
+        .ui.accurate.star.widget .highlight {
+          background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAdElEQVQoz2P4//8/AzmYgWKN6KC4uDgBhGF8UjQ+AGGSNEJt+w/FCXg1AhUUAHEDEB8A4g9IGj9AxUByBdg0LkBSjAsvwOpUApoX4PUjUMEFLJouEAwcSjTCFB+AYjAfr0agAgNo/AUgGRQAFTOgbpIjFQMAtcfKBD81ItYAAAAASUVORK5CYII=') repeat scroll left bottom transparent;
+          height: 0.875em;
+        }
+        .ui.accurate.star.widget.inline {
+          display: inline-block;
+          margin-left: 0.3em;
+        }
+
+
+block content
+    h1= title
+    p Welcome to #{title}
+
+    li(id="dummy_book", style="display:none;", class="book")
+
+    div
+        div#book_panel
+            table
+                tbody
+                    tr
+                        td
+                            img#book_cover(src=book.cover_url)
+                        td
+                            strong#book_title #{book.title}
+                            ul
+                                li#book_authors 저자
+                                li#book_publish #{book.publisher}|#{book.published_date}
+                                           
+    form(method='post', action='reading', id="input_form", onsubmit="return check_form()")
+        input(type="hidden", name="book", id="form_book")
+        input(type="date", name="date_started", id="form_start_date", value=date_started)
+        label ~
+        input(type="date", name="date_finished", id="form_finished_date", value=date_finished)
+
+
+        .ui.accurate.star.widget
+            .highlight(style="width:100%")
+        label(for="addread_rating") 평점
+
+        select(name='rating', id='form_rating')
+            option 0
+            option 1
+            option 2
+            option 3
+            option 4
+            option 5
+            option 6
+            option 7
+            option 8
+            option 9
+            option 10
+
+        label(for="form_comment") 소감
+        textarea(name='comment', id='form_comment') #{comment}
+        button 수정
+        button(style="display:none") 완료
+        button(style="display:none") 취소

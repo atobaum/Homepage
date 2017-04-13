@@ -35,8 +35,6 @@ app.get('/:page', function(req, res, next){
 });
 
 app.get('/:page/edit', function(req, res, next){
-
-
     res.render('addread', {
         "title": "Add Book"
     });

@@ -45,9 +45,9 @@ function addReadingToTable(reading){
     author = format_authors(book.authors);
     var content = "";
     content += '<tr>';
-    content +=     '<td><a href="/book/'+reading.id+'">'+book.title_ko+'</a></td>';
+    content +=     '<td><a href="/book/'+book.isbn13+'">'+book.title_ko+'</a></td>';
     content +=     '<td>'+author+'</td>';
-    content +=     '<td>'+reading.date_started+'</td>';
+    content +=     '<td><a href="/reading/'+reading.id+'">'+reading.date_started+'</a></td>';
     content +=     '<td>'+reading.date_finished+'</td>';
     content += '</tr>';
     $('#tbdReadings').append(content);

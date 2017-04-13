@@ -10,6 +10,8 @@ var dbController = require('./lib/db_controller.js');
 var config = require('./config.js').dev;
 var aladin = require('./lib/aladin.js');
 aladin = new aladin(config.api.aladin);
+
+var async = require('async');
 //var dbInit = require('./lib/db_init.js');
 //dbInit(config.db);
 //console.log("Done");
@@ -58,25 +60,25 @@ app.get('/book/:isbn13', function(req, res, next){
 
 //add a book
 app.post('/book/:isbn13', function(req, res, next){
-    dbController.isExistBook(req.params.isbn13, function(err){   //when ther exists a book.
-        if(err)
-            res.render('error', {error: err});
-        res.render('error', {
-            error:{
-                status: "이미 존재하는 책 입니다."
-            }
-        }); //이미 존재하는 책.
-        //res.redirect('/bookshelf/book/'+req.params.isbn13);
+    var book = JSON.parse(req.body);
+    dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
+        if(err){
+            res.render('error', {error:err});
+        } else{
+            res.redirect('error', {error: '책이 이미 존재합니다.'});
+        }
     },
-    function(err){
-        if(err)
-            res.render('error', {error: err});
-
-        var data = req.body;
-        aladin.bookInfo(req.params.isbn13, function(book){
-            dbController.addBook(book, function(err){
-                res.redirect('/bookshelf/book/'+req.params.isbn13);
-            });
+    function(err){ //when book doesn't exist
+        if(err){
+            res.render('error', {error:err});
+            return;
+        }
+        dbController.addBook(book, function(err){
+            if(err){
+                res.render('error', {error:err});
+            } else{
+                res.redirect('/bookshelf');
+            }
         });
     });
 });
@@ -105,12 +107,50 @@ app.delete('/book/:isbn13', function(req, res, next){
 
 
 app.get('/reading/:id', function(req, res, next){
-
+    res.render('viewReading', {title: 'view reading', id: req.params.id, date_started: '2016-11-11', date_finished: '2016-12-12', rating: 4, comment: '너무너무 좋아요', book:{title: '가나다', authors:[{id:1, type: 'author', name: '한구루'}], publisher: '출판사', published_date: '2014-12-09', cover_url:'http://image.aladin.co.kr/product/748/90/coversum/1593272839_2.jpg'}})
 });
 
 //add reading
 app.post('/reading', function(req, res, next){
-
+    console.log('post: add reading');
+    var reading = req.body;
+    console.log(reading);
+    var book = JSON.parse(reading.book);
+    reading.isbn13 = book.isbn13;
+    delete reading.book;
+    if(reading.date_finished.length === 0) delete reading.date_finished;
+    dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
+        if(err){
+            res.render('error', {error:err});
+        } else{
+            dbController.addReading(reading, function(err){
+                if(err){
+                    res.render('error', {error:err});
+                } else{
+                    res.redirect('/bookshelf');
+                }
+            });
+        }
+    },
+    function(err){ //when book doesn't exist
+        if(err){
+            res.render('error', {error:err});
+            return;
+        }
+        dbController.addBook(book, function(err){
+            if(err){
+                res.render('error', {error:err});
+            } else{
+                dbController.addReading(reading, function(err){
+                    if(err){
+                        res.render('error', {error:err});
+                    } else{
+                        res.redirect('/bookshelf');
+                    }
+                });
+            }
+        });
+    });
 });
 
 app.put('/reading/:id', function(req, res, next){
@@ -139,59 +179,70 @@ app.delete('/person/:id', function(req, res, next){
 });
 
 
-
-//api
-app.post('/api/addread', function(req, res, next){ //to delete
-    var data = req.body;
-    dbController.isExistBook(data.isbn13, function(err){   //when ther exists a book.
-        if(err)
-            res.render('error', {error: err});
-        dbController.addRead(data);
-        res.redirect('/bookshelf');
-    },
-    function(err){
-        if(err)
-            res.render('error', {error: err});
-        aladin.bookInfo(data.isbn13, function(book){
-            dbController.addBook(book, function(){
-                dbController.addRead(data);
-                res.redirect('/bookshelf');
-            });
-        });
-    });
-});
-
 app.post('/api/reading/add', function(req, res, next){
-    var data = req.body;
-    dbController.isExistBook(data.isbn13, function(err){   //when ther exists a book.
-        if(err)
-            res.render('error', {error: err});
-        dbController.addRead(data);
-        res.redirect('/bookshelf');
-    },
-    function(err){
-        if(err)
-            res.render('error', {error: err});
-        aladin.bookInfo(data.isbn13, function(book){
-            dbController.addBook(book, function(){
-                dbController.addRead(data);
-                res.redirect('/bookshelf');
+    var reading = req.body;
+    var book = reading.book;
+    reading.isbn13 = book.isbn13;
+    delete reading.book;
+
+    dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
+        if(err){
+            res.json({ok:0, error:err});
+        } else{
+            dbController.addReading(reading, function(err){
+                if(err){
+                    res.json({ok:0, error:err});
+                } else{
+                    res.json({ok:1});
+                }
             });
+        }
+    },
+    function(err){ //when book doesn't exist
+        if(err){
+            res.json({ok:0, error:err});
+            return;
+        }
+        dbController.addBook(book, function(err){
+            if(err){
+                res.json({ok:0, error:err});
+            } else{
+                dbController.addReading(data, function(err){
+                    if(err){
+                        res.json({ok:0, error:err});
+                    } else{
+                        res.json({ok:1});
+                    }
+                });
+            }
         });
     });
 });
 
 app.post('/api/reading/edit', function(req, res, next){
-
+    dbController.editReading(req.body, function(err){
+        if(err){
+            res.json({ok: 0, error:err});
+        } else{
+            res.json({ok: 1});
+        }
+    });
 });
 
-app.post('/api/reading/edit', function(req, res, next){
-
+app.get('/api/bookinfo/aladin', function(req, res, next){
+    aladin.bookInfo(req.query.isbn13, function(err, book){
+        if(err){
+            res.json({ok:0, error:err});
+        } else{
+            res.json({ok:1, result: book});
+        }
+    });
 });
 
 app.get('/api/searchbook', function(req, res){
     res.writeHead(200, {'Content-Type' : "application/json;charset=UTF-8"});
-    aladin.search("Keyword", req.query.word, function(data){
+    aladin.search("Keyword", req.query.keyword, function(err, data){
+        console.log(data);
         res.end(JSON.stringify(data));
     });
 });
