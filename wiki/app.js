@@ -1,62 +1,66 @@
 var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var config = require('./config.js').dev; //dev: development, real: real service
+//var path = require('path');
+//var favicon = require('serve-favicon');
+//var logger = require('morgan');
+//var cookieParser = require('cookie-parser');
+//var bodyParser = require('body-parser');
 
-var config = require('./config.js').dev;
-//var dbInit = require('./lib/db_init.js');
-//dbInit(config.db);
+var config = require('./config.js').dev; //dev: development, real: real service
 app = express();
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', __dirname + '/views');
 app.set('view engine', 'pug');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+//app.use(logger('dev'));
+//app.use(bodyParser.json());
+//app.use(bodyParser.urlencoded({ extended: false }));
+//app.use(cookieParser());
+//app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.get('/', function (req, res, next) {
     res.render('main', {"title": "Wiki"});
 });
 
-app.get('/:page', function(req, res, next){
-    res.render('addread', {
-        "title": "Add Book"
+app.get('/v/:page', function(req, res, next){
+    res.render('main', {
+        "title": "view page: " + req.params.page
     });
 });
 
-app.get('/:page/edit', function(req, res, next){
-    res.render('addread', {
-        "title": "Add Book"
+app.get('/edit/:page', function(req, res, next){
+    res.render('main', {
+        "title": "edit page: " + req.params.page
     });
 });
 
-app.get('/:page/delete', function(req, res){
-    res.render('main');
+app.get('/history/:page', function(req, res, next){
+    res.render('main', {
+        "title": "history page: " + req.params.page
+    });
 });
 
-app.post('/:page', function(req, res, next){
-    var data = req.body;
-    dbController.isExistBook(data.isbn13, function(){   //when ther exists a book.
-        dbController.addRead(data);
-        res.redirect('/bookshelf');
-    },
-    function(){
-        aladin.bookInfo(data.isbn13, function(book){
-            dbController.addBook(book, function(){
-                dbController.addRead(data);
-                res.redirect('/bookshelf');
-            });
-        });
+//backlinks
+app.get('/xref/:page', function(req, res, next){
+    res.render('main', {
+        "title": "backlink page: " + req.params.page
+    });
+});
+
+
+//for backend
+app.get('/delete/:page', function(req, res, next){
+    res.render('main', {
+        "title": "delete page: " + req.params.page
+    });
+});
+
+app.post('/edit/:page', function(req, res, next){
+    res.render('main', {
+        "title": "POST edit page: " + req.params.page
     });
 });
 
