@@ -6,13 +6,13 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var config = require('./config.js').dev; //dev: development, real: real service
 
-var dbController = require('./lib/db_controller.js');
+var dbController = require('./libs/db_controller.js');
 var config = require('./config.js').dev;
-var aladin = require('./lib/aladin.js');
+var aladin = require('./libs/aladin.js');
 aladin = new aladin(config.api.aladin);
 
 var async = require('async');
-//var dbInit = require('./lib/db_init.js');
+//var dbInit = require('./libs/db_init.js');
 //dbInit(config.db);
 //console.log("Done");
 app = express();
