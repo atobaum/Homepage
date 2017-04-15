@@ -1,5 +1,4 @@
-function selectBook(){
-    var isbn13 = this.getAttribute('isbn13');
+function selectBook(isbn13){
     console.log('tes');
 
     $.ajax({
@@ -38,8 +37,10 @@ function selectBook(){
             $('#book_authors').text(authors);
             $('#book_publish').text(book.publisher + ' | ' + book.published_date);
             $('#form_book').val(JSON.stringify(book));
+            $('#book_search').val('');
             $('#book_list_wrapper').hide();
             $('#book_panel').show();
+            $('.ui.search').hide();
         }
     });
 
@@ -55,7 +56,7 @@ function hoverBook(evt){
 
 function searchBookByKeyword(keyword, callback){
     $.ajax({
-        url:"api/searchbook?keyword=" + keyword,
+        url:"/bookshelf/api/searchbook?keyword=" + keyword,
         dataType: "json",
         success: function(data){
             //console.log(data);
@@ -108,7 +109,52 @@ function DelayedHandler(){
 
 var delayedHnadlerForTitle = new DelayedHandler();
 
+
+var content = [
+  {
+    "title": "하스켈로 배우는 함수형 프로그래밍",
+    "author": "오카와 노리유키 지음, 정인식 옮김",
+    "published_date": "2015-08-21",
+    "publisher": "제이펍",
+    "isbn13": "9791185890296",
+    "cover_URL": "http://image.aladin.co.kr/product/6486/90/coveroff/k952433349_1.jpg"
+  },
+  {
+    "title": "가장 쉬운 하스켈 책 - 느긋하지만, 우아하고 세련된 함수형 언어",
+    "author": "미란 리포바카 지음, 황반석 옮김",
+    "published_date": "2014-02-25",
+    "publisher": "비제이퍼블릭",
+    "isbn13": "9788994774619",
+    "cover_URL": "http://image.aladin.co.kr/product/3696/4/coveroff/8994774610_1.jpg"
+  },
+  {
+    "title": "Learn You a Haskell for Great Good!: A Beginner's Guide (Paperback)",
+    "author": "Miran Lipovaca",
+    "published_date": "2011-04-21",
+    "publisher": "No Starch Pr                            ",
+    "isbn13": "9781593272838",
+    "cover_URL": "http://image.aladin.co.kr/product/748/90/coveroff/1593272839_2.jpg"
+  },
+  {
+    "title": "Stardust Melody (Paperback)",
+    "author": "마리 하스켈 (Mary Haskell)",
+    "published_date": "1985-03-01",
+    "publisher": "Jove Pubns                              ",
+    "isbn13": "9780425079799",
+    "cover_URL": "http://image.aladin.co.kr/product/7987/42/coveroff/0425079791_2.jpg"
+  },
+  {
+    "title": "Programming in Haskell (Paperback)",
+    "author": "Hutton, Graham",
+    "published_date": "2007-01-15",
+    "publisher": "Cambridge Univ Pr",
+    "isbn13": "9780521692694",
+    "cover_URL": "http://image.aladin.co.kr/product/159/59/coveroff/0521692695_1.jpg"
+  }
+];
+
 $(document).ready(function(){
+    $('#book_panel').hide();
     $('#book_search').keyup(function(){
         var title = $('#book_search').val();
         if(title.length === 0){
@@ -126,6 +172,19 @@ $(document).ready(function(){
     $('#book_search').focus(function(){
         if($('#book_search').val().length !== 0){
             $('#book_list_wrapper').show();
+        }
+    });
+    $('.ui.search').search({
+        apiSettings:{
+            url: "/bookshelf/api/searchbook?keyword={query}"
+        },
+        searchDelay: 1000,
+        //source: content,
+        onSelect: function(result, response){
+            selectBook(result.isbn13);
+        },
+        onResults: function(response){
+            console.log(response);
         }
     });
 });

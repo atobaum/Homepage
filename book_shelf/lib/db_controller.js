@@ -61,7 +61,7 @@ function generate_update_query_values(parameter){
             q += parameter[key]+', ';
         }
     }
-    q = q.substring(0, q1.length - 2);
+    q = q.substring(0, q.length - 2);
     return q;
 }
 
@@ -70,6 +70,29 @@ function generate_update_query_values(parameter){
 * @todo write addPerson, addSeries, addTitle, searchCategory, searchSeries, searchTitle, searchRead
 */
 module.exports = {
+    formatAuthors: function(authors){
+        var author = '';
+        for(var i in authors){
+            var aut = authors[i];
+            switch(aut.type){
+                case "author":
+                    author += aut.name + " 지음, ";
+                    break;
+                case "translator":
+                    author += aut.name + " 번역, ";
+                    break;
+                case "supervisor":
+                    author += aut.name + " 감수, ";
+                    break;
+                case "illustrator":
+                    author += aut.name + " 그림, ";
+                    break;
+            }
+        }
+        author =  author.substring(0, author.length-2) + '.';
+        return author;
+    },
+
     insertData : function (table, data, callback){
         /*
         data:
@@ -364,7 +387,23 @@ module.exports = {
         });
     },
 
-    editReading: function(read, callback){
+    editReading: function(reading, callback){
+        var id = reading.id;
+        if(reading.date_finished.length === 0){
+            delete reading.date_finished;
+        }
+        delete reading.id;
+        var query = 'UPDATE readings SET '+generate_update_query_values(reading)+' WHERE id = '+id;
+        conn.query(query, function(err, rows){
+            if(err){
+                callback(err);
+            } else{
+                if(rows.affectedRows === 0){
+                    callback(new Error('해당하는 책이 없다.:' + id));
+                } else
+                    callback(null, rows);
+            }
+        });
 
     },
 
@@ -426,6 +465,7 @@ module.exports = {
                     }
                     book.publisher = book.name;
                     delete book.name;
+                    book.formatted_authors = thisClass.formatAuthors(book.authors);
                     callback(err, book);
                 });
             } else{
@@ -470,6 +510,29 @@ module.exports = {
             }, function(err, result){
                 callback(err, result);
             });
+        });
+    },
+
+    readingInfo: function(id, callback){
+        var thisClass = this;
+        var query = 'SELECT * FROM readings WHERE id = '+id;
+        conn.query(query, function(err, rows){
+            if(err){
+                callback(err);
+            } else if(rows.length === 0){
+                callback(new Error('잘못된 id:' + id));
+            } else {
+                var reading = rows[0];
+                thisClass.bookInfo(reading.book_id, function(err, book){
+                    if(err){
+                        callback(err);
+                    } else{
+                        reading.book = book;
+                        delete reading.book_id;
+                        callback(null, reading);
+                    }
+                });
+            }
         });
     },
 

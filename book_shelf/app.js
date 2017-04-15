@@ -46,8 +46,8 @@ app.get('/', function (req, res, next) {
     });
 });
 
-app.get('/addreading', function(req, res, next){
-    res.render('addread', {
+app.get('/reading/add', function(req, res, next){
+    res.render('addReading', {
         "title": "Add Book"
     });
 });
@@ -107,7 +107,17 @@ app.delete('/book/:isbn13', function(req, res, next){
 
 
 app.get('/reading/:id', function(req, res, next){
-    res.render('viewReading', {title: 'view reading', id: req.params.id, date_started: '2016-11-11', date_finished: '2016-12-12', rating: 4, comment: '너무너무 좋아요', book:{title: '가나다', authors:[{id:1, type: 'author', name: '한구루'}], publisher: '출판사', published_date: '2014-12-09', cover_url:'http://image.aladin.co.kr/product/748/90/coversum/1593272839_2.jpg'}})
+    dbController.readingInfo(req.params.id, function(err, reading){
+        if(err){
+            res.render('err', {error: err});
+        } else{
+            console.log(reading);
+            reading.title = reading.title_ko;
+            res.render('viewReading', reading);
+        }
+    });
+
+    //res.render('viewReading', {title: 'view reading', id: req.params.id, date_started: '2016-11-11', date_finished: '2016-12-12', rating: 5, comment: '너무너무 좋아요', book:{title: '제목은 가나다', authors:[{id:1, type: 'author', name: '한구루'}], formatted_authors:'한구루 지음.', publisher: '여기는 출판사', published_date: '2014-12-09', cover_url:'http://image.aladin.co.kr/product/748/90/coversum/1593272839_2.jpg'}})
 });
 
 //add reading
@@ -153,9 +163,17 @@ app.post('/reading', function(req, res, next){
     });
 });
 
-app.put('/reading/:id', function(req, res, next){
-
+app.post('/reading/edit', function(req, res, next){
+    console.log(req.body);
+    dbController.editReading(req.body, function(err){
+        if(err){
+            res.render('error', {error:err});
+        } else{
+            res.redirect('/bookshelf');
+        }
+    });
 });
+
 
 app.delete('/reading/:id', function(req, res, next){
 
@@ -240,10 +258,8 @@ app.get('/api/bookinfo/aladin', function(req, res, next){
 });
 
 app.get('/api/searchbook', function(req, res){
-    res.writeHead(200, {'Content-Type' : "application/json;charset=UTF-8"});
     aladin.search("Keyword", req.query.keyword, function(err, data){
-        console.log(data);
-        res.end(JSON.stringify(data));
+        res.json({results: data});
     });
 });
 
