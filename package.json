@@ -1,6 +1,9 @@
 {
-  "name": "web",
+  "name": "hanjitori.com",
+  "description" : "Hompage for my hompage: hanjitori.com",
   "version": "0.0.0",
+  "author" : "hanjitori <khyoung2500@gmail.com> (http://www.hanjitori.com/)",
+  
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
@@ -10,17 +13,17 @@
     "async": "^2.3.0",
     "body-parser": "~1.15.2",
     "cookie-parser": "~1.4.3",
-    "debug": "~2.2.0",
     "express": "~4.14.0",
     "express-subdomain": "^1.0.5",
-    "mocha": "^3.2.0",
-    "mongodb": "^2.2.25",
-    "mongoose": "^4.9.3",
     "morgan": "~1.7.0",
     "mysql": "^2.13.0",
     "pug": "^2.0.0-beta6",
     "request": "^2.79.0",
     "semantic-ui": "^2.2.10",
     "serve-favicon": "~2.3.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "mocha": "^3.2.0"
   }
 }
