@@ -4,10 +4,9 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var config = require('./config.js').dev; //dev: development, real: real service
-
+var config = require('./config.js').dev; //dev: development, dist: real service
 var dbController = require('./libs/db_controller.js');
-var config = require('./config.js').dev;
+dbController = new dbController(config.db);
 var aladin = require('./libs/aladin.js');
 aladin = new aladin(config.api.aladin);
 
