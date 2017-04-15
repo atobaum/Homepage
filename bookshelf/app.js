@@ -1,12 +1,12 @@
 var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+//var path = require('path');
+//var favicon = require('serve-favicon');
+//var cookieParser = require('cookie-parser');
+//var bodyParser = require('body-parser');
 var config = require('./config.js').dev; //dev: development, dist: real service
 var dbController = require('./libs/db_controller.js');
 dbController = new dbController(config.db);
+
 var aladin = require('./libs/aladin.js');
 aladin = new aladin(config.api.aladin);
 
@@ -14,18 +14,17 @@ var async = require('async');
 //var dbInit = require('./libs/db_init.js');
 //dbInit(config.db);
 //console.log("Done");
-app = express();
 
+app = express();
 // view engine setup
 app.set('views', __dirname+'/views');
 app.set('view engine', 'pug');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
+//app.use(bodyParser.json());
+//app.use(bodyParser.urlencoded({ extended: false }));
+//app.use(cookieParser());
 //app.use(express.static('../public'));
 
 app.get('/', function (req, res, next) {
