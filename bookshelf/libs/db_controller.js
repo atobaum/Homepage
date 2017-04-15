@@ -303,6 +303,8 @@ dbController.prototype.addBook = function(book, callback){
                                     if(rollerr) next(rollerr);
                                     else next(err);
                                 });
+                            }else{
+                                callback();
                             }
                         });
                     });
@@ -310,8 +312,7 @@ dbController.prototype.addBook = function(book, callback){
             });
         }
     ], function(err, result){
-        if(callback) callback(err);
-        else console.log(err);
+        if(err) callback(err);
     });
 };
 
@@ -477,7 +478,7 @@ dbController.prototype.searchBook = function(type, keyword, callback){
 */
 dbController.prototype.searchReading = function(data, callback){
     var thisClass = this;
-    var query = 'SELECT * FROM readings LIMIT '+(data.page-1) * 10 + ', 10';
+    var query = 'SELECT * FROM readings ORDER BY last_update DESC LIMIT '+(data.page-1) * 10 + ', 10';
      thisClass.conn.query(query, function(err, rows){
         if(err){
             callback(err);
@@ -532,7 +533,7 @@ get books returns books with authors info
 */
 dbController.prototype.searchAuthorsForBook = function(book, callback){
     var thisClass = this;
-    var query = 'SELECT people.name_ko as name, author_type.name_en as type FROM author_to_person JOIN people ON people.id = author_to_person.person_id JOIN author_type ON author_type.id = author_to_person.type_id WHERE book_id = '+book.isbn13;
+    var query = 'SELECT people.id, people.name_ko as name, author_type.name_en as type FROM author_to_person JOIN people ON people.id = author_to_person.person_id JOIN author_type ON author_type.id = author_to_person.type_id WHERE book_id = '+book.isbn13;
      thisClass.conn.query(query, function(err, rows, fields){
         if(err)
             callback(err);

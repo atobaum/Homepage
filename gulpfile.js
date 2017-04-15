@@ -57,7 +57,7 @@ gulp.task('watch', function(){
 });
 
 
-gulp.task('default', ['uglify-js', 'uglify-css', 'watch', 'start', 'browser-sync']);
+gulp.task('default', ['uglify-js', 'uglify-css', 'watch', 'start']);
 
 process.on('exit', function() {
     if (node) node.kill();

@@ -2,6 +2,8 @@ extends ../../main/views/layout
 block head
     link(rel="stylesheet" type="text/css" href="/css/bookshelf/addReading.css")
     script(src='/js/bookshelf/addReading.js')
+    script(src='/js/bookshelf/jquery.star-rating-svg.js')
+    link(rel="stylesheet" type="text/css" href="/css/bookshelf/star-rating-svg.css")
 
 
 block content
@@ -26,7 +28,7 @@ block content
                                     strong 제목
                                     ul
                                         li 저자
-                                        li 출판사|날짜                          
+                                        li 출판사|날짜                      
     
         #book_panel.ui.segment(style='height:150px')
             div(style="float:left")
@@ -36,10 +38,15 @@ block content
                     strong 
                 .item#book_authors 
                 .item#book_publish 
+            .ui.button#change_book 책 바꾸기
                                                
-        form.ui.form.segment(method='post', action='/bookshelf/reading/edit', id="input_form")
-            input(type="hidden", name="id", id="form_id")
+        form.ui.form.segment(method='post', action='/bookshelf/reading', id="input_form")
             input(type="hidden", name="rating", id="form_rating")
+            input(type="hidden", name="book", id="form_book")
+            .ui.message(style="display:none;")
+                i.close.icon
+                .header
+                p
             .fields.inline
                 .field
                     label 읽은 날짜
@@ -54,10 +61,15 @@ block content
                 .rating#form_rating
             .field
                 label 후기
-                textarea(name='comment', id='form_comment') #{comment}
+                textarea(name='comment', id='form_comment')
+            .inline.field
+                .ui.toggle.checkbox
+                    input(type="checkbox", tabindex="0", name="is_secret")
+                    label 비밀
             .field
                 label 읽은 사람
-                a(href="#", id="form_user") #{user}
+                input(href="#", id="form_user", name='user')
+            
             .ui.buttons
                 button#ok_btn.ui.button.positive(type='button') 완료
-                button#can_btn.ui.button.negative(type='reset') 취소
+                button#can_btn.ui.button.negative(type='reset') 비우기

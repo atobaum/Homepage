@@ -45,6 +45,10 @@ block content
         .field
             label 후기
             textarea(name='comment', id='form_comment', readonly) #{comment}
+        .inline.field
+            .ui.checkbox
+                input(type="checkbox", tabindex="0", name="is_secret")
+                label 비밀
         .field
             label 읽은 사람
             a(href="#", id="form_user") #{user}

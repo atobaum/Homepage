@@ -198,10 +198,19 @@ app.delete('/person/:id', function(req, res, next){
 
 app.post('/api/reading/add', function(req, res, next){
     var reading = req.body;
-    var book = reading.book;
+    var book;
+    if(typeof(reading.book) == "string")
+        book = JSON.parse(reading.book);
+    else {
+        book = reading.book;
+    }
+
     reading.isbn13 = book.isbn13;
     delete reading.book;
 
+    console.log('POST: /api/reading/add');
+    console.log(reading);
+    console.log(book);
     dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
         if(err){
             res.json({ok:0, error:err});
