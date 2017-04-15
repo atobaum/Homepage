@@ -1,0 +1,92 @@
+extends ../../main/views/layout
+
+block head
+    //script(src='javascripts/addread.js')
+    script(src='/js/bookshelf/jquery.star-rating-svg.js')
+    link(rel="stylesheet" type="text/css" href="/css/bookshelf/star-rating-svg.css")
+    style.
+        td {
+            padding:10px;
+        }
+        
+        ul {
+            
+        }
+
+
+block content
+    h1= title
+    p Welcome to #{title}
+
+    #book_panel.ui.segment(style='height:150px')
+        div(style="float:left")
+            img#book_cover(src=book.cover_URL)
+        .ui.list(style="float:left; margin:15px")
+            .item#book_title 
+                strong #{book.title}
+            .item#book_authors #{book.formatted_authors}
+            .item#book_publish #{book.publisher} | #{book.published_date}
+                                           
+    form.ui.form.segment(method='post', action='/bookshelf/reading/edit', id="input_form")
+        input(type="hidden", name="id", id="form_id", value=id)
+        input(type="hidden", name="rating", id="form_rating", value=rating)
+        .fields.inline
+            .field
+                label 읽은 날짜
+                input(type="date", name="date_started", id="form_date_started", value=date_started, readonly)
+            .field
+                label ~
+            .field
+                input(type="date", name="date_finished", id="form_date_finished", value=date_finished, readonly)
+
+        .field
+            label 평점
+            .rating#form_rating
+        .field
+            label 후기
+            textarea(name='comment', id='form_comment', readonly) #{comment}
+        .field
+            label 읽은 사람
+            a(href="#", id="form_user") #{user}
+        .ui.buttons
+            button#mod_btn.ui.button.yellow(type='button') 수정
+            button#can_btn.ui.button.negative(type='button') 삭제
+        .ui.buttons(style="display:none")
+            button#ok_btn.ui.button.positive(type='button') 완료
+            button#can_btn.ui.button.negative(type='reset') 취소
+            
+
+        
+    script.
+        $('.rating').starRating({
+            starShape: 'rounded',
+            starSize: 25,
+            disableAfterRate: false,
+            readOnly: true,
+            initialRating: #{rating}/2
+        });
+        
+        $('#mod_btn').click(function(){
+            $('form *').removeAttr('readonly');
+            $('.rating').starRating('setReadOnly', false);
+            $('.ui.buttons').show();
+            $(this).hide();
+        });
+        
+        $('#ok_btn').click(function(){
+            $('#form_rating').val($('.rating').starRating('getRating')*2);
+            $('form').submit();
+        });
+        
+        $('#can_btn').click(function(){
+            $('.rating').starRating('setRating', parseInt($('#form_rating').val()) / 2);
+            $('.rating').starRating('setReadOnly', true);
+            
+            $('form *').attr('readonly', '');
+            $('.ui.buttons').hide();
+            $('#mod_btn').show();
+        });
+        
+        function check_form(){
+            return true;
+        }

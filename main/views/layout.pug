@@ -1,0 +1,41 @@
+doctype html
+html
+    head
+        title= title
+        link(rel='stylesheet', href='/css/style.css')
+        script(src="https://code.jquery.com/jquery-3.1.1.min.js", integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=", crossorigin="anonymous")
+        link(rel='stylesheet', href='/semantic/semantic.min.css')
+        script(src="/semantic/semantic.min.js")
+        block head
+    
+    body
+        nav.ui.top.inverted.menu
+            a.item(href='/') Home
+            .ui.dropdown.item
+                .text 책장
+                i.dropdown.icon
+                .menu
+                    a.item(href="/bookshelf") 책장
+                    a.item(href="/bookshelf/reading/add") 읽은 책 추가
+                    a.item(href="/bookshelf/book/add") 책추가
+            a.item(herf="#") Wiki
+            
+            .right.item
+                button.ui.button 회원가입
+                button.ui.button 로그인
+        
+        
+        .ui.container
+            block content
+        
+        
+        footer(style='text-align: center')
+            p.
+                hanjitori.com | #[a(href='#') Contact]
+            p Copyright (c) foobar
+        script.
+            $('.ui.sidebar').sidebar('setting', 'transition', 'push');
+            $('#sidebar_button').click(function(){
+                $('.ui.sidebar').sidebar('toggle');
+            });
+            $('.ui.dropdown').dropdown();

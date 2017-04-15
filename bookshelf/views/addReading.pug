@@ -1,0 +1,63 @@
+extends ../../main/views/layout
+block head
+    link(rel="stylesheet" type="text/css" href="/css/bookshelf/addReading.css")
+    script(src='/js/bookshelf/addReading.js')
+
+
+block content
+    h1= title
+    p Welcome to #{title}
+
+    li(id="dummy_book", style="display:none;", class="book")
+
+    div
+        .ui.search
+            .ui.icon.input
+                input.prompt(type="text", placeholder='책 검색...')
+                i.search.icon
+            .results
+                div(id='book_info', style="float:left;")
+                    table
+                        tbody
+                            tr
+                                td
+                                    img
+                                td
+                                    strong 제목
+                                    ul
+                                        li 저자
+                                        li 출판사|날짜                          
+    
+        #book_panel.ui.segment(style='height:150px')
+            div(style="float:left")
+                img#book_cover
+            .ui.list(style="float:left; margin:15px")
+                .item#book_title 
+                    strong 
+                .item#book_authors 
+                .item#book_publish 
+                                               
+        form.ui.form.segment(method='post', action='/bookshelf/reading/edit', id="input_form")
+            input(type="hidden", name="id", id="form_id")
+            input(type="hidden", name="rating", id="form_rating")
+            .fields.inline
+                .field
+                    label 읽은 날짜
+                    input(type="date", name="date_started", id="form_date_started")
+                .field
+                    label ~
+                .field
+                    input(type="date", name="date_finished", id="form_date_finished")
+    
+            .field
+                label 평점
+                .rating#form_rating
+            .field
+                label 후기
+                textarea(name='comment', id='form_comment') #{comment}
+            .field
+                label 읽은 사람
+                a(href="#", id="form_user") #{user}
+            .ui.buttons
+                button#ok_btn.ui.button.positive(type='button') 완료
+                button#can_btn.ui.button.negative(type='reset') 취소
