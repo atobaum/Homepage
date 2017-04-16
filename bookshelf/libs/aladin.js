@@ -41,7 +41,7 @@ module.exports = function(config){
         request(query, function(error, res, body){
             if(!error && res.statusCode == 200){
                 //console.log(body.replace('};', '}').replace("\'", "\\"));
-                var item = JSON.parse(body.replace('};', '}').replace(/\'/g, "\\"));
+                var item = JSON.parse(body.replace('};', '}').replace(/\'/g, "\\").replace(/\\</g, "<").replace(/\\>/g, ">"));
                 if(item.errorCode){
                     callback(new Error(item.errorMessage));
                     return;
