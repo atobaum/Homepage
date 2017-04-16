@@ -5,7 +5,7 @@ var express = require('express');
 //var cookieParser = require('cookie-parser');
 //var bodyParser = require('body-parser');
 
-var config = require('./config.js').dev; //dev: development, real: real service
+//var config = require('./config.js'); //dev: development, real: real service
 app = express();
 
 // view engine setup
