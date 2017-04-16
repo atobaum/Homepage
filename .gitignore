@@ -62,6 +62,9 @@ jspm_packages
 ### Git ###
 *.orig
 
+### webstorm###
+.idea
+
 # End of https://www.gitignore.io/api/node,git
 
 ### private data ###
