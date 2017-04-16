@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.7.17, for Win64 (x86_64)
 --
--- Host: localhost    Database: book_shelf_test
+-- Host: localhost    Database: bookshelf_structure_model
 -- ------------------------------------------------------
 -- Server version	5.7.17-log
 
@@ -16,6 +16,36 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `author_to_person`
+--
+
+DROP TABLE IF EXISTS `author_to_person`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `author_to_person` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `book_id` bigint(20) NOT NULL,
+  `person_id` int(11) NOT NULL,
+  `type_id` tinyint(3) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `authors_people_people_fk` (`person_id`),
+  KEY `authors_people_titles_fk` (`book_id`),
+  KEY `authors_people_author_type_fk` (`type_id`),
+  CONSTRAINT `authors_people_author_type_fk` FOREIGN KEY (`type_id`) REFERENCES `author_type` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `authors_people_people_fk` FOREIGN KEY (`person_id`) REFERENCES `people` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=75 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `author_to_person`
+--
+
+LOCK TABLES `author_to_person` WRITE;
+/*!40000 ALTER TABLE `author_to_person` DISABLE KEYS */;
+/*!40000 ALTER TABLE `author_to_person` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `author_type`
 --
 
@@ -23,8 +53,9 @@ DROP TABLE IF EXISTS `author_type`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `author_type` (
-  `id` int(11) NOT NULL,
-  `type_eng` varchar(20) NOT NULL,
+  `id` tinyint(3) unsigned NOT NULL,
+  `name_en` varchar(20) NOT NULL,
+  `name_ko` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -35,39 +66,46 @@ CREATE TABLE `author_type` (
 
 LOCK TABLES `author_type` WRITE;
 /*!40000 ALTER TABLE `author_type` DISABLE KEYS */;
-INSERT INTO `author_type` VALUES (1,'author'),(2,'translator'),(3,'supervisor');
+INSERT INTO `author_type` VALUES (1,'author','저자'),(2,'translator','역자'),(3,'supervisor','감수'),(4,'illustrator','그림');
 /*!40000 ALTER TABLE `author_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `authors_people`
+-- Table structure for table `books`
 --
 
-DROP TABLE IF EXISTS `authors_people`;
+DROP TABLE IF EXISTS `books`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `authors_people` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title_id` int(11) NOT NULL,
-  `person_id` int(11) NOT NULL,
-  `type_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `authors_people_author_type_fk` (`type_id`),
-  KEY `authors_people_people_fk` (`person_id`),
-  KEY `authors_people_titles_fk` (`title_id`),
-  CONSTRAINT `authors_people_author_type_fk` FOREIGN KEY (`type_id`) REFERENCES `author_type` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `authors_people_people_fk` FOREIGN KEY (`person_id`) REFERENCES `people` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `authors_people_titles_fk` FOREIGN KEY (`title_id`) REFERENCES `titles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8;
+CREATE TABLE `books` (
+  `title_ko` varchar(100) NOT NULL,
+  `title_original` varchar(100) DEFAULT NULL,
+  `original_book_id` int(11) DEFAULT NULL,
+  `publisher_id` int(11) NOT NULL,
+  `published_date` date DEFAULT NULL,
+  `pages` smallint(5) unsigned DEFAULT NULL,
+  `language` varchar(3) DEFAULT NULL COMMENT 'ISO 639‑2',
+  `category_id` int(11) DEFAULT NULL,
+  `series_id` int(11) DEFAULT NULL,
+  `series_number` int(11) DEFAULT NULL,
+  `description` text,
+  `link` varchar(255) DEFAULT NULL,
+  `subtitle` varchar(100) DEFAULT NULL,
+  `cover_URL` varchar(100) DEFAULT NULL,
+  `isbn13` bigint(20) NOT NULL,
+  `checked` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`isbn13`),
+  KEY `idx_titles` (`series_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `authors_people`
+-- Dumping data for table `books`
 --
 
-LOCK TABLES `authors_people` WRITE;
-/*!40000 ALTER TABLE `authors_people` DISABLE KEYS */;
-/*!40000 ALTER TABLE `authors_people` ENABLE KEYS */;
+LOCK TABLES `books` WRITE;
+/*!40000 ALTER TABLE `books` DISABLE KEYS */;
+/*!40000 ALTER TABLE `books` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -94,6 +132,31 @@ LOCK TABLES `category` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `log`
+--
+
+DROP TABLE IF EXISTS `log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `log` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `type` tinyint(4) NOT NULL,
+  `content` json DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `log`
+--
+
+LOCK TABLES `log` WRITE;
+/*!40000 ALTER TABLE `log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `log` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `people`
 --
 
@@ -108,9 +171,9 @@ CREATE TABLE `people` (
   `birthdate` date DEFAULT NULL,
   `deathdate` date DEFAULT NULL,
   `link` varchar(255) DEFAULT NULL,
-  `nationality` date DEFAULT NULL,
+  `nationality` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -123,55 +186,58 @@ LOCK TABLES `people` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `publisher`
+-- Table structure for table `publishers`
 --
 
-DROP TABLE IF EXISTS `publisher`;
+DROP TABLE IF EXISTS `publishers`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `publisher` (
+CREATE TABLE `publishers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `nationality` varchar(3) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `publisher`
+-- Dumping data for table `publishers`
 --
 
-LOCK TABLES `publisher` WRITE;
-/*!40000 ALTER TABLE `publisher` DISABLE KEYS */;
-/*!40000 ALTER TABLE `publisher` ENABLE KEYS */;
+LOCK TABLES `publishers` WRITE;
+/*!40000 ALTER TABLE `publishers` DISABLE KEYS */;
+/*!40000 ALTER TABLE `publishers` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `reading_list`
+-- Table structure for table `readings`
 --
 
-DROP TABLE IF EXISTS `reading_list`;
+DROP TABLE IF EXISTS `readings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `reading_list` (
+CREATE TABLE `readings` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `start_date` date DEFAULT NULL,
-  `finish_date` date DEFAULT NULL,
-  `book_id` int(11) NOT NULL,
-  `rating` int(10) unsigned DEFAULT NULL,
-  `review` text,
+  `date_started` date DEFAULT NULL,
+  `date_finished` date DEFAULT NULL,
+  `book_id` bigint(20) NOT NULL,
+  `rating` tinyint(3) unsigned DEFAULT NULL,
+  `comment` text,
   `link` varchar(255) DEFAULT NULL,
+  `user` varchar(100) DEFAULT NULL,
+  `last_update` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_secret` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `reading_list`
+-- Dumping data for table `readings`
 --
 
-LOCK TABLES `reading_list` WRITE;
-/*!40000 ALTER TABLE `reading_list` DISABLE KEYS */;
-/*!40000 ALTER TABLE `reading_list` ENABLE KEYS */;
+LOCK TABLES `readings` WRITE;
+/*!40000 ALTER TABLE `readings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `readings` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -198,47 +264,7 @@ LOCK TABLES `series` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `titles`
---
-
-DROP TABLE IF EXISTS `titles`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `titles` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title_ko` varchar(100) NOT NULL,
-  `title_original` varchar(80) DEFAULT NULL,
-  `original_book_id` int(11) DEFAULT NULL,
-  `authors_id` int(11) NOT NULL,
-  `translators` int(11) DEFAULT NULL,
-  `publisher_id` int(11) NOT NULL,
-  `published_date` date DEFAULT NULL,
-  `pages` int(11) DEFAULT NULL,
-  `isnb13` varchar(13) DEFAULT NULL,
-  `language` varchar(3) DEFAULT NULL COMMENT 'ISO 639‑2',
-  `category_id` int(11) DEFAULT NULL,
-  `series_id` int(11) DEFAULT NULL,
-  `series_number` int(11) DEFAULT NULL,
-  `description` text,
-  `link` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `idx_titles_0` (`authors_id`),
-  UNIQUE KEY `pk_titles` (`translators`),
-  KEY `idx_titles` (`series_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `titles`
---
-
-LOCK TABLES `titles` WRITE;
-/*!40000 ALTER TABLE `titles` DISABLE KEYS */;
-/*!40000 ALTER TABLE `titles` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping routines for database 'book_shelf_test'
+-- Dumping routines for database 'bookshelf_structure_model'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -250,4 +276,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-02-01  2:21:07
+-- Dump completed on 2017-04-17  4:11:04

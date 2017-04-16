@@ -1,6 +1,6 @@
 {
   "name": "hanjitori.com",
-  "description": "Hompage for my hompage: hanjitori.com",
+  "description": "Hompage for my homepage: hanjitori.com",
   "version": "0.0.0",
   "author": "hanjitori <khyoung2500@gmail.com> (http://www.hanjitori.com/)",
   "private": true,
@@ -15,6 +15,7 @@
     "debug": "^2.6.3",
     "express": "~4.14.0",
     "express-subdomain": "^1.0.5",
+    "forever": "^0.15.3",
     "morgan": "~1.7.0",
     "mysql": "^2.13.0",
     "pug": "^2.0.0-beta6",
