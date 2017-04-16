@@ -3,7 +3,7 @@ var express = require('express');
 //var favicon = require('serve-favicon');
 //var cookieParser = require('cookie-parser');
 //var bodyParser = require('body-parser');
-var config = require('./config.js').dev; //dev: development, dist: real service
+var config = require('./config.js'); //development: development, dist: real service
 var dbController = require('./libs/db_controller.js');
 dbController = new dbController(config.db);
 
@@ -29,19 +29,6 @@ app.set('view engine', 'pug');
 
 app.get('/', function (req, res, next) {
     res.render('main', {"title": "Bookshelf"});
-    var page;
-    try{
-        page = parseInt(req.query.page) || 1;
-    } catch(e){
-        res.render('error', new Error('잘못된 페이지 접근'));
-    }
-
-    dbController({'page': page}, function(err, result){
-        if(err){
-            res.render('error', new Error('몰라몰라 난몰라'));
-        }
-        res.render('viewReadings', result);
-    });
 });
 
 app.get('/reading/add', function(req, res, next){

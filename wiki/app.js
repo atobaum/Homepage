@@ -5,7 +5,7 @@ var express = require('express');
 //var cookieParser = require('cookie-parser');
 //var bodyParser = require('body-parser');
 
-var config = require('./config.js').dev; //dev: development, real: real service
+var config = require('./config.js'); //development: development, real: real service
 app = express();
 
 // view engine setup
@@ -14,7 +14,7 @@ app.set('view engine', 'pug');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-//app.use(logger('dev'));
+//app.use(logger('development'));
 //app.use(bodyParser.json());
 //app.use(bodyParser.urlencoded({ extended: false }));
 //app.use(cookieParser());
