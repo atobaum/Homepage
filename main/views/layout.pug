@@ -19,18 +19,7 @@ html
                     a.item(href="/bookshelf/reading/add") 읽은 책 추가
                     a.item(href="/bookshelf/book/add") 책추가
             a.item(herf="#") Wiki
-
-            .item.ui.action.input#search_bar
-                select.ui.compact.selection.dropdown
-                    option(value="all") 통합
-                    option(value="bookshelf") 책장
-                    option(value="wiki") 위키
-                ui.search
-                    .ui.icon.input
-                        input.prompt(placeholder='검색...')
-                        i.search.icon
-                    .results
-
+            
             .right.item
                 button.ui.button 회원가입
                 button.ui.button 로그인
@@ -50,5 +39,3 @@ html
                 $('.ui.sidebar').sidebar('toggle');
             });
             $('.ui.dropdown').dropdown();
-            $('#search_bar .ui.search').search({});
-            $('#search_bar .ui.dropdown').dropdown();

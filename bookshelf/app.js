@@ -4,12 +4,16 @@ var express = require('express');
 //var cookieParser = require('cookie-parser');
 //var bodyParser = require('body-parser');
 var config = require('./config.js'); //development: development, dist: real service
-var aladin = require('./libs/aladin.js');
-aladin = new aladin(config.api.aladin);
-var async = require('async');
-
 var dbController = require('./libs/db_controller.js');
 dbController = new dbController(config.db);
+
+var aladin = require('./libs/aladin.js');
+aladin = new aladin(config.api.aladin);
+
+var async = require('async');
+//var dbInit = require('./libs/db_init.js');
+//dbInit(config.db);
+//console.log("Done");
 
 app = express();
 // view engine setup
