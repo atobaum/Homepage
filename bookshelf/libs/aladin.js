@@ -9,6 +9,38 @@ var querystring = require('querystring');
 module.exports = function(config){
     this.TTBKey = config.TTBKey;
     this.host = 'http://www.aladin.co.kr/ttb/api/';
+    this.parseAuthors = function(strAuthors){
+        var result = [];
+        var authors = strAuthors.split(', ');
+        var typeRegex = /(?:\s)(\S+?)$/;
+        authors.forEach(function(strAuthor){
+            var type = typeRegex.exec(strAuthor)[1];
+            var names = strAuthor.substr(0, strAuthor.length - type.length - 1).split('.');
+            switch(type){
+                case '지음':
+                    type = 'author';
+                    break;
+                case '옮김':
+                    type = 'translator';
+                    break;
+                case '감수':
+                    type = 'supervisor';
+                    break;
+                case '사진':
+                    type = 'photo';
+                    break;
+                case '그림':
+                    type = 'illustrator';
+                    break;
+                default:
+                    throw new Error('지원하지 않는 저자 타입: '+type);
+            }
+            for(var i in names){
+                result.push({name: names[i], type: type});
+            };
+        });
+        return result;
+    };
 
     /**
     * get book information.
@@ -28,12 +60,13 @@ module.exports = function(config){
     * @property {string} book.coverURL
     */
     this.bookInfo = function(isbn, callback){
+        var thisClass = this;
         var queryOption = {
             output: 'js',
             ttbkey: this.TTBKey,
             itemIdType: "ISBN13",
             ItemId: isbn,
-            Version: 20070901
+            Version: 20131101
         };
 
         var query = this.host + "ItemLookUp.aspx?";
@@ -41,7 +74,7 @@ module.exports = function(config){
         request(query, function(error, res, body){
             if(!error && res.statusCode == 200){
                 //console.log(body.replace('};', '}').replace("\'", "\\"));
-                var item = JSON.parse(body.replace('};', '}').replace(/\'/g, "\\").replace(/\\</g, "<").replace(/\\>/g, ">"));
+                var item = JSON.parse(body);
                 if(item.errorCode){
                     callback(new Error(item.errorMessage));
                     return;
@@ -50,35 +83,21 @@ module.exports = function(config){
                 // slice(0, -1) is for deleting ';' in the end of string. JSON.parse can't parse correctily if string has single quotes. So I used replace("\'", "\\"))
                 //console.log("body: ", body);
                 //console.log(item);
-                var authors = [];
                 var result = {
-                    title: item.title.replace(/\\/g, "\'"),
-                    publisher: item.publisher.replace(/\\/g, "\'"),
+                    title: item.title,
+                    publisher: item.publisher,
                     published_date: item.pubDate,
                     isbn13: item.isbn13,
                     cover_URL: item.cover,
+                    authors: thisClass.parseAuthors(item.author)
                 };
 
                 //console.log(item);
-                if(item.bookinfo){
-                    result.subtitle = item.bookinfo.subTitle;
-                    result.original_title = item.bookinfo.originalTitle;
-                    result.pages = item.bookinfo.itemPage;
-
-                    for (var i in item.bookinfo.authors) {
-                        var author = item.bookinfo.authors[i];
-                        authors.push({
-                            name: author.name.replace(/\\/g, "\'"),
-                            type: author.authorType
-                        });
-                    }
-                } else{
-                    authors.push({
-                        name: item.author,
-                        type: 'author'
-                    });
+                if(item.subInfo) {
+                    result.subtitle = item.subInfo.subTitle;
+                    result.original_title = item.subInfo.originalTitle;
+                    result.pages = item.subInfo.itemPage;
                 }
-                result.authors = authors;
                 callback(null, result);
             } else {
                 callback(error);
