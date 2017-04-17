@@ -133,7 +133,7 @@ module.exports = function(config){
                         });
                     }
                 }
-                console.log(result);
+                //console.log(result);
                 callback(null, result);
             } else {
                 callback(error);
