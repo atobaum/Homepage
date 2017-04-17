@@ -147,7 +147,7 @@ dbController.prototype.deleteSeries = function(id, callback){
 };
 
 dbController.prototype.addAuthors = function(bookId, authors, callback){
-    //console.log('addAuthors');
+    console.log('addAuthors');
     var thisClass = this;
     async.each(authors, function(author, callback){
         //refine author
@@ -160,10 +160,13 @@ dbController.prototype.addAuthors = function(bookId, authors, callback){
                 author.type = 3;
             else if(author.type == "그림" || author.type == "illustrator")
                 author.type = 4;
+            else if(author.type == "사진" || author.type == "photo")
+                author.type = 5;
             else {
                 callback(new Error("지원하지 않는 저자 타입: "+author.type));
             }
         }
+
 
          thisClass.conn.query('SELECT * FROM people WHERE name_ko="'+author.name+'"', function(err, rows, fields){
             if(err){
@@ -204,7 +207,7 @@ dbController.prototype.addAuthors = function(bookId, authors, callback){
             callback(err);
         }else{
             if(err){
-                console.error('Error occured when inserting in addAuthors: ');
+                console.log('Error occured when inserting in addAuthors: ');
                 console.error(err);
             }else{
                 console.log("Finished addAuthors");
