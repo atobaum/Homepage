@@ -29,12 +29,18 @@ app.get('/', function (req, res, next) {
 
 app.get('/reading/add', function(req, res, next){
     res.render('addReading', {
-        "title": "Add Book"
+        "title": "읽은 책 추가하기"
     });
 });
 
 /**
 */
+app.get('/book/add', function(req, res, next){
+    res.render('addBook', {
+        title: "책 추가하기"
+    });
+});
+
 app.get('/book/:isbn13', function(req, res, next){
 
 });
