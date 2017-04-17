@@ -225,8 +225,8 @@ dbController.prototype.deleteAuthor = function(id, callback){
 };
 
 dbController.prototype.addBook = function(book, callback){
-    console.log('addBook');
-    console.log(book);
+    //console.log('addBook');
+    //console.log(book);
     /*book is form of
     {
         title,
@@ -358,8 +358,8 @@ dbController.prototype.deleteBook = function(isbn13, callback){
 };
 
 dbController.prototype.addRead = function(read, callback){
-    console.log('addRead');
-    console.log(read);
+    // console.log('addRead');
+    // console.log(read);
     read.book_id = read.isbn13;
     delete read.isbn13;
     this.insertData('readings', read, function(err, res){
@@ -370,8 +370,8 @@ dbController.prototype.addRead = function(read, callback){
 };
 
 dbController.prototype.addReading = function(read, callback){
-    console.log('addRead');
-    console.log(read);
+    // console.log('addRead');
+    // console.log(read);
     read.book_id = read.isbn13;
     delete read.isbn13;
     this.insertData('readings', read, function(err, res){
@@ -421,7 +421,7 @@ dbController.prototype.searchCategory = function(){
 * @param callback
 */
 dbController.prototype.searchPerson = function(type, keyword, callback){
-    console.log('searchPerson');
+    // console.log('searchPerson');
      this.conn.query('select * from people where '+type+' LIKE "%'+keyword+'%"', function(err, rows, fields){
         if(!err){
             if(callback)
@@ -448,7 +448,9 @@ dbController.prototype.bookInfo = function(isbn13, callback){
      thisClass.conn.query(query, function(err, rows, fields){
         if(!err){
             if(rows.length === 0){
-                callback(new Error("There's no such book."));
+                var error = new Error("There's no such book.");
+                error.name = "NoBookError";
+                callback(error);
                 return;
             }
             thisClass.searchAuthorsForBook(rows[0], function(err, book){
@@ -482,18 +484,23 @@ dbController.prototype.searchReading = function(data, callback){
     var thisClass = this;
     var query = 'SELECT * FROM readings ORDER BY last_update DESC LIMIT '+(data.page-1) * 10 + ', 10';
      thisClass.conn.query(query, function(err, rows){
-        if(err){
+        if(err) {
             callback(err);
             return;
         }
         if(rows.length === 0){
-            callback(err, rows);
+            callback(null, rows);
             return;
         }
         async.map(rows, function(reading, callback){
             thisClass.bookInfo(reading.book_id, function(err, book){
                 if(err) {
-                    callback(err);
+                    if(err.name == "NoBookError"){
+                        callback(null, reading);
+                    }
+                    else {
+                        callback(err);
+                    }
                 }else{
                     reading.book = book;
                     delete reading.book_id;
@@ -553,7 +560,7 @@ dbController.prototype.searchAuthorsForBook = function(book, callback){
 * @param flaseCallback - Run this callback function when there isn't the book.
 */
 dbController.prototype.isExistBook = function(isbn, trueCallback, falseCallback){
-    console.log('isExistBook');
+    //console.log('isExistBook');
     // run trueCallback when there is a book and falseCallback if not.
     var query = 'select count(*) from books where isbn13 = ' + isbn;
      this.conn.query(query, function(err, rows, fields){

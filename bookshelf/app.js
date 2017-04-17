@@ -257,7 +257,7 @@ app.get('/api/recentreading', function(req, res){
     var page = req.query.page || 1;
     dbController.searchReading({page: page}, function(err, result){
         if(err){
-            res.json({ok:0});
+            res.json({ok:0, error: err});
         }else{
             res.json({ok:1, result: result});
         }
