@@ -270,6 +270,31 @@ app.get('/api/recentreading', function(req, res){
     });
 });
 
+app.get('/api/comment', function(req, res){
+    if(!req.query.action){
+        res.json({ok:0, error: "No action query."});
+        return;
+    }
+
+    switch (req.query.action){
+        case 'get':
+            dbController.getSecretComment(req.query.id, req.query.password, function(err, comment){
+                if(err){
+                    if(err.name="WrongPasswordError") {
+                        res.json({ok: 2}); //Worng Password
+                    } else{
+                        res.json({ok: 0, error: err});
+                    }
+                    return;
+                }
+                res.json({ok:1, result: comment});
+            });
+            break;
+        default:
+            res.json({ok:0, error: "Not supported action: "+req.query.action});
+    }
+});
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');

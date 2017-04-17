@@ -56,14 +56,6 @@ function selectBook(isbn13){
 
 }
 
-function hoverBook(evt){
-    $('#book_info img').attr('src', this.getAttribute('cover_url'));
-    $('#book_info strong').text(this.getAttribute('title'));
-    $('#book_info img').attr('src', this.getAttribute('cover_url'));
-    $('#book_info li:nth-child(1)').text(this.getAttribute('author'));
-    $('#book_info li:nth-child(2)').text(this.getAttribute('publisher')+" | " + this.getAttribute('published_date'));
-}
-
 function searchBookByKeyword(keyword, callback){
     $.ajax({
         url:"/bookshelf/api/searchbook?keyword=" + keyword,

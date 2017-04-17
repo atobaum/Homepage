@@ -383,11 +383,15 @@ dbController.prototype.addReading = function(read, callback){
 
 dbController.prototype.editReading = function(reading, callback){
     var id = reading.id;
+    delete reading.id;
+    var password = reading.password;
+    delete reading.password;
+    console.log(password);
     if(reading.date_finished.length === 0){
         delete reading.date_finished;
     }
-    delete reading.id;
-    var query = 'UPDATE readings SET '+generate_update_query_values(reading)+' WHERE id = '+id;
+
+    var query = 'UPDATE readings SET '+generate_update_query_values(reading)+' WHERE id = '+id + ' AND password='+password;
      this.conn.query(query, function(err, rows){
         if(err){
             callback(err);
@@ -523,6 +527,10 @@ dbController.prototype.readingInfo = function(id, callback){
             callback(new Error('잘못된 id:' + id));
         } else {
             var reading = rows[0];
+            if(reading.is_secret){
+                delete reading.comment;
+                delete reading.password;
+            }
             thisClass.bookInfo(reading.book_id, function(err, book){
                 if(err){
                     callback(err);
@@ -574,5 +582,21 @@ dbController.prototype.isExistBook = function(isbn, trueCallback, falseCallback)
         }
     });
 };
+
+dbController.prototype.getSecretComment = function(reading_id, passwd, callback){
+    var query = "SELECT comment FROM readings WHERE id=" + reading_id + " AND password="+passwd;
+    this.conn.query(query, function(err, rows){
+        if(err){
+            callback(err);
+        } else if(rows.length === 0){
+            var error = new Error('Wrong password');
+            error.name="WrongPasswordError";
+            callback(error);
+        } else{
+            callback(null, rows[0].comment);
+        }
+
+    });
+}
 
 module.exports = dbController;
