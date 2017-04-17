@@ -66,9 +66,13 @@ block content
                 .ui.toggle.checkbox
                     input(type="checkbox", tabindex="0", name="is_secret")
                     label 비밀
-            .field
-                label 읽은 사람
-                input(href="#", id="form_user", name='user')
+            .fields.inline
+                .field
+                    label 읽은 사람
+                    input(type="text", id="form_user", name='user')
+                .field
+                    label 비밀번호
+                    input(type="text", id="form_password", name='password')
             
             .ui.buttons
                 button#ok_btn.ui.button.positive(type='button') 완료

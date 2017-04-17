@@ -66,7 +66,7 @@ CREATE TABLE `author_type` (
 
 LOCK TABLES `author_type` WRITE;
 /*!40000 ALTER TABLE `author_type` DISABLE KEYS */;
-INSERT INTO `author_type` VALUES (1,'author','저자'),(2,'translator','역자'),(3,'supervisor','감수'),(4,'illustrator','그림');
+INSERT INTO `author_type` VALUES (1,'author','저자'),(2,'translator','역자'),(3,'supervisor','감수'),(4,'illustrator','그림'),(5,'photo','사진');
 /*!40000 ALTER TABLE `author_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -227,6 +227,7 @@ CREATE TABLE `readings` (
   `user` varchar(100) DEFAULT NULL,
   `last_update` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `is_secret` tinyint(1) NOT NULL DEFAULT '0',
+  `password` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -276,4 +277,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-04-17  4:49:41
+-- Dump completed on 2017-04-17 21:45:16

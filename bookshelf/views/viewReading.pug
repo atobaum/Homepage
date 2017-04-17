@@ -30,6 +30,8 @@ block content
     form.ui.form.segment(method='post', action='/bookshelf/reading/edit', id="input_form")
         input(type="hidden", name="id", id="form_id", value=id)
         input(type="hidden", name="rating", id="form_rating", value=rating)
+        input(type="hidden", name="is_secret", id="form_secret", value=rating)
+        input(type="hidden", name="password", id="form_password", value=rating)
         .fields.inline
             .field
                 label 읽은 날짜
@@ -45,13 +47,17 @@ block content
         .field
             label 후기
             textarea(name='comment', id='form_comment', readonly) #{comment}
-        .inline.field
-            .ui.checkbox
-                input(type="checkbox", tabindex="0", name="is_secret")
+        #is_secret.inline.field(style="display:none")
+            .ui.toggle.checkbox
+                input(type="checkbox", tabindex="0", readonly)
                 label 비밀
         .field
             label 읽은 사람
             a(href="#", id="form_user") #{user}
+
+        .field.inline
+            label 비밀번호
+            input(type="text", id="password")
         .ui.buttons
             button#mod_btn.ui.button.yellow(type='button') 수정
             button#can_btn.ui.button.negative(type='button') 삭제
@@ -62,6 +68,10 @@ block content
 
         
     script.
+        if(#{is_secret}) {
+            $('#form_comment').parent().hide();
+            $('#is_secret input').prop('checked', true);
+        }
         $('.rating').starRating({
             starShape: 'rounded',
             starSize: 25,
@@ -71,24 +81,56 @@ block content
         });
         
         $('#mod_btn').click(function(){
-            $('form *').removeAttr('readonly');
-            $('.rating').starRating('setReadOnly', false);
-            $('.ui.buttons').show();
-            $(this).hide();
+            $.get({
+                url: '/bookshelf/api/comment?action=get&password='+$('#password').val()+'&id='+$('#form_id').val(),
+                success: function (response) {
+                    console.log(response);
+                    if (response.ok === 0) {
+                        alert('오류 발생. 관리자에게 문의하세요.');
+                        return;
+                    }
+                    if(response.ok === 2){
+                        alert('잘못된 비밀번호. 당신 맞나요?');
+                        return;
+                    }
+                    var comment = response.result;
+                    $('#form_comment').val(comment);
+                    $('#form_comment').parent().show();
+
+                    $('#form_password').val($('#password').val());
+                    $('form *').removeAttr('readonly');
+                    $('.rating').starRating('setReadOnly', false);
+
+                    $('#is_secret').show();
+                    $('#password').parent().hide();
+                    $('#ok_btn').parent().show();
+                    $('#mod_btn').parent().hide();
+                },
+                error: function () {
+                    alert('error');
+                }
+            });
         });
         
         $('#ok_btn').click(function(){
             $('#form_rating').val($('.rating').starRating('getRating')*2);
+            if ($('#is_secret input').prop('checked'))
+                $('form input[name="is_secret"]').val(1);
+            else {
+                $('form input[name="is_secret"]').val(0);
+            }
             $('form').submit();
         });
         
         $('#can_btn').click(function(){
             $('.rating').starRating('setRating', parseInt($('#form_rating').val()) / 2);
             $('.rating').starRating('setReadOnly', true);
-            
             $('form *').attr('readonly', '');
-            $('.ui.buttons').hide();
-            $('#mod_btn').show();
+
+            $('#is_secret').hide();
+            $('#password').parent().show();
+            $('#ok_btn').parent().hide();
+            $('#mod_btn').parent().show();
         });
         
         function check_form(){
