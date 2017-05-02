@@ -6,7 +6,6 @@ if(!process.env.NODE_ENV){
 global.env = process.env.NODE_ENV;
 var express = require('express');
 //var path = require('path');
-var logger;
 var favicon = require('serve-favicon');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
