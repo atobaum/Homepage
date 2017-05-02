@@ -37,6 +37,7 @@ app.use('/wiki', wiki);
 
 // subdomain
 app.use(subdomain('bookshelf', bookshelf));
+app.use(subdomain('wiki', wiki));
 
 /*
 //for test
