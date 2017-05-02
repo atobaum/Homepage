@@ -20,20 +20,43 @@ app.set('view engine', 'pug');
 //app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));
 
+var wiki = require('./libs/wiki');
+wiki = new wiki(config);
+
 
 app.get('/', function (req, res, next) {
-    res.render('main', {"title": "Wiki"});
+    res.redirect('/wiki/view/index');
 });
 
-app.get('/v/:page', function(req, res, next){
-    res.render('main', {
-        "title": "view page: " + req.params.page
+app.get('/view/:page', function(req, res, next){
+    var title = decodeURIComponent(req.params.page);
+    wiki.viewPage(title, function(err, page){
+        if(err){
+            if(err.name == 'NO_PAGE_ERROR') {
+                res.render('noPage', {title: req.params.page});
+            } else{
+                res.render('error', {error: err});
+            }
+        }else{
+            res.render('viewPage', {wiki: page});
+        }
     });
 });
 
 app.get('/edit/:page', function(req, res, next){
-    res.render('main', {
-        "title": "edit page: " + req.params.page
+    var title = decodeURIComponent(req.params.page);
+    wiki.rawPage(title, function(err, page){
+        if(err){
+            if(err.name == 'NO_PAGE_ERROR') {
+                page = {
+                    title: title,
+                    rawContent: ''
+                };
+            } else{
+                res.render('error', {error: err});
+            }
+        }
+        res.render('editPage', {wiki: page});
     });
 });
 
@@ -59,8 +82,16 @@ app.get('/delete/:page', function(req, res, next){
 });
 
 app.post('/edit/:page', function(req, res, next){
-    res.render('main', {
-        "title": "POST edit page: " + req.params.page
+    var title = decodeURIComponent(req.params.page);
+    var data = req.body;
+    data.title = title;
+    data.user = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    wiki.editPage(data, function(err){
+        if(err){
+            res.render('error', {error: err});
+        }else{
+            res.redirect('/wiki/view/'+req.params.page);
+        }
     });
 });
 

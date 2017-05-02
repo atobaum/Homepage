@@ -5,19 +5,18 @@
 var Renderer = require('./renderer');
 
 var blocks = {
-    heading: /^(={2,5}) (.+) ={2,5}(\n|$)/,
-    list: /^(\s+)([*-]) (.+)(\n|$)/,
-    newparagraph: /^\n+/,
-    // indent: /^:{1,}(.+)(\n|$)/,
-    hr: /^-{3,}/,
+    heading: /^(={2,5}) (.+) ={2,5}(\r?\n|$)/,
+    list: /^(\s+)([*-]) (.+)(\r?\n|$)/,
+    // indent: /^:{1,}(.+)(\r?\n|$)/,
+    hr: /^-{3,}\s*(\r?\n|$)/,
     // quote: /^/,
     // quote2: /^/,
-    // code: /^<code>(.+)<\/code>(\n|$)/,
-    // math: /^<math>(.+)<\/math>(\n|$)/,
+    // code: /^<code>(.+)<\/code>(\r?\n|$)/,
+    // math: /^<math>(.+)<\/math>(\r?\n|$)/,
     // table: /^/,
-    emptyline: /^\n(?:\s*)/,
-    paragraph: /^(?:(?:\s*)\n)*([^\n]+?)(\n|$)/,
-    text: /^(\n|$)/
+    emptyline: /^\r?\n(?:\s*)/,
+    paragraph: /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/,
+    text: /^(\r?\n|$)/
 };
 
 var inlineTockens = {
@@ -51,6 +50,15 @@ Lexer.prototype.scan = function(src){
                 type: 'heading',
                 level: cap[1].length - 1,
                 text: cap[2]
+            });
+            src = src.substr(cap[0].length);
+            continue;
+        }
+
+        //emptyline
+        if(cap = blocks.emptyline.exec(src)){
+            toks.push({
+                type: 'emptyline'
             });
             src = src.substr(cap[0].length);
             continue;
@@ -185,7 +193,7 @@ Lexer.prototype.scan = function(src){
             throw new Error('Infinite loop on byte: ' + src.charCodeAt(0));
         }
     }
-    console.log('toks: ', toks);
+    //console.log('toks: ', toks);
     return toks;
 };
 
@@ -310,15 +318,6 @@ function Parser(){
     this.inlineParser = new InlineParser(this.renderer, this.additional);
 }
 
-Parser.prototype.init = function(){
-  this.additional.footnote = '';
-    this.additional.footnoteIndex = 1;
-};
-
-Parser.prototype.parse = function(){
-
-};
-
 Parser.prototype.reloadRenderer = function(){
     this.renderer = new Renderer();
     this.inlineParser = new InlineParser(this.renderer);
@@ -360,6 +359,7 @@ Parser.prototype.out = function(src){
     };
     var content = '';
     var toks = this.lexer.scan(src);
+    console.log(toks);
     var preType = ''; //type of previous token.
     while (tok = toks.shift()){
         switch(tok.type){
@@ -381,6 +381,6 @@ Parser.prototype.out = function(src){
         preType = tok.type;
     }
     return content;
-}
+};
 
-module.exports = new Parser();
+module.exports = Parser;

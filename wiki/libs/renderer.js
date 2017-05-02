@@ -6,11 +6,10 @@ function Renderer(){
 
 }
 Renderer.prototype.heading = function(data) {
-    console.log('heading'+ JSON.stringify(data));
     return '<h'
         + data.level
         + ' id="'
-        + '1'
+        + encodeURIComponent(data.text)
         + '">'
         + data.text
         + '</h'
@@ -47,7 +46,7 @@ Renderer.prototype.newline = function(){
 };
 
 Renderer.prototype.link = function(data){
-    text = (text ? text :href);
+    var text = (text ? text :href);
     return '<a href="\/wiki\/v\/'+data.href+'" title="'+data.text+'">'+data.text+'</a>';
 };
 
@@ -86,6 +85,10 @@ Renderer.prototype.assemble = function(content, toc, footnotes){
 
 Renderer.prototype.paragraph = function(data){
     return '<p>'+data.text+'</p>';
+};
+
+Renderer.prototype.emptyline = function(data){
+    return '<br />';
 };
 
 module.exports = Renderer;
