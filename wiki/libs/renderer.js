@@ -55,7 +55,7 @@ Renderer.prototype.link = function(data){
 
 Renderer.prototype.urlLink = function(data){
     var text = (data.text ? data.text :data.href);
-    return `<a class="wiki_ext_link" href="${data.href}" title="${text}">${text}</a>`;
+    return `<a class="wiki_ext_link" href="${data.href}" title="${text}">${text}<i class="external square icon"></i></a>`;
 };
 
 Renderer.prototype.image = function(data){

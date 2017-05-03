@@ -13,7 +13,7 @@ var dir = {
 var src = {
 	main: './main/public',
 	bookshelf: './bookshelf/public',
-	wiki: dir.wiki + '/public'
+	wiki: './wiki/public'
 };
 var dist = 'public';
 //...
