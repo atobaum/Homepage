@@ -8,11 +8,8 @@ block head
 
 block content
     h1= title
-    p Welcome to #{title}
 
-    li(id="dummy_book", style="display:none;", class="book")
-
-    div
+    .inline#btns_add_book
         .ui.search
             .ui.icon.input
                 input.prompt(type="text", placeholder='책 검색...')
@@ -28,52 +25,103 @@ block content
                                     strong 제목
                                     ul
                                         li 저자
-                                        li 출판사|날짜                      
-    
-        #book_panel.ui.segment(style='height:150px')
-            div(style="float:left")
-                img#book_cover
-            .ui.list(style="float:left; margin:15px")
-                .item#book_title 
-                    strong 
-                .item#book_authors 
-                .item#book_publish 
-            .ui.button#change_book 책 바꾸기
-                                               
-        form.ui.form.segment(method='post', action='/bookshelf/reading', id="input_form")
-            input(type="hidden", name="rating", id="form_rating")
-            input(type="hidden", name="book", id="form_book")
-            .ui.message(style="display:none;")
-                i.close.icon
-                .header
-                p
-            .fields.inline
-                .field
-                    label 읽은 날짜
-                    input(type="date", name="date_started", id="form_date_started")
-                .field
-                    label ~
-                .field
-                    input(type="date", name="date_finished", id="form_date_finished")
-    
+                                        li 출판사|날짜
+        button.ui.button#btn_manual_book 책 수동 추가
+
+    .ui.modal.small.segment
+        .header
+            span 책 추가하기
+            button.ui.small.basic.button.right.floated(type="button")
+                i.remove.icon
+        form.content.ui.form.compact#manual_book_form(method = "POST" action="", onsubmit="return manualSelectBook();")
             .field
-                label 평점
-                .rating#form_rating
+                label 제목
+                input(type='text' name="title" required)
             .field
-                label 후기
-                textarea(name='comment', id='form_comment')
-            .inline.field
-                .ui.toggle.checkbox
-                    input(type="checkbox", tabindex="0", name="is_secret")
-                    label 비밀
-            .fields.inline
+                label 저자
+
+                .ui.action.input#manual_authors
+                    .ui.multiple.search.selection.dropdown
+                        input(type="hidden")
+                        .default.text 저자 추가하기
+                    .ui.selection.dropdown.compact#manual_author_type
+                        input(type='hidden')
+                        i.dropdown.icon
+                        .default.text
+                        .menu
+                            .item(data-value='1' value="author") 저자
+                            .item(data-value='2' value="translator") 역자
+                            .item(data-value='3' value="supervisor") 감수
+                            .item(data-value='4' value="illustrator") 그림
+                            .item(data-value='5' value="photo") 사진
+                    button.ui.button
+                        i.add.user.icon
+            .fields
                 .field
-                    label 읽은 사람
-                    input(type="text", id="form_user", name='user')
+                    label 출판사
+                    input(type='text' name="publisher" required)
                 .field
-                    label 비밀번호
-                    input(type="text", id="form_password", name='password')
-            
-            .ui.buttons
-                button#ok_btn.ui.button.positive(type='button') 완료
-                button#can_btn.ui.button.negative(type='reset') 비우기
+                    label 출판일
+                    input(type='date' name="published_date" required)
+            .field
+                label isbn
+                input(type='text' pattern="\\d{10}|\\d{13}" name="isbn" maxlength=13 required)
+            h3.ui.dividing.header 추가사항
+            .field
+                label 커버 이미지
+                input(type='url' name="cover_URL" )
+            .field
+                label 원제목
+                input(type='text' name="original_title" )
+            .field
+                label 페이지
+                input(type='number' name="pages"  min=0)
+            button.ui.positive.button 확인
+
+    #book_panel.ui.segment
+        div(style="float:left")
+            img#book_cover
+        .ui.list(style="float:left; margin:15px")
+            .item
+                strong#book_title
+            .item#book_authors
+            .item#book_publish
+        .ui.button#change_book 책 바꾸기
+
+    form.ui.form.segment(method='post', action='/bookshelf/reading', id="input_form")
+        input(type="hidden", name="rating", id="form_rating")
+        input(type="hidden", name="book", id="form_book")
+        .ui.message(style="display:none;")
+            i.close.icon
+            .header
+            p
+        .fields.inline
+            .field
+                label 읽은 날짜
+                input(type="date", name="date_started", id="form_date_started")
+            .field
+                label ~
+            .field
+                input(type="date", name="date_finished", id="form_date_finished")
+
+        .field
+            label 평점
+            .rating#form_rating
+        .field
+            label 후기
+            textarea(name='comment', id='form_comment')
+        .inline.field
+            .ui.toggle.checkbox
+                input(type="checkbox", tabindex="0", name="is_secret")
+                label 비밀
+        .fields.inline
+            .field
+                label 읽은 사람
+                input(type="text", id="form_user", name='user')
+            .field
+                label 비밀번호
+                input(type="text", id="form_password", name='password')
+
+        .ui.buttons
+            button#ok_btn.ui.button.positive(type='button') 완료
+            button#can_btn.ui.button.negative(type='reset') 비우기

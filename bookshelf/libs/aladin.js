@@ -124,7 +124,7 @@ module.exports = function(config){
             Version: '20131101',
             Cover: 'Small',
             MaxResults: 10,
-            SearchTarget: 'All',
+            SearchTarget: 'Book',
             ttbkey: this.TTBKey,
             QueryType: type,
             Query: keyword

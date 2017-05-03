@@ -1,14 +1,36 @@
-var selectedBook;
+var authors = [];
+function manualSelectBook(){
+    for(var i = 0; i < authors.length; i++){
+        delete authors[i].text;
+    }
+
+    var book = {};
+    //language=JQuery-CSS
+    book.title = $('#manual_book_form input[name="title"]').val();
+    book.publisher = $('#manual_book_form input[name="publisher"]').val();
+    book.published_date = $('#manual_book_form input[name="published_date"]').val();
+    var isbn = $('#manual_book_form input[name="isbn"]').val();
+    book.isbn13 = (isbn.length == 10) ? '978'+isbn : isbn;
+    book.cover_URL = $('#manual_book_form input[name="cover_URL"]').val();
+    book.subtitle = $('#manual_book_form input[name="subtitle"]').val();
+    book.original_title = $('#manual_book_form input[name="original_title"]').val();
+    book.pages = $('#manual_book_form input[name="pages"]').val();
+    book.authors = authors;
+
+    setBook(book);
+    $('.modal').modal('hide');
+    return false;
+}
+
 
 function resetBook(){
     $('#form_isbn13').val('');
     $('#form_book').val('');
     $('#book_panel').hide();
-    $('.ui.search').show();
+    $('#btns_add_book').show();
 }
 
 function selectBook(isbn13){
-    console.log('tes');
 
     $.ajax({
         url: '/bookshelf/api/bookinfo/aladin?isbn13='+isbn13,
@@ -19,41 +41,47 @@ function selectBook(isbn13){
                 return;
             }
             var book = data.result;
-            var authors = '';
-            for(var i in book.authors){
-                var author = book.authors[i];
-                authors += author.name;
-                switch(author.type){
-                    case 'author':
-                        authors += ' 지음, ';
-                        break;
-                    case 'translator':
-                        authors += ' 번역, ';
-                        break;
-                    case 'supervisor':
-                        authors += ' 감수, ';
-                        break;
-                    case 'illustrator':
-                        authors += ' 그림, ';
-                        break;
-                }
-            }
-            authors = authors.substring(0, authors.length-2) + '.';
-            console.log(authors);
-            $('#form_isbn13').val(book.isbn13);
-            $('#book_cover').attr('src',book.cover_URL);
-            $('#book_title').text(book.title);
-            $('#book_authors').text(authors);
-            $('#book_publish').text(book.publisher + ' | ' + book.published_date);
-            $('.ui.search').search('set value', '');
-            $('#book_list_wrapper').hide();
-            $('#book_panel').show();
-            $('.ui.search').hide();
-            $('#form_book').val(JSON.stringify(book));
-            //selectedBook = book;
+            setBook(book);
         }
     });
 
+}
+
+function formatAuthors(authors){
+    var formatted_authors = '';
+    for(var i in authors){
+        var author = authors[i];
+        formatted_authors += author.name;
+        switch(author.type){
+            case 'author':
+                formatted_authors += ' 지음, ';
+                break;
+            case 'translator':
+                formatted_authors += ' 번역, ';
+                break;
+            case 'supervisor':
+                formatted_authors += ' 감수, ';
+                break;
+            case 'illustrator':
+                formatted_authors += ' 그림, ';
+                break;
+        }
+    }
+    formatted_authors = formatted_authors.substring(0, formatted_authors.length-2) + '.';
+    return formatted_authors;
+}
+
+function setBook(book){
+    $('#form_isbn13').val(book.isbn13);
+    $('#book_cover').attr('src',book.cover_URL);
+    $('#book_title').text(book.title);
+    $('#book_authors').text(formatAuthors(book.authors));
+    $('#book_publish').text(book.publisher + ' | ' + book.published_date);
+    $('.ui.search').search('set value', '');
+    $('#book_list_wrapper').hide();
+    $('#book_panel').show();
+    $('#btns_add_book').hide();
+    $('#form_book').val(JSON.stringify(book));
 }
 
 function searchBookByKeyword(keyword, callback){
@@ -61,7 +89,6 @@ function searchBookByKeyword(keyword, callback){
         url:"/bookshelf/api/searchbook?keyword=" + keyword,
         dataType: "json",
         success: function(data){
-            //console.log(data);
             var bookList =  $('#book_list');
             bookList.empty();
             $.each(data, function(index, item){
@@ -72,7 +99,6 @@ function searchBookByKeyword(keyword, callback){
                     class: 'book'
                 }));
                 $('#book_'+index).attr(item).click(selectBook).hover(hoverBook);
-                //console.log(item.title + ": " + item.author);
             });
             $('#book_list_wrapper').show();
         }
@@ -127,7 +153,27 @@ function DelayedHandler(){
     };
 }
 
+//author type translation
+var authorTypeTrans = {
+    '저자': 'author',
+    '역자': 'translator',
+    '감수': 'supervisor',
+    '그림': 'illustrator',
+    '사진': 'photo'
+};
+
 $(document).ready(function(){
+    $('.remove.icon').parent().click(function(){
+        $('.modal').modal('hide');
+    });
+
+    $('.ui.modal').modal();
+    $('#btn_manual_book').click(
+        function() {
+            $('.ui.modal').modal('show');
+        }
+    );
+
     $('#book_panel').hide();
     $('#book_search').keyup(function(){
         var title = $('#book_search').val();
@@ -157,15 +203,12 @@ $(document).ready(function(){
         onSelect: function(result, response){
             selectBook(result.isbn13);
         },
-        onResults: function(response){
-            console.log(response);
-        }
     });
 
     $('.rating').starRating({
         starShape: 'rounded',
         starSize: 25,
-        disableAfterRate: false,
+        disableAfterRate: false
     });
 
     $('#mod_btn').click(function(){
@@ -195,4 +238,37 @@ $(document).ready(function(){
     $('#change_book').click(function(){
         resetBook();
     });
+
+    $('#manual_authors .multiple.selection').dropdown({
+        allowAdditions: true,
+        action: function(text, value){
+            var typeKor = $('#manual_author_type').dropdown('get text');
+            var typeEng = authorTypeTrans[typeKor];
+            authors.push({name: text, type: typeEng, text:text+'('+typeKor+')'});
+            $('#manual_authors .multiple.selection').dropdown('set selected', [text+'('+typeKor+')']);
+        },
+        onRemove: function(value){
+            for(var i = 0; i < authors.length; i++){
+                var author = authors[i];
+                if(value == author.text){
+                    authors.splice(i, 1);
+                    return;
+                }
+            }
+
+        }
+    });
+    $('#manual_authors input.search').keydown(function(evt){
+        switch (evt.which){
+            case 38: //up
+                var index = $('#manual_author_type').dropdown('get value');
+                $('#manual_author_type').dropdown('set selected', parseInt(index) - 1);
+                break;
+            case 40: //down
+                var index = $('#manual_author_type').dropdown('get value');
+                $('#manual_author_type').dropdown('set selected', parseInt(index) + 1);
+                break;
+        }
+    });
+    $('#manual_author_type').dropdown('set selected', 1);
 });

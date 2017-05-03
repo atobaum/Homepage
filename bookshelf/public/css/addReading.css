@@ -16,45 +16,22 @@ br {
     height: 20px;
 }
 
-.block{
-    display: block
-}
 input{
     float:none
 }
-#book_list{
-    width:150px;
-    height:300px;
-    list-style:none;
+
+.remove.icon{
+    margin: 0px !important;
 }
 
-#book_list>li{
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
+#book_panel{
+    overflow: hidden;
 }
 
-.hide {
-    display:none
+#btns_add_book > .ui.search{
+    float: left;
 }
 
-.book{
-    width: 330px;
-    height: 20px;
-    background: red;
-}
-
-.book:hover{
-    background: yellow
-}
-
-#book_info{
-    width:300px;
-    height:400px;
-    background: yellow;
-}
-
-#book_list_panel{
-    position:absolute;
-    background: green;
+#book_cover{
+    height: 150px;
 }
