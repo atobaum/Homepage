@@ -2,373 +2,77 @@
  * Created by Le Reveur on 2017-04-24.
  */
 
+var Lexer = require('./lexer');
+var InlineParser = require('./inline_parser');
 var Renderer = require('./renderer');
 
-var blocks = {
-    heading: /^(={2,5}) (.+) ={2,5}(\r?\n|$)/,
-    list: /^(\s+)([*-]) (.+)(\r?\n|$)/,
-    // indent: /^:{1,}(.+)(\r?\n|$)/,
-    hr: /^-{3,}\s*(\r?\n|$)/,
-    // quote: /^/,
-    // quote2: /^/,
-    // code: /^<code>(.+)<\/code>(\r?\n|$)/,
-    // math: /^<math>(.+)<\/math>(\r?\n|$)/,
-    // table: /^/,
-    emptyline: /^\r?\n(?:\s*)/,
-    paragraph: /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/,
-    text: /^(\r?\n|$)/
-};
-
-var inlineTockens = {
-    escape: /^\\([\\`*{}\[\]()#+\-.!_>])/,
-    italic: /^''(?!')(?=\S)([\s\S]*?\S)''/,
-    bold: /^'''(?!')(?=\S)([\s\S]*?\S)'''/,
-    underline: /^__(.+)__/,
-    sup: /^\^\^(.+?)\^\^/,
-    sub: /^,,(.+),,/,
-    urlLink: /^\[\[(https?:\/\/[^\|]+?)(\|([^\|]+?))?\]\]/,
-    link: /^\[\[([^\|]+?)(\|([^\|]+?))?\]\]/,
-    del: /^~~(?=\S)([\s\S]*?\S)~~/,
-    newline: /^ {2,}$/,
-    footnote: /\(\(.+\)\)/,
-    fontsize: /./,
-    fontcolor: /./,
-    text: /^.+?(?=''|__|\^\^|,,|\[\[|~~| {2,}|\(\(|\n|$)/
-};
-
-function Lexer(){
-
-}
-
-Lexer.prototype.scan = function(src){
-    var toks = [];
-    var cap;
-    while (src) {
-        //heading
-        if (cap = blocks.heading.exec(src)) {
-            toks.push({
-                type: 'heading',
-                level: cap[1].length - 1,
-                text: cap[2]
-            });
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //emptyline
-        if(cap = blocks.emptyline.exec(src)){
-            toks.push({
-                type: 'emptyline'
-            });
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //list
-        if (cap = blocks.list.exec(src)) {
-            toks.push({
-                type: 'list',
-                ordered: cap[2] == '-',
-                level: cap[1].length,
-                text: cap[3]
-            });
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //indent
-        // if (cap = blocks.indent.exec(src)) {
-        //     toks.push({
-        //         type: 'indent',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-        //
-        // //quote
-        // if (cap = blocks.quote.exec(src)) {
-        //     toks.push({
-        //         type: 'quote',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-
-        //quote2
-        // if (cap = blocks.quote2.exec(src)) {
-        //     toks.push({
-        //         type: '',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-
-        // //code
-        // if (cap = blocks.code.exec(src)) {
-        //     toks.push({
-        //         type: 'code',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-        //
-        // //math
-        // if (cap = blocks.math.exec(src)) {
-        //     toks.push({
-        //         type: 'math',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-        //
-        // //table
-        // if (cap = blocks.table.exec(src)) {
-        //     toks.push({
-        //         type: 'table',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-        //
-        // //html
-        // if (cap = blocks.html.exec(src)) {
-        //     toks.push({
-        //         type: 'html',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-        //
-        // //nowiki
-        // if (cap = blocks.nowiki.exec(src)) {
-        //     toks.push({
-        //         type: 'html',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-
-        //text
-        // if (cap = blocks.text.exec(src)) {
-        //     toks.push({
-        //         type: 'text',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-
-        //hr
-        if (cap = blocks.hr.exec(src)) {
-            toks.push({
-                type: 'hr'
-            });
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-
-        //paragraph
-        if (cap = blocks.paragraph.exec(src)) {
-            toks.push({
-                type: 'paragraph',
-                text: cap[1]
-            });
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-
-        if(src){
-            console.log('error:');
-            console.log(src);
-            throw new Error('Infinite loop on byte: ' + src.charCodeAt(0));
-        }
-    }
-    //console.log('toks: ', toks);
-    return toks;
-};
-
-function InlineParser(renderer, additional){
-    this.renderer = renderer;
-    this.additional = additional;
-}
-
-InlineParser.prototype.out = function(src) {
-    var result='';
-    var cap;
-    var renderer = this.renderer;
-    while (src) {
-        //italic
-        if (cap = inlineTockens.italic.exec(src)) {
-            result += renderer.italic(cap[1]);
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //bold
-        if (cap = inlineTockens.bold.exec(src)) {
-            result += renderer.bold(cap[1]);
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //underline
-        if (cap = inlineTockens.underline.exec(src)) {
-            result += renderer.underline(cap[1]);
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //sup
-        if (cap = inlineTockens.sup.exec(src)) {
-            result += renderer.sup(cap[1]);
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //sub
-        if (cap = inlineTockens.sub.exec(src)) {
-            result += renderer.sub(cap[1]);
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //urlLink
-        if (cap = inlineTockens.urlLink.exec(src)) {
-            result += renderer.urlLink(cap[3], cap[1]);
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //link
-        if (cap = inlineTockens.link.exec(src)) {
-            result += renderer.link(cap[3], cap[1]);
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //del
-        if (cap = inlineTockens.del.exec(src)) {
-            result += renderer.del(cap[1]);
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //newline
-        if (cap = inlineTockens.newline.exec(src)) {
-            result += renderer.newline();
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        //footnote
-        if (cap = inlineTockens.footnote.exec(src)) {
-            var fn = renderer.footnote({index: this.additional.footnoteIndex++, text: cap[1]});
-            result += fn[0];
-            this.additional.footnote += fn[1];
-            continue;
-        }
-
-        // //fontsize
-        // if (cap = inlineTockens.bold.exec(src)) {
-        //     result += renderer.bold(cap[1]);
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-        //
-        // //fontcolor
-        // if (cap = inlineTockens.bold.exec(src)) {
-        //     result += renderer.bold(cap[1]);
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-
-
-        //else: text
-        if (cap = inlineTockens.text.exec(src)) {
-            result += cap[0];
-            src = src.substr(cap[0].length);
-            continue;
-        }
-
-        console.log('result: '+result);
-        console.log('src: '+src);
-        throw new Error('Infinite loop');
-    }
-    return result;
-};
-
-
-
 function Parser(){
+    this.additional = {};
+    this.initAdditional();
     this.renderer = new Renderer();
-    this.lexer = new Lexer();
-    this.additional = {
-        footnotes: ''
-    };
+    this.lexer = new Lexer(this.additional);
     this.inlineParser = new InlineParser(this.renderer, this.additional);
 }
+
+Parser.prototype.initAdditional = function(){
+    this.additional.footnotes = [];
+    this.additional.toc = [];
+};
 
 Parser.prototype.reloadRenderer = function(){
     this.renderer = new Renderer();
     this.inlineParser = new InlineParser(this.renderer);
 };
 
-function parseList(toks, renderer){
-    var nextItem,
-        content,
-        curOrdered = toks[0].ordered,
-        curLevel = toks[0].level;
-    if(curOrdered){
-        content = '<ol>';
-    } else{
-        content = '<ul>';
+Parser.prototype.parseList = function(first, toks){
+
+    var list = [first],
+        curOrdered = first.ordered,
+        curLevel = first.level;
+    while(toks[0] && toks[0].type == 'list' && (toks[0].level > curLevel || (toks[0].level == curLevel && toks[0].ordered == curOrdered))) {
+        var tok = toks.shift();
+        tok.text = this.inlineParser.out(tok.text);
+        list.push(tok);
     }
 
-    do{
-        nextItem = toks.shift();
-        if(nextItem.level == curLevel)
-            content += `<li>${nextItem.text}</li>`;
-        else if(nextItem.level < curLevel) {
-            break;
-        }else {
-            content += `<li>${parseList(toks, renderer)}</li>`;
-        }
-    } while(toks[0] && toks[0].type == 'list' && toks[0].ordered == curOrdered)
-
-    if (curOrdered) {
-        content += '</ol>';
-    } else {
-        content += '</ul>';
-    }
-    return content;
+    return this.renderer.list(list);
+    // if(curOrdered){
+    //     content = '<ol>';
+    // } else{
+    //     content = '<ul>';
+    // }
+    //     content += `<li>${this.inlineParser.out(first.text)}`
+    // while(toks[0] && toks[0].type == 'list' && (toks[0].level >= curLevel || toks[0].ordered == curOrdered)) {
+    //     nextItem = toks.shift();
+    //     if(nextItem.level == curLevel)
+    //         content += `</li><li>${this.inlineParser.out(nextItem.text)}`;
+    //     else {
+    //         content += `${this.parseList(nextItem, toks, renderer)}`;
+    //     }
+    // }
+    //
+    // if (curOrdered) {
+    //     content += '</li></ol>';
+    // } else {
+    //     content += '</li></ul>';
+    // }
+    // return content;
 }
 
 Parser.prototype.out = function(src){
-    this.additional = {
-        footnotes: ''
-    };
+    this.initAdditional();
     var content = '';
     var toks = this.lexer.scan(src);
-    console.log(toks);
     var preType = ''; //type of previous token.
     while (tok = toks.shift()){
+        if(tok.text) tok.text = this.inlineParser.out(tok.text);
         switch(tok.type){
             case 'heading':
                 var result = this.inlineParser.out(tok.text);
                 content += this.renderer.heading({level: tok.level, text: result});
                 break;
             case 'list':
-                content += parseList(toks, this.renderer);
+                content += this.parseList(tok, toks);
                 break;
             default:
                 if(this.renderer[tok.type])
@@ -380,6 +84,8 @@ Parser.prototype.out = function(src){
         }
         preType = tok.type;
     }
+    console.log(this.additional);
+    content += '<hr>'+this.renderer.footnotes(this.additional.footnotes);
     return content;
 };
 
