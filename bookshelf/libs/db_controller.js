@@ -1,45 +1,6 @@
 var mysql = require('mysql');
 var async = require('async');
 
-function generate_query_values(parameter){
-    var q1 = "(";
-    var q2 = " values (";
-    var isLastString = 0;
-    for (var key in parameter){
-        if(parameter[key] === undefined){
-            continue;
-        }
-        q1 += key + ', ';
-        if(typeof(parameter[key]) == "string"){
-            q2 += '"'+parameter[key]+'", ';
-        }
-        else {
-            q2 += parameter[key]+', ';
-        }
-    }
-    q1 = q1.substring(0, q1.length - 2) + ")";
-    q2 = q2.substring(0, q2.length - 2) + ")";
-    return q1 + q2;
-}
-
-function generate_update_query_values(parameter){
-    var q = "";
-    for (var key in parameter){
-        if(parameter[key] === undefined){
-            continue;
-        }
-        q += key + '=';
-        if(typeof(parameter[key]) == "string"){
-            q += '"'+parameter[key]+'", ';
-        }
-        else {
-            q += parameter[key]+', ';
-        }
-    }
-    q = q.substring(0, q.length - 2);
-    return q;
-}
-
 function formatAuthors(authors){
     var author = '';
     for(var i in authors){
@@ -91,13 +52,9 @@ dbController.prototype.insertData = function (table, data, callback){
 
      insert into table (a, b) values (1, 2)
      */
-    this.conn.query('INSERT INTO '+table+' '+generate_query_values(data), function(err, res, fields){
+    this.conn.query('INSERT INTO '+table+' SET ?', [data], function(err, res, fields){
         if(callback){
             callback(err, res);
-            console.log('inserting data:' + 'INSERT INTO '+table+' '+generate_query_values(data));
-            console.log('error: '+err);
-            console.log(res);
-            console.log();
         }
     });
 };
@@ -147,7 +104,6 @@ dbController.prototype.deleteSeries = function(id, callback){
 };
 
 dbController.prototype.addAuthors = function(bookId, authors, callback){
-    console.log('addAuthors');
     var thisClass = this;
     async.each(authors, function(author, callback){
         //refine author
@@ -209,8 +165,6 @@ dbController.prototype.addAuthors = function(bookId, authors, callback){
             if(err){
                 console.log('Error occured when inserting in addAuthors: ');
                 console.error(err);
-            }else{
-                console.log("Finished addAuthors");
             }
         }
     });
@@ -225,8 +179,6 @@ dbController.prototype.deleteAuthor = function(id, callback){
 };
 
 dbController.prototype.addBook = function(book, callback){
-    //console.log('addBook');
-    //console.log(book);
     /*book is form of
      {
      title,
@@ -358,8 +310,6 @@ dbController.prototype.deleteBook = function(isbn13, callback){
 };
 
 dbController.prototype.addRead = function(read, callback){
-    // console.log('addRead');
-    // console.log(read);
     read.book_id = read.isbn13;
     delete read.isbn13;
     this.insertData('readings', read, function(err, res){
@@ -370,8 +320,6 @@ dbController.prototype.addRead = function(read, callback){
 };
 
 dbController.prototype.addReading = function(read, callback){
-    // console.log('addRead');
-    // console.log(read);
     read.book_id = read.isbn13;
     delete read.isbn13;
     this.insertData('readings', read, function(err, res){
@@ -386,13 +334,12 @@ dbController.prototype.editReading = function(reading, callback){
     delete reading.id;
     var password = reading.password;
     delete reading.password;
-    console.log(password);
     if(reading.date_finished.length === 0){
         delete reading.date_finished;
     }
 
-    var query = 'UPDATE readings SET '+generate_update_query_values(reading)+' WHERE id = '+id + ' AND password='+password;
-    this.conn.query(query, function(err, rows){
+    var query = 'UPDATE readings SET ? WHERE id = ? AND password=?';
+    this.conn.query(query, [reading, id, password], function(err, rows){
         if(err){
             callback(err);
         } else{
@@ -404,13 +351,20 @@ dbController.prototype.editReading = function(reading, callback){
     });
 };
 
-dbController.prototype.deleteReading = function(read, callback){
-    var id = read.id;
-    delete read.id;
-
-    var query = 'UPDATE readings SET '+generate_update_query_values(read)+' WHERE id = '+id;
-    this.conn.query(query, function(err, rows, fields){
-        callback(err, rows);
+dbController.prototype.deleteReading = function(reading, callback){
+    var thisClass = this;
+    this.conn.query('SELECT * FROM readings WHERE id = ?', [reading.id], function(err, rows){
+        if(err){
+            callback(err);
+        } else if(rows[0].password != reading.password){
+            var error = new Error("Wrong Password");
+            error.name = "WrongPasswordError";
+            callback(error);
+        } else{
+            thisClass.conn.query('UPDATE readings SET deleted = 1 WHERE id = ?', [reading.id], function(err, rows){
+                callback(err, rows);
+            });
+        }
     });
 };
 
@@ -425,7 +379,6 @@ dbController.prototype.searchCategory = function(){
  * @param callback
  */
 dbController.prototype.searchPerson = function(type, keyword, callback){
-    // console.log('searchPerson');
     this.conn.query('select * from people where '+type+' LIKE "%'+keyword+'%"', function(err, rows, fields){
         if(!err){
             if(callback)
@@ -488,7 +441,7 @@ dbController.prototype.searchReading = function(data, callback){
     var thisClass = this;
     var articlePerPage = 10;
     if(data.type == 'recent'){
-        var query = 'SELECT * FROM readings ORDER BY last_update DESC LIMIT '+(data.page-1) * articlePerPage + ', '+articlePerPage;
+        var query = 'SELECT * FROM readings WHERE deleted = 0 ORDER BY last_update DESC LIMIT '+(data.page-1) * articlePerPage + ', '+articlePerPage;
     }
     async.parallel([
         function(next){
@@ -551,6 +504,10 @@ dbController.prototype.readingInfo = function(id, callback){
             callback(new Error('잘못된 id:' + id));
         } else {
             var reading = rows[0];
+            if(reading.deleted == 1){
+                callback(new Error('지워진 기록'));
+                return;
+            }
             if(reading.is_secret){
                 delete reading.comment;
                 delete reading.password;
@@ -592,7 +549,6 @@ dbController.prototype.searchAuthorsForBook = function(book, callback){
  * @param flaseCallback - Run this callback function when there isn't the book.
  */
 dbController.prototype.isExistBook = function(isbn, trueCallback, falseCallback){
-    //console.log('isExistBook');
     // run trueCallback when there is a book and falseCallback if not.
     var query = 'select count(*) from books where isbn13 = ' + isbn;
     this.conn.query(query, function(err, rows, fields){

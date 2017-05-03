@@ -37,7 +37,7 @@ module.exports = function(config){
             }
             for(var i in names){
                 result.push({name: names[i], type: type});
-            };
+            }
         });
         return result;
     };
@@ -73,16 +73,12 @@ module.exports = function(config){
         query += querystring.stringify(queryOption);
         request(query, function(error, res, body){
             if(!error && res.statusCode == 200){
-                //console.log(body.replace('};', '}').replace("\'", "\\"));
                 var item = JSON.parse(body);
                 if(item.errorCode){
                     callback(new Error(item.errorMessage));
                     return;
                 }
                 item = item.item[0];
-                // slice(0, -1) is for deleting ';' in the end of string. JSON.parse can't parse correctily if string has single quotes. So I used replace("\'", "\\"))
-                //console.log("body: ", body);
-                //console.log(item);
                 var result = {
                     title: item.title,
                     publisher: item.publisher,
@@ -92,7 +88,6 @@ module.exports = function(config){
                     authors: thisClass.parseAuthors(item.author)
                 };
 
-                //console.log(item);
                 if(item.subInfo) {
                     result.subtitle = item.subInfo.subTitle;
                     result.original_title = item.subInfo.originalTitle;
@@ -133,7 +128,6 @@ module.exports = function(config){
 
         var query = this.host + "ItemSearch.aspx?";
         query += querystring.stringify(queryOption);
-        //console.log(query);
         request(query, function(error, res, body){
             if(!error && res.statusCode == 200){
                 var data = JSON.parse(body);
@@ -152,7 +146,6 @@ module.exports = function(config){
                         });
                     }
                 }
-                //console.log(result);
                 callback(null, result);
             } else {
                 callback(error);

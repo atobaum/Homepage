@@ -33,17 +33,33 @@ app.get('/reading/add', function(req, res, next){
     });
 });
 
-/**
-*/
 app.get('/book/add', function(req, res, next){
-    res.render('addBook', {
+    res.render('editBook', {
         title: "책 추가하기"
     });
 });
 
 app.get('/book/:isbn13', function(req, res, next){
+    res.render('editBook', {
+
+    });
+});
+
+app.get('/reading/:id', function(req, res, next){
+    dbController.readingInfo(req.params.id, function(err, reading){
+        if(err){
+            res.render('err', {error: err});
+        } else{
+            reading.title = reading.title_ko;
+            res.render('viewReading', reading);
+        }
+    });
+});
+
+app.get('/person/:id', function(req, res, next){
 
 });
+
 
 //add a book
 app.post('/book/:isbn13', function(req, res, next){
@@ -70,46 +86,9 @@ app.post('/book/:isbn13', function(req, res, next){
     });
 });
 
-//edit a book
-app.put('/book/:isbn13', function(req, res, next){
-    var book = req.body;
-    dbController.editBook(req.params.isbn13, book, function(err){
-        if(err){
-            res.render('error', {error:err});
-        }
-        res.redirect('/bookshelf');
-    });
-});
-
-//delete a book
-app.delete('/book/:isbn13', function(req, res, next){
-    var book = req.body;
-    dbController.deleteBook(req.params.isbn13, book, function(err){
-        if(err){
-            res.render('error', {error:err});
-        }
-        res.redirect('/bookshelf');
-    });
-});
-
-
-app.get('/reading/:id', function(req, res, next){
-    dbController.readingInfo(req.params.id, function(err, reading){
-        if(err){
-            res.render('err', {error: err});
-        } else{
-            console.log(reading);
-            reading.title = reading.title_ko;
-            res.render('viewReading', reading);
-        }
-    });
-});
-
 //add reading
 app.post('/reading', function(req, res, next){
-    console.log('post: add reading');
     var reading = req.body;
-    console.log(reading);
     var book = JSON.parse(reading.book);
     reading.isbn13 = book.isbn13;
     delete reading.book;
@@ -158,25 +137,6 @@ app.post('/reading/edit', function(req, res, next){
     });
 });
 
-app.post('/reading/delete', function(req, res, next){
-    dbController.deleteReading(req.body, function(err){
-        if(err){
-            res.render('error', {error:err});
-        } else{
-            res.redirect('/bookshelf');
-        }
-    });
-});
-
-
-app.delete('/reading/:id', function(req, res, next){
-
-});
-
-
-app.get('/person/:id', function(req, res, next){
-
-});
 
 app.post('/person', function(req, res, next){
 
@@ -202,10 +162,6 @@ app.post('/api/reading/add', function(req, res, next){
 
     reading.isbn13 = book.isbn13;
     delete reading.book;
-
-    console.log('POST: /api/reading/add');
-    console.log(reading);
-    console.log(book);
     dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
         if(err){
             res.json({ok:0, error:err});
@@ -241,11 +197,25 @@ app.post('/api/reading/add', function(req, res, next){
 });
 
 app.post('/api/reading/edit', function(req, res, next){
-    dbController.editReading(req.body, function(err){
-        if(err){
-            res.json({ok: 0, error:err});
-        } else{
-            res.json({ok: 1});
+    console.log(req.body);
+    res.send('rea');
+    // dbController.editReading(req.body, function(err){
+    //     if(err){
+    //         res.json({ok: 0, error:err});
+    //     } else{
+    //         res.json({ok: 1});
+    //     }
+    // });
+});
+
+app.post('/api/reading/delete', function(req, res){
+    dbController.deleteReading(req.body, function(err){
+        if(err && err.name=="WrongPasswordError"){
+            res.json({ok:2});
+        } else if(err){
+            res.json({ok:0, error:err});
+        }else {
+            res.json({ok:1});
         }
     });
 });
@@ -274,8 +244,6 @@ app.get('/api/recentreading', function(req, res){
             console.log(err);
         }else{
             res.json({ok:1, result: result});
-
-            console.log(result);
         }
     });
 });

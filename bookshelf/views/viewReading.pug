@@ -1,23 +1,12 @@
 extends ../../main/views/layout
 
 block head
-    //script(src='javascripts/addread.js')
     script(src='/js/bookshelf/jquery.star-rating-svg.js')
+    script(src='/js/bookshelf/viewReading.js')
     link(rel="stylesheet" type="text/css" href="/css/bookshelf/star-rating-svg.css")
-    style.
-        td {
-            padding:10px;
-        }
-        
-        ul {
-            
-        }
-
+    title 읽은 책 - 한지토리
 
 block content
-    h1= title
-    p Welcome to #{title}
-
     #book_panel.ui.segment(style='height:150px')
         div(style="float:left")
             img#book_cover(src=book.cover_URL)
@@ -60,15 +49,13 @@ block content
             input(type="text", id="password")
         .ui.buttons
             button#mod_btn.ui.button.yellow(type='button') 수정
-            button#can_btn.ui.button.negative(type='button') 삭제
+            button#del_btn.ui.button.negative(type='button') 삭제
         .ui.buttons(style="display:none")
             button#ok_btn.ui.button.positive(type='button') 완료
             button#can_btn.ui.button.negative(type='reset') 취소
-            
 
-        
     script.
-        if(#{is_secret}) {
+        if (#{is_secret}) {
             $('#form_comment').parent().hide();
             $('#is_secret input').prop('checked', true);
         }
@@ -77,62 +64,5 @@ block content
             starSize: 25,
             disableAfterRate: false,
             readOnly: true,
-            initialRating: #{rating}/2
+            initialRating: #{rating} / 2
         });
-        
-        $('#mod_btn').click(function(){
-            $.get({
-                url: '/bookshelf/api/comment?action=get&password='+$('#password').val()+'&id='+$('#form_id').val(),
-                success: function (response) {
-                    console.log(response);
-                    if (response.ok === 0) {
-                        alert('오류 발생. 관리자에게 문의하세요.');
-                        return;
-                    }
-                    if(response.ok === 2){
-                        alert('잘못된 비밀번호. 당신 맞나요?');
-                        return;
-                    }
-                    var comment = response.result;
-                    $('#form_comment').val(comment);
-                    $('#form_comment').parent().show();
-
-                    $('#form_password').val($('#password').val());
-                    $('form *').removeAttr('readonly');
-                    $('.rating').starRating('setReadOnly', false);
-
-                    $('#is_secret').show();
-                    $('#password').parent().hide();
-                    $('#ok_btn').parent().show();
-                    $('#mod_btn').parent().hide();
-                },
-                error: function () {
-                    alert('error');
-                }
-            });
-        });
-        
-        $('#ok_btn').click(function(){
-            $('#form_rating').val($('.rating').starRating('getRating')*2);
-            if ($('#is_secret input').prop('checked'))
-                $('form input[name="is_secret"]').val(1);
-            else {
-                $('form input[name="is_secret"]').val(0);
-            }
-            $('form').submit();
-        });
-        
-        $('#can_btn').click(function(){
-            $('.rating').starRating('setRating', parseInt($('#form_rating').val()) / 2);
-            $('.rating').starRating('setReadOnly', true);
-            $('form *').attr('readonly', '');
-
-            $('#is_secret').hide();
-            $('#password').parent().show();
-            $('#ok_btn').parent().hide();
-            $('#mod_btn').parent().show();
-        });
-        
-        function check_form(){
-            return true;
-        }
