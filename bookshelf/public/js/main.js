@@ -43,20 +43,40 @@ function addReadingToTable(reading){
     $('#tbdReadings').append(content);
 }
 
-$(document).ready(function(){
+function getRecentReadings(page, articlePerPage){
     $.ajax({
         type:"get",
-        url: "/bookshelf/api/recentReading",
+        url: "/bookshelf/api/recentReading?page="+page,
         success: function(response){
             if(response.ok === 0){
                 alert('오류 발생. 관리자에게 문의하세요.');
                 return;
             }
-            var readings = response.result;
+            var readings = response.result.readings;
+            var maxPage = response.result.maxPage;
+            $('#tbdReadings').empty();
             for(var i in readings){
                 addReadingToTable(readings[i]);
+            }
+
+            var btnPage = $('<a href="#"/>').addClass('item');
+
+            var paginationMenu = $('.pagination.menu');
+            paginationMenu.empty();
+            var startPage = (page - 5 >0) ? page-5 : 1;
+            for(var i = 0 ; i < 10 ; i++){
+                var tmp = btnPage.clone().text(startPage).click(function(){
+                    getRecentReadings($(this).text());
+                });
+                if(startPage++ == page) tmp.addClass('active');
+                tmp.appendTo(paginationMenu);
+                if (startPage > maxPage) break;
             }
         },
         error: function(){alert('error');}
     });
+}
+
+$(document).ready(function(){
+    getRecentReadings(1);
 });

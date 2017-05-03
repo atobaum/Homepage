@@ -149,8 +149,17 @@ app.post('/reading', function(req, res, next){
 });
 
 app.post('/reading/edit', function(req, res, next){
-    console.log(req.body);
     dbController.editReading(req.body, function(err){
+        if(err){
+            res.render('error', {error:err});
+        } else{
+            res.redirect('/bookshelf');
+        }
+    });
+});
+
+app.post('/reading/delete', function(req, res, next){
+    dbController.deleteReading(req.body, function(err){
         if(err){
             res.render('error', {error:err});
         } else{
@@ -259,11 +268,14 @@ app.get('/api/searchbook', function(req, res){
 
 app.get('/api/recentreading', function(req, res){
     var page = req.query.page || 1;
-    dbController.searchReading({page: page}, function(err, result){
+    dbController.searchReading({type: 'recent', page: page}, function(err, result){
         if(err){
             res.json({ok:0, error: err});
+            console.log(err);
         }else{
             res.json({ok:1, result: result});
+
+            console.log(result);
         }
     });
 });
