@@ -7,6 +7,7 @@ block head
     title 읽은 책 - 한지토리
 
 block content
+    - if(book){
     #book_panel.ui.segment(style='height:150px')
         div(style="float:left")
             img#book_cover(src=book.cover_URL)
@@ -15,7 +16,11 @@ block content
                 strong #{book.title}
             .item#book_authors #{book.formatted_authors}
             .item#book_publish #{book.publisher} | #{book.published_date}
-                                           
+    - } else{
+    .ui.negative.message
+        .header 책이 데이터베이스에 없습니다.
+        p 책(ISBN #{book_id})을 #[a(href="/bookshelf/add/book?isbn13="+book_id) 추가] 해주세요.
+    - }
     form.ui.form.segment(method='post', action='/bookshelf/reading/edit', id="input_form")
         input(type="hidden", name="id", id="form_id", value=id)
         input(type="hidden", name="rating", id="form_rating", value=rating)

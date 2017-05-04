@@ -32,8 +32,6 @@ module.exports = function(config){
                 case '그림':
                     type = 'illustrator';
                     break;
-                default:
-                    throw new Error('지원하지 않는 저자 타입: '+type);
             }
             for(var i in names){
                 result.push({name: names[i], type: type});

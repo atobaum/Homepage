@@ -196,18 +196,6 @@ app.post('/api/reading/add', function(req, res, next){
     });
 });
 
-app.post('/api/reading/edit', function(req, res, next){
-    console.log(req.body);
-    res.send('rea');
-    // dbController.editReading(req.body, function(err){
-    //     if(err){
-    //         res.json({ok: 0, error:err});
-    //     } else{
-    //         res.json({ok: 1});
-    //     }
-    // });
-});
-
 app.post('/api/reading/delete', function(req, res){
     dbController.deleteReading(req.body, function(err){
         if(err && err.name=="WrongPasswordError"){

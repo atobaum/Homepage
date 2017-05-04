@@ -88,7 +88,7 @@ block content
             .item#book_publish
         .ui.button#change_book 책 바꾸기
 
-    form.ui.form.segment(method='post', action='/bookshelf/reading', id="input_form")
+    form.ui.form.segment(method='post', action='/bookshelf/reading', id="input_form" onsubmit="return check_form();")
         input(type="hidden", name="rating", id="form_rating")
         input(type="hidden", name="book", id="form_book")
         .ui.message(style="display:none;")
@@ -98,7 +98,7 @@ block content
         .fields.inline
             .field
                 label 읽은 날짜
-                input(type="date", name="date_started", id="form_date_started")
+                input(type="date", name="date_started", id="form_date_started" required)
             .field
                 label ~
             .field
@@ -117,11 +117,11 @@ block content
         .fields.inline
             .field
                 label 읽은 사람
-                input(type="text", id="form_user", name='user')
+                input(type="text", id="form_user", name='user' required)
             .field
                 label 비밀번호
                 input(type="text", id="form_password", name='password')
 
         .ui.buttons
-            button#ok_btn.ui.button.positive(type='button') 완료
+            button#ok_btn.ui.button.positive 완료
             button#can_btn.ui.button.negative(type='reset') 비우기

@@ -114,25 +114,20 @@ function check_form(){
     if($('#form_book').val().length === 0){
         message += '책을 선택하세요. ';
         result = false;
-    }
-
-    if($('#form_date_started').val().length === 0){
-        $('#form_date_started').parent().addClass('error');
-        message += '책을 읽기 시작한 날짜를 선택하세요. ';
-        result = false;
-    }
-
-    if($('#form_user').val().length === 0){
-        $('#form_user').parent().addClass('error');
-        message += '당신은 누구인가요?';
-        result = false;
-    }
+    };
 
     if(!result){
-        $('.ui.message .header').text('어딘가 비어있는 폼.');
+        //$('.ui.message .header').text('어딘가 비어있는 폼.');
         $('.ui.message p').text(message);
         $('form .ui.message').addClass('error');
         $('form .ui.message').show();
+    }
+
+    $('#form_rating').val($('.rating').starRating('getRating')*2);
+    if($('form input[type="checkbox"]').prop('checked'))
+        $('form input[name="is_secret"]').val(1);
+    else {
+        $('form input[name="is_secret"]').val(0);
     }
 
     return result;
@@ -202,6 +197,7 @@ $(document).ready(function(){
         //source: content,
         onSelect: function(result, response){
             selectBook(result.isbn13);
+            $('#form_date_started').focus();
         },
     });
 
@@ -216,18 +212,6 @@ $(document).ready(function(){
         $('.rating').starRating('setReadOnly', false);
         $('.ui.buttons').show();
         $(this).hide();
-    });
-
-    $('#ok_btn').click(function(){
-        if(!check_form()) return;
-        $('#form_rating').val($('.rating').starRating('getRating')*2);
-        if($('form input[type="checkbox"]').prop('checked'))
-            $('form input[name="is_secret"]').val(1);
-        else {
-            $('form input[name="is_secret"]').val(0);
-        }
-
-        $('#input_form').submit();
     });
 
     $('#can_btn').click(function(){

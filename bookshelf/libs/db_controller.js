@@ -62,10 +62,7 @@ dbController.prototype.insertData = function (table, data, callback){
 
 dbController.prototype.addCaterory = function(name, callback){
     this.conn.query('INSERT INTO category (name) values (?)', name, function(err, res){
-        if(err){
-            console.log(err);
-            callback(err);
-        }
+        callback(err);
     });
 };
 
@@ -513,7 +510,9 @@ dbController.prototype.readingInfo = function(id, callback){
                 delete reading.password;
             }
             thisClass.bookInfo(reading.book_id, function(err, book){
-                if(err){
+                if(err && err.name == "NoBookError"){
+                    callback(null, reading);
+                }else if(err){
                     callback(err);
                 } else{
                     reading.book = book;
