@@ -15,9 +15,12 @@ wiki.prototype.rawPage = function(title, callback){
             callback(err);
             return;
         }
-        page.rawContent = page.content;
         callback(null, page);
     });
+};
+
+wiki.prototype.parse = function(src){
+    return this.parser.out(src);
 };
 
 wiki.prototype.viewPage = function(title, callback){
@@ -27,7 +30,8 @@ wiki.prototype.viewPage = function(title, callback){
             callback(err);
             return;
         }
-        page.content = thisClass.parser.out(page.content);
+        page.parsedContent = thisClass.parser.out(page.content);
+        delete page.content;
         callback(null, page);
     });
 };

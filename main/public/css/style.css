@@ -23,3 +23,11 @@ nav ul li a:link, nav ul li a:visited {
 nav ul li a:hover {
     color: #0f0;
 }
+
+footer.ui.inverted.vertical{
+    margin-top: 60px;
+}
+
+.ui.container{
+    max-width: 960px !important;
+}

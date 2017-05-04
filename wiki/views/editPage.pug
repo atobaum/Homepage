@@ -9,5 +9,29 @@ block content
         - var editType = wiki.rev_id ? "(R"+wiki.rev_id+" 수정)" : "(새 문서 만들기)";
         small !{editType}
     form.ui.form(method="POST" action="/wiki/edit/"+encodeURIComponent(wiki.title))
-        textarea(rows=15 name="content") !{wiki.rawContent}
+        .ui.top.attached.tabular.menu
+            a.item.active(data-tab="edit") 편집
+            a.item(data-tab="preview") 미리보기
+        .ui.bottom.attached.tab.segment.active(data-tab="edit")
+            textarea.ui.textarea(rows=25 name="content") !{wiki.content}
+        .ui.bottom.attached.tab.segment(data-tab="preview")
+            .preview
+
+
         button.ui.button(type='submit') 제출
+
+    script.
+        $(function(){
+            $('.tabular.menu .item').tab({
+                cache: false
+            });
+            $('.tabular.menu a.item[data-tab="preview"]').click(function () {
+                $.post({
+                    url: '/wiki/api/parse',
+                    data: {content: $('.tab textarea').val()},
+                    success: function (res) {
+                        $('.preview').html(res);
+                    }
+                })
+            });
+        });

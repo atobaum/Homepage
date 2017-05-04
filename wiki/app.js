@@ -95,6 +95,54 @@ app.post('/edit/:page', function(req, res, next){
     });
 });
 
+app.post('/api/parse', function(req, res){
+    res.json(wiki.parse(req.body.content));
+});
+
+app.get('/api/parse/:page', function(req, res){
+    var title = decodeURIComponent(req.params.page);
+    wiki.viewPage(title, function(err, page){
+        if(err){
+            if(err.name == 'NO_PAGE_ERROR') {
+                res.json({ok:2, error: err});
+            } else{
+                res.json({ok:0, error: err});
+            }
+        }else{
+            res.json({ok:1, result: page});
+        }
+    });
+});
+
+app.get('/api/rawtext/:page', function(req, res){
+    var title = decodeURIComponent(req.params.page);
+    wiki.rawPage(title, function(err, page){
+        if(err){
+            if(err.name == 'NO_PAGE_ERROR') {
+                res.json({ok:2, error: err});
+            } else{
+                res.json({ok:0, error: err});
+            }
+        }else{
+            res.json({ok:1, result: page});
+        }
+    });
+});
+
+app.post('/api/edit/:page', function(req, res){
+    var title = decodeURIComponent(req.params.page);
+    var data = req.body;
+    data.title = title;
+    data.user = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    wiki.editPage(data, function(err){
+        if(err){
+            res.json({ok:0, error: err});
+        }else{
+            res.json({ok:1});
+        }
+    });
+});
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');

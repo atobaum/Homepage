@@ -84,7 +84,7 @@ Parser.prototype.out = function(src){
         }
         preType = tok.type;
     }
-    console.log(this.additional);
+    //console.log(this.additional);
     content += '<hr>'+this.renderer.footnotes(this.additional.footnotes);
     return content;
 };

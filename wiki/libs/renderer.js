@@ -98,7 +98,7 @@ Renderer.prototype.emptyline = function(data){
 };
 
 Renderer.prototype.list = function(list){
-    console.log(list);
+    //console.log(list);
     var content = '',
         curOrdered = list[0].ordered,
         curLevel = list[0].level;
