@@ -65,25 +65,25 @@ app.get('/person/:id', function(req, res, next){
 app.post('/book/:isbn13', function(req, res, next){
     var book = JSON.parse(req.body);
     dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
-        if(err){
-            res.render('error', {error:err});
-        } else{
-            res.redirect('error', {error: '책이 이미 존재합니다.'});
-        }
-    },
-    function(err){ //when book doesn't exist
-        if(err){
-            res.render('error', {error:err});
-            return;
-        }
-        dbController.addBook(book, function(err){
             if(err){
                 res.render('error', {error:err});
             } else{
-                res.redirect('/bookshelf');
+                res.redirect('error', {error: '책이 이미 존재합니다.'});
             }
+        },
+        function(err){ //when book doesn't exist
+            if(err){
+                res.render('error', {error:err});
+                return;
+            }
+            dbController.addBook(book, function(err){
+                if(err){
+                    res.render('error', {error:err});
+                } else{
+                    res.redirect('/bookshelf');
+                }
+            });
         });
-    });
 });
 
 //add reading
@@ -94,24 +94,6 @@ app.post('/reading', function(req, res, next){
     delete reading.book;
     if(reading.date_finished.length === 0) delete reading.date_finished;
     dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
-        if(err){
-            res.render('error', {error:err});
-        } else{
-            dbController.addReading(reading, function(err){
-                if(err){
-                    res.render('error', {error:err});
-                } else{
-                    res.redirect('/bookshelf');
-                }
-            });
-        }
-    },
-    function(err){ //when book doesn't exist
-        if(err){
-            res.render('error', {error:err});
-            return;
-        }
-        dbController.addBook(book, function(err){
             if(err){
                 res.render('error', {error:err});
             } else{
@@ -123,8 +105,26 @@ app.post('/reading', function(req, res, next){
                     }
                 });
             }
+        },
+        function(err){ //when book doesn't exist
+            if(err){
+                res.render('error', {error:err});
+                return;
+            }
+            dbController.addBook(book, function(err){
+                if(err){
+                    res.render('error', {error:err});
+                } else{
+                    dbController.addReading(reading, function(err){
+                        if(err){
+                            res.render('error', {error:err});
+                        } else{
+                            res.redirect('/bookshelf');
+                        }
+                    });
+                }
+            });
         });
-    });
 });
 
 app.post('/reading/edit', function(req, res, next){
@@ -153,38 +153,15 @@ app.delete('/person/:id', function(req, res, next){
 
 app.post('/api/reading/add', function(req, res, next){
     var reading = req.body;
-    var book;
-    if(typeof(reading.book) == "string")
-        book = JSON.parse(reading.book);
-    else {
-        book = reading.book;
-    }
-
+    var book = JSON.parse(reading.book);
     reading.isbn13 = book.isbn13;
     delete reading.book;
-    dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
-        if(err){
-            res.json({ok:0, error:err});
-        } else{
-            dbController.addReading(reading, function(err){
-                if(err){
-                    res.json({ok:0, error:err});
-                } else{
-                    res.json({ok:1});
-                }
-            });
-        }
-    },
-    function(err){ //when book doesn't exist
-        if(err){
-            res.json({ok:0, error:err});
-            return;
-        }
-        dbController.addBook(book, function(err){
+    if(reading.date_finished.length === 0) delete reading.date_finished;
+    dbController.isExistBook(book.isbn13, function(err){   //when there exists a book.
             if(err){
                 res.json({ok:0, error:err});
             } else{
-                dbController.addReading(data, function(err){
+                dbController.addReading(reading, function(err){
                     if(err){
                         res.json({ok:0, error:err});
                     } else{
@@ -192,8 +169,26 @@ app.post('/api/reading/add', function(req, res, next){
                     }
                 });
             }
+        },
+        function(err){ //when book doesn't exist
+            if(err){
+                res.json({ok:0, error:err});
+                return;
+            }
+            dbController.addBook(book, function(err){
+                if(err){
+                    res.json({ok:0, error:err});
+                } else{
+                    dbController.addReading(reading, function(err){
+                        if(err){
+                            res.json({ok:0, error:err});
+                        } else{
+                            res.json({ok:1});
+                        }
+                    });
+                }
+            });
         });
-    });
 });
 
 app.post('/api/reading/delete', function(req, res){
@@ -263,20 +258,20 @@ app.get('/api/comment', function(req, res){
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
 });
 
 // error handler
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+// set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+// render the error page
+    res.status(err.status || 500);
+    res.render('error');
 });
 
 
