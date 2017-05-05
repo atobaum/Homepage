@@ -438,7 +438,7 @@ dbController.prototype.searchReading = function(data, callback){
     var thisClass = this;
     var articlePerPage = 10;
     if(data.type == 'recent'){
-        var query = 'SELECT * FROM readings WHERE deleted = 0 ORDER BY last_update DESC LIMIT '+(data.page-1) * articlePerPage + ', '+articlePerPage;
+        var query = 'SELECT * FROM readings WHERE deleted = 0 ORDER BY date_started DESC LIMIT '+(data.page-1) * articlePerPage + ', '+articlePerPage;
     }
     async.parallel([
         function(next){

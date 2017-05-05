@@ -14,7 +14,9 @@ module.exports = function(config){
         var authors = strAuthors.split(', ');
         var typeRegex = /(?:\s)(\S+?)$/;
         authors.forEach(function(strAuthor){
-            var type = typeRegex.exec(strAuthor)[1];
+            var type = typeRegex.exec(strAuthor);
+            if(!type) throw new Error('Error at 9283');
+            type = type[1];
             var names = strAuthor.substr(0, strAuthor.length - type.length - 1).split('.');
             switch(type){
                 case '지음':
@@ -32,6 +34,8 @@ module.exports = function(config){
                 case '그림':
                     type = 'illustrator';
                     break;
+                default:
+                    throw new Error('지원하지 않는 저자 타입: '+type);
             }
             for(var i in names){
                 result.push({name: names[i], type: type});
@@ -82,9 +86,15 @@ module.exports = function(config){
                     publisher: item.publisher,
                     published_date: item.pubDate,
                     isbn13: item.isbn13,
-                    cover_URL: item.cover,
-                    authors: thisClass.parseAuthors(item.author)
+                    cover_URL: item.cover
                 };
+
+                try{
+                    var authors = thisClass.parseAuthors(item.author);
+                    result.authors = authors;
+                } catch(e){
+                    result.authorsText = item.author;
+                }
 
                 if(item.subInfo) {
                     result.subtitle = item.subInfo.subTitle;
@@ -132,17 +142,14 @@ module.exports = function(config){
                 var result = [];
                 for (var i in data.item) {
                     var item = data.item[i];
-                    if (item.mallType == "BOOK" || item.mallType == "FOREIGN") {
-                        //if item is book, not DVD
-                        result.push({
-                            title: item.title,
-                            author: item.author,
-                            published_date: item.pubDate,
-                            publisher: item.publisher,
-                            isbn13: item.isbn13,
-                            cover_URL: item.cover
-                        });
-                    }
+                    result.push({
+                        title: item.title,
+                        author: item.author.split(',')[0],
+                        published_date: item.pubDate,
+                        publisher: item.publisher,
+                        isbn13: item.isbn13,
+                        cover_URL: item.cover
+                    });
                 }
                 callback(null, result);
             } else {

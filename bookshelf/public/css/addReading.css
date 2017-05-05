@@ -35,3 +35,32 @@ input{
 #book_cover{
     height: 150px;
 }
+
+#book_search .input{
+    width:200px;
+}
+
+#book_search .results{
+    width:300px;
+}
+
+#book_search .image{
+    float:left;
+    height: 55px;
+    width: 40px;
+    margin:0 5px 0 0;
+}
+
+#book_search img{
+    height: 100%;
+    margin:0;
+}
+
+#book_search .content{
+    margin:0;
+}
+
+#book_search .title{
+    margin:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}

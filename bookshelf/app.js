@@ -1,4 +1,5 @@
 var express = require('express');
+var async = require('async');
 //var path = require('path');
 //var favicon = require('serve-favicon');
 //var cookieParser = require('cookie-parser');
@@ -35,6 +36,12 @@ app.get('/reading/add', function(req, res, next){
 
 app.get('/book/add', function(req, res, next){
     res.render('editBook', {
+        title: "책 추가하기"
+    });
+});
+
+app.get('/addMultipleReadings', function(req, res, next){
+    res.render('addMultipleReading', {
         title: "책 추가하기"
     });
 });
@@ -150,46 +157,143 @@ app.delete('/person/:id', function(req, res, next){
 
 });
 
-
 app.post('/api/reading/add', function(req, res, next){
     var reading = req.body;
     var book = JSON.parse(reading.book);
     reading.isbn13 = book.isbn13;
     delete reading.book;
     if(reading.date_finished.length === 0) delete reading.date_finished;
-    dbController.isExistBook(book.isbn13, function(err){   //when there exists a book.
-            if(err){
-                res.json({ok:0, error:err});
-            } else{
-                dbController.addReading(reading, function(err){
+
+    async.waterfall([
+        function(next){ //is exist the book in database?
+            dbController.isExistBook(book.isbn13, function(err){
+                if(err){
+                    next(err);
+                    return;
+                }
+                next(null, 1);
+            }, function(err){
+                if(err){
+                    next(err);
+                    return;
+                }
+                next(null, 0);
+            });
+        },
+        function (exists, next) { //add book if book doesn't exist.
+            if(exists)
+                next(null);
+            else{
+                dbController.addBook(book, function(err){
                     if(err){
-                        res.json({ok:0, error:err});
-                    } else{
-                        res.json({ok:1});
+                        next(err);
+                        return;
                     }
+                    next(null);
                 });
             }
         },
-        function(err){ //when book doesn't exist
-            if(err){
-                res.json({ok:0, error:err});
-                return;
-            }
-            dbController.addBook(book, function(err){
-                if(err){
-                    res.json({ok:0, error:err});
-                } else{
-                    dbController.addReading(reading, function(err){
-                        if(err){
-                            res.json({ok:0, error:err});
-                        } else{
-                            res.json({ok:1});
-                        }
-                    });
-                }
+        function(next){
+            dbController.addReading(reading, function(err){
+                next(err);
             });
-        });
+        }
+    ], function(err){
+        if(err){
+            res.json({ok:0, error: err});
+        }else{
+            res.json({ok:1});
+        }
+    });
+    // dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
+    //         if(err){
+    //             console.log(1);
+    //             res.json({ok:0, error:err});
+    //             return;
+    //         } else{
+    //             dbController.addReading(reading, function(err1){
+    //                 if(err1){
+    //                     console.log(2);
+    //                     res.json({ok:0, error:err1});
+    //                     return;
+    //                 } else{
+    //                     console.log(3);
+    //                     res.json({ok:1});
+    //                     return;
+    //                 }
+    //             });
+    //         }
+    //     },
+    //     function(err2){ //when book doesn't exist
+    //         if(err2){
+    //             console.log(4);
+    //             res.json({ok:0, error:err2});
+    //             return;
+    //         }
+    //         dbController.addBook(book, function(err3){
+    //             if(err3){
+    //                 console.log(5);
+    //                 console.log(err3);
+    //                 console.log(book);
+    //                 res.json({ok:0, error:err3});
+    //                 return;
+    //             } else {
+    //                 dbController.addReading(reading, function(err4){
+    //                     if(err4){
+    //                         console.log(6);
+    //                         res.json({ok:0, error:err4});
+    //                         return;
+    //                     } else{
+    //                         console.log(7);
+    //                         console.log(reading);
+    //                         res.json({ok:1});
+    //                         return;
+    //                     }
+    //                 });
+    //             }
+    //         });
+    //     });
 });
+
+// app.post('/api/reading/add', function(req, res, next){
+//     var reading = req.body;
+//     var book = JSON.parse(reading.book);
+//     reading.isbn13 = book.isbn13;
+//     delete reading.book;
+//     if(reading.date_finished.length === 0) delete reading.date_finished;
+//     dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
+//             if(err){
+//                 res.json({ok:0, error:err});
+//             } else{
+//                 dbController.addReading(reading, function(err){
+//                     if(err){
+//                         res.json({ok:0, error:err});
+//                     } else{
+//                         res.json({ok:1});
+//                     }
+//                 });
+//             }
+//         },
+//         function(err){ //when book doesn't exist
+//             if(err){
+//                 res.json({ok:0, error:err});
+//                 return;
+//             }
+//             dbController.addBook(book, function(err){
+//                 if(err){
+//                     res.json({ok:0, error:err});
+//                 } else{
+//                     dbController.addReading(reading, function(err){
+//                         if(err){
+//                             res.json({ok:0, error:err});
+//                         } else{
+//                             res.json({ok:1});
+//                         }
+//                     });
+//                 }
+//             });
+//         });
+// });
 
 app.post('/api/reading/delete', function(req, res){
     dbController.deleteReading(req.body, function(err){
@@ -215,7 +319,8 @@ app.get('/api/bookinfo/aladin', function(req, res, next){
 
 app.get('/api/searchbook', function(req, res){
     aladin.search("Keyword", req.query.keyword, function(err, data){
-        res.json({results: data});
+        res.json({result: data});
+        console.log(data);
     });
 });
 
