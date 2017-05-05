@@ -199,95 +199,7 @@ app.post('/api/reading/add', function(req, res, next){
             res.json({ok:1});
         }
     });
-    // dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
-    //         if(err){
-    //             console.log(1);
-    //             res.json({ok:0, error:err});
-    //             return;
-    //         } else{
-    //             dbController.addReading(reading, function(err1){
-    //                 if(err1){
-    //                     console.log(2);
-    //                     res.json({ok:0, error:err1});
-    //                     return;
-    //                 } else{
-    //                     console.log(3);
-    //                     res.json({ok:1});
-    //                     return;
-    //                 }
-    //             });
-    //         }
-    //     },
-    //     function(err2){ //when book doesn't exist
-    //         if(err2){
-    //             console.log(4);
-    //             res.json({ok:0, error:err2});
-    //             return;
-    //         }
-    //         dbController.addBook(book, function(err3){
-    //             if(err3){
-    //                 console.log(5);
-    //                 console.log(err3);
-    //                 console.log(book);
-    //                 res.json({ok:0, error:err3});
-    //                 return;
-    //             } else {
-    //                 dbController.addReading(reading, function(err4){
-    //                     if(err4){
-    //                         console.log(6);
-    //                         res.json({ok:0, error:err4});
-    //                         return;
-    //                     } else{
-    //                         console.log(7);
-    //                         console.log(reading);
-    //                         res.json({ok:1});
-    //                         return;
-    //                     }
-    //                 });
-    //             }
-    //         });
-    //     });
 });
-
-// app.post('/api/reading/add', function(req, res, next){
-//     var reading = req.body;
-//     var book = JSON.parse(reading.book);
-//     reading.isbn13 = book.isbn13;
-//     delete reading.book;
-//     if(reading.date_finished.length === 0) delete reading.date_finished;
-//     dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
-//             if(err){
-//                 res.json({ok:0, error:err});
-//             } else{
-//                 dbController.addReading(reading, function(err){
-//                     if(err){
-//                         res.json({ok:0, error:err});
-//                     } else{
-//                         res.json({ok:1});
-//                     }
-//                 });
-//             }
-//         },
-//         function(err){ //when book doesn't exist
-//             if(err){
-//                 res.json({ok:0, error:err});
-//                 return;
-//             }
-//             dbController.addBook(book, function(err){
-//                 if(err){
-//                     res.json({ok:0, error:err});
-//                 } else{
-//                     dbController.addReading(reading, function(err){
-//                         if(err){
-//                             res.json({ok:0, error:err});
-//                         } else{
-//                             res.json({ok:1});
-//                         }
-//                     });
-//                 }
-//             });
-//         });
-// });
 
 app.post('/api/reading/delete', function(req, res){
     dbController.deleteReading(req.body, function(err){
@@ -372,6 +284,5 @@ app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.render('error');
 });
-
 
 module.exports = app;

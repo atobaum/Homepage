@@ -92,6 +92,9 @@ function formatAuthors(authors){
             case 'illustrator':
                 formatted_authors += ' 그림, ';
                 break;
+            case 'editor':
+                formatted_authors += ' 엮음, ';
+                break;
         }
     }
     formatted_authors = formatted_authors.substring(0, formatted_authors.length-2) + '.';
@@ -146,7 +149,8 @@ var authorTypeTrans = {
     '역자': 'translator',
     '감수': 'supervisor',
     '그림': 'illustrator',
-    '사진': 'photo'
+    '사진': 'photo',
+    '엮음': 'editor'
 };
 
 $(document).ready(function(){

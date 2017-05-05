@@ -34,6 +34,9 @@ module.exports = function(config){
                 case '그림':
                     type = 'illustrator';
                     break;
+                case '엮음':
+                    type = 'editor';
+                    break;
                 default:
                     throw new Error('지원하지 않는 저자 타입: '+type);
             }
@@ -132,8 +135,6 @@ module.exports = function(config){
             QueryType: type,
             Query: keyword
         };
-
-
         var query = this.host + "ItemSearch.aspx?";
         query += querystring.stringify(queryOption);
         request(query, function(error, res, body){

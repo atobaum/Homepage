@@ -66,7 +66,7 @@ CREATE TABLE `author_type` (
 
 LOCK TABLES `author_type` WRITE;
 /*!40000 ALTER TABLE `author_type` DISABLE KEYS */;
-INSERT INTO `author_type` VALUES (1,'author','저자'),(2,'translator','역자'),(3,'supervisor','감수'),(4,'illustrator','그림'),(5,'photo','사진');
+INSERT INTO `author_type` VALUES (1,'author','저자'),(2,'translator','역자'),(3,'supervisor','감수'),(4,'illustrator','그림'),(5,'photo','사진'),(6,'editor','엮음');
 /*!40000 ALTER TABLE `author_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -278,4 +278,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-05-04  7:31:01
+-- Dump completed on 2017-05-05 11:57:22

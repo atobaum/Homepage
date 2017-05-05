@@ -19,6 +19,9 @@ function format_authors(authors){
             case "photo":
                 author += " 사진, ";
                 break;
+            case "editor":
+                author += " 엮음, ";
+                break;
         }
     }
     author =  author.substring(0, author.length-2);
