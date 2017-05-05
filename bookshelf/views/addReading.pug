@@ -10,7 +10,7 @@ block content
     h1= title
 
     .inline#btns_add_book
-        .ui.search
+        .ui.search#book_search
             .ui.icon.input
                 input.prompt(type="text", placeholder='책 검색...')
                 i.search.icon
@@ -33,6 +33,9 @@ block content
             span 책 추가하기
             button.ui.small.basic.button.right.floated(type="button")
                 i.remove.icon
+            .ui.message.hidden
+                .header
+                p
         form.content.ui.form.compact#manual_book_form(method = "POST" action="", onsubmit="return manualSelectBook();")
             .field
                 label 제목
@@ -64,7 +67,7 @@ block content
                     label 출판일
                     input(type='date' name="published_date" required)
             .field
-                label isbn
+                label ISBN
                 input(type='text' pattern="\\d{10}|\\d{13}" name="isbn" maxlength=13 required)
             h3.ui.dividing.header 추가사항
             .field

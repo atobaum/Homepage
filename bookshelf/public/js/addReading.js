@@ -6,15 +6,16 @@ function manualSelectBook(){
 
     var book = {};
     //language=JQuery-CSS
-    book.title = $('#manual_book_form input[name="title"]').val();
-    book.publisher = $('#manual_book_form input[name="publisher"]').val();
-    book.published_date = $('#manual_book_form input[name="published_date"]').val();
-    var isbn = $('#manual_book_form input[name="isbn"]').val();
-    book.isbn13 = (isbn.length == 10) ? '978'+isbn : isbn;
-    book.cover_URL = $('#manual_book_form input[name="cover_URL"]').val();
-    book.subtitle = $('#manual_book_form input[name="subtitle"]').val();
-    book.original_title = $('#manual_book_form input[name="original_title"]').val();
-    book.pages = $('#manual_book_form input[name="pages"]').val();
+    var form = $('#manual_book_form');
+    book.title = form.find('input[name="title"]').val();
+    book.publisher = form.find('input[name="publisher"]').val();
+    book.published_date = form.find('input[name="published_date"]').val();
+    var isbn = form.find('input[name="isbn"]').val();
+    book.isbn13 = (isbn.length === 10) ? '978'+isbn : isbn;
+    book.cover_URL = form.find('input[name="cover_URL"]').val();
+    book.subtitle = form.find('input[name="subtitle"]').val();
+    book.original_title = form.find('input[name="original_title"]').val();
+    book.pages = form.find('input[name="pages"]').val();
     book.authors = authors;
 
     setBook(book);
@@ -41,7 +42,33 @@ function selectBook(isbn13){
                 return;
             }
             var book = data.result;
-            setBook(book);
+            if(book.authors){
+                setBook(book);
+            } else{ //need manual adding
+                authors = [];
+                var form = $('#manual_book_form');
+
+                //setting message box
+                var messageBox = form.parent().find('.ui.message');
+                messageBox.addClass('negative');
+                messageBox.find('.header').text('책 자동 추가 실패. 저자를 수동으로 추가해주세요.');
+                messageBox.find('p').text("저자: " + book.authorsText);
+                messageBox.show();
+
+                //setting input text
+                form.find('input[name="title"]').val(book.title);
+                form.find('input[name="publisher"]').val(book.publisher);
+                form.find('input[name="published_date"]').val(book.published_date);
+                form.find('input[name="isbn"]').val(book.isbn13);
+                form.find('input[name="cover_URL"]').val(book.cover_URL);
+                form.find('input[name="original_title"]').val(book.original_title);
+                form.find('input[name="pages"]').val(book.pages);
+
+                $('#manual_author_type').dropdown('clear');
+                $('#manual_author_type').dropdown('set selected', 1);
+                $('.modal.small').modal('show');
+                //$('#manual_author_type').dropdown('set selected', 1);
+            }
         }
     });
 
@@ -82,29 +109,9 @@ function setBook(book){
     $('#book_panel').show();
     $('#btns_add_book').hide();
     $('#form_book').val(JSON.stringify(book));
+    $('#manual_authors .message').hide();
 }
 
-function searchBookByKeyword(keyword, callback){
-    $.ajax({
-        url:"/bookshelf/api/searchbook?keyword=" + keyword,
-        dataType: "json",
-        success: function(data){
-            var bookList =  $('#book_list');
-            bookList.empty();
-            $.each(data, function(index, item){
-                //$('#dummy_book').clone().attr(item).attr('id', 'book_'+index).css('display', 'block').text(item.title).click(selectBook).hover(hoverBook).appendTo(bookList);
-                bookList.append($('<li />', {
-                    id: 'book_'+index,
-                    text: item.title,
-                    class: 'book'
-                }));
-                $('#book_'+index).attr(item).click(selectBook).hover(hoverBook);
-            });
-            $('#book_list_wrapper').show();
-        }
-        //callback(data)
-    });
-}
 
 function check_form(){
     $('form .field').removeClass('error');
@@ -133,21 +140,6 @@ function check_form(){
     return result;
 }
 
-function DelayedHandler(){
-//execute handler after millisec if the event not aroused until millisec.
-//var test = new DelayedHandler(); $('#id').keyon(test.start(handler, milliseconds));
-    this.timer = null;
-    this.handler= '';
-    this.millisec = '';
-
-    this.start = function(handler, millisec){
-        if(this.timer){
-            clearInterval(this.timer);
-        }
-        this.timer = setTimeout(handler, millisec);
-    };
-}
-
 //author type translation
 var authorTypeTrans = {
     '저자': 'author',
@@ -170,28 +162,16 @@ $(document).ready(function(){
     );
 
     $('#book_panel').hide();
-    $('#book_search').keyup(function(){
-        var title = $('#book_search').val();
-        if(title.length === 0){
-            $('#book_list_wrapper').hide();
-            $('#book_search_bar').removeClass('loading');
-        } else{
-            $('#book_search_bar').addClass('loading');
-            delayedHnadlerForTitle.start(function(){
-                searchBookByKeyword(title);
-                $('#book_search_bar').removeClass('loading');
-            }, 1500);
-        }
-    });
 
-    $('#book_search').focus(function(){
-        if($('#book_search').val().length !== 0){
-            $('#book_list_wrapper').show();
-        }
-    });
     $('.ui.search').search({
         apiSettings:{
-            url: "/bookshelf/api/searchbook?keyword={query}"
+            url: "/bookshelf/api/searchbook?keyword={query}",
+            onResponse: function(res) {
+                $.each(res.result, function(index, item){
+                    item.desc = item.author + ' | ' + item.publisher + ' | ' + item.published_date;
+                });
+                return res;
+            }
         },
         searchDelay: 1000,
         //source: content,
@@ -199,6 +179,11 @@ $(document).ready(function(){
             selectBook(result.isbn13);
             $('#form_date_started').focus();
         },
+        fields:{
+            results: 'result',
+            description: 'desc',
+            image: 'cover_URL'
+        }
     });
 
     $('.rating').starRating({

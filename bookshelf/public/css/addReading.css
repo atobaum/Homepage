@@ -62,5 +62,7 @@ input{
 
 #book_search .title{
     margin:0;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
 }

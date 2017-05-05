@@ -2,6 +2,8 @@ extends ../../main/views/layout
 
 block head
     script(src = "/js/bookshelf/main.js")
+    //link(rel="stylesheet" href="/css/bookshelf/main.js")
+
     title 책장 - hanjitori
     
 block content
@@ -11,8 +13,7 @@ block content
             tr
                 th 책 제목
                 th 저자
-                th 읽기 시작한 날짜
-                th 다 읽은 날짜
+                th 날짜
                 th 읽은 사람
         tbody(id='tbdReadings')
         tfoot

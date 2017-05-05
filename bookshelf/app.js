@@ -40,12 +40,6 @@ app.get('/book/add', function(req, res, next){
     });
 });
 
-app.get('/addMultipleReadings', function(req, res, next){
-    res.render('addMultipleReading', {
-        title: "책 추가하기"
-    });
-});
-
 app.get('/book/:isbn13', function(req, res, next){
     res.render('editBook', {
 

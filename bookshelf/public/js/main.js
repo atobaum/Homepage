@@ -27,6 +27,14 @@ function format_authors(authors){
 
 function addReadingToTable(reading){
     var book = reading.book;
+    if(reading.date_started == '1000-01-01')
+        reading.date_started = '???';
+    if(!reading.date_finished)
+        reading.date_finished = '읽는 중';
+    else if(reading.date_finished == '1000-01-01')
+        reading.date_finished = '???';
+
+
     var content = "";
     content += '<tr>';
     if(reading.book) {
@@ -36,8 +44,7 @@ function addReadingToTable(reading){
         content += '<td>(책 정보 없음: '+reading.book_id+') <a href="/bookshelf/book/' + reading.book_id + '">추가</a></td>';
         content += '<td>책 정보 없음</td>';
     }
-    content +=     '<td><a href="/bookshelf/reading/'+reading.id+'">'+reading.date_started+'</a></td>';
-    content +=     '<td>'+reading.date_finished+'</td>';
+    content +=     '<td><a href="/bookshelf/reading/'+reading.id+'">'+reading.date_started + ' ~ ' + reading.date_finished + '</a></td>';
     content +=     '<td>'+reading.user+'</td>';
     content += '</tr>';
     $('#tbdReadings').append(content);
