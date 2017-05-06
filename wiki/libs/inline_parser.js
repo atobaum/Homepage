@@ -123,8 +123,8 @@ InlineParser.prototype.out = function(src) {
             continue;
         }
 
-        console.log('result: '+result);
-        console.log('src: '+src);
+        console.error('result: '+result);
+        console.error('src: '+src);
         throw new Error('Infinite loop');
     }
     return result;

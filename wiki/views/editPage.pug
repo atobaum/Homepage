@@ -5,7 +5,7 @@ block head
 
 block content
     h1
-        a(href="/wiki/v/"+wiki.title)= wiki.title
+        a(href="/wiki/view/"+wiki.title)= wiki.title
         - var editType = wiki.rev_id ? "(R"+wiki.rev_id+" 수정)" : "(새 문서 만들기)";
         small !{editType}
     form.ui.form(method="POST" action="/wiki/edit/"+encodeURIComponent(wiki.title))

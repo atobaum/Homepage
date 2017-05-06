@@ -5,11 +5,16 @@
 function Renderer(){
 
 }
+
+Renderer.prototype.title = function(data){
+    return `<h1 class="ui block header">${data.text}</h1>`;
+};
+
 Renderer.prototype.heading = function(data) {
     return '<h'
         + data.level
-        + ' id="'
-        + encodeURIComponent(data.text)
+        + ' class="ui dividing header" id="'
+        + data.id
         + '">'
         + data.text
         + '</h'
@@ -72,9 +77,9 @@ Renderer.prototype.rfn = function(data){
 };
 
 Renderer.prototype.footnotes = function(footnotes){
-    var result = '<ul class="wiki_fns">';
+    var result = '<hr><ul class="wiki_fns">';
     footnotes.forEach(function(fn, index){
-       result += `<li><a class="wiki_fn" id="fn_${index + 1}" href="#rfn_${index + 1}" title="${fn.text}">[${index + 1}]</a> ${fn.text}</li>`;
+        result += `<li><a class="wiki_fn" id="fn_${index + 1}" href="#rfn_${index + 1}" title="${fn.text}">[${index + 1}]</a> ${fn.text}</li>`;
     });
     result += "</ul>";
     return result;
@@ -97,34 +102,33 @@ Renderer.prototype.emptyline = function(data){
     return '<br />';
 };
 
-Renderer.prototype.list = function(list){
-    //console.log(list);
-    var content = '',
-        curOrdered = list[0].ordered,
-        curLevel = list[0].level;
-    if(curOrdered){
-        content = '<ol>';
-    } else{
-        content = '<ul>';
-    }
+Renderer.prototype.list = function(list, notFirst){
+    var ordered = list[0].ordered;
+    var result = !notFirst ? '<div class="wiki_list">' : '';
+    result += `<${ordered ? 'o' : 'u'}l ${!notFirst ? 'class = "ui list"' : ''}>`;
 
-    while(list[0]) {
-        if(list[0].level == curLevel)
-            content += `<li>${list.shift().text}`;
-        else if(list[0].level > curLevel){
-            content += `${this.list(list)}`;
-        } else{
-            break;
-        }
-        content += '</li>';
+    for(var i = 0; i < list.length; i++){
+        var item = list[i];
+        result += `<li>${item.text + (item.child ? this.list(item.child, 1) : '')}</li>`;
     }
+    result += ordered ? '</ol>' : '</ul>';
+    result += (!notFirst ? '</div>' : '');
+    return result;
+};
 
-    if (curOrdered) {
-        content += '</ol>';
-    } else {
-        content += '</ul>';
+Renderer.prototype.toc = function(toks, notFirst) {
+    var ordered = toks[0].ordered;
+    var result = !notFirst ? '<div class="ui segment compact wiki_toc">' : '';
+    result += `<ol class="${!notFirst ? 'ui list' : ''}">`;
+
+    for(var i = 0; i < toks.length; i++){
+        var item = toks[i];
+        //result += `<li>${item.text + (item.child ? this.toc(item.child, 1) : '')}</li>`;
+        result += `<li><a href="#${item.id}" id="r${item.id}">${item.text}</a>${item.child ? this.toc(item.child, 1) : ''}</li>`;
     }
-    return content;
+    result += '</ol>';
+    result += (!notFirst ? '</div>' : '');
+    return result;
 };
 
 module.exports = Renderer;

@@ -30,7 +30,7 @@ wiki.prototype.viewPage = function(title, callback){
             callback(err);
             return;
         }
-        page.parsedContent = thisClass.parser.out(page.content);
+        page.parsedContent = thisClass.parser.out(page.content, page.title);
         delete page.content;
         callback(null, page);
     });

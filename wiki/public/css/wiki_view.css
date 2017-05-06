@@ -4,3 +4,16 @@
 i.icon{
     margin: 0;
 }
+
+.wiki_toc{
+    padding-right: 25px !important;
+}
+
+.wiki_list{
+    margin: 13px 0 0 13px;
+}
+
+.wiki_fns{
+    list-style: none;
+    padding: 0px;
+}
