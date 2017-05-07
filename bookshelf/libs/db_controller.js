@@ -576,6 +576,20 @@ dbController.prototype.getSecretComment = function(reading_id, passwd, callback)
         }
 
     });
-}
+};
+
+dbController.prototype.backup = function(dest, callback){
+    var mysqlDump = require('mysqldump');
+    mysqlDump({
+        host: config.host,
+        port: config.port,
+        user: config.user,
+        password: config.password,
+        database: config.database,
+        dest: dest
+    },function(err){
+        callback(err);
+    })
+};
 
 module.exports = dbController;

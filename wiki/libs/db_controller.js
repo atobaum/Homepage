@@ -101,78 +101,25 @@ dbController.prototype.editPage = function(data, callback){
             }
 
         });
-
-        // thisClass.conn.query("INSERT INTO pages SET ?", [page], function (err, rows, fields) {
-        //     if (err) {
-        //         if(err.code == 'ER_DUP_ENTRY'){
-        //             var revision = {
-        //                 page_id: rows.insertId,
-        //                 rev_id: 1,
-        //                 user: data.user,
-        //                 content: data.content
-        //             }
-        //         }else {
-        //             thisClass.conn.rollback(function (roll_err) {
-        //                 if (roll_err) {
-        //                     callback(roll_err);
-        //                 } else
-        //                     callback(err);
-        //             });
-        //             return;
-        //         }
-        //     }
-        //
-        //     var revision = {
-        //         page_id: rows.insertId,
-        //         rev_id: 1,
-        //         user: data.user,
-        //         content: data.content
-        //     };
-        //     thisClass.conn.query("INSERT INTO revisions SET ?", [revision], function (err, rows) {
-        //         if (err) {
-        //             thisClass.conn.rollback(function(roll_err){
-        //                 if(roll_err){
-        //                     callback(roll_err);
-        //                 }else
-        //                     callback(err);
-        //             });
-        //             return;
-        //         } else{
-        //             thisClass.conn.commit(function(err){
-        //                 callback(err);
-        //             })
-        //         }
-        //     });
-        // })
     });
 };
-
-// dbController.prototype.editPage = function(data, callback){
-//     this.conn.query('SELECT page_id, latest_rev_id FROM pages WHERE title = ?', [data.title], function(err, rows){
-//         if(err){
-//             callback(err);
-//             return;
-//         }
-//         var rev_id = rows[0].latest_rev_id + 1;
-//         var revision = {
-//             page_id: rows.page_id,
-//             rev_id: rev_id,
-//             user: data.user,
-//             content: data.content
-//         };
-//
-//         this.conn.query("INSERT INTO revisions SET ?", [revision], function(err, rows){
-//            callback(err);
-//         });
-//     });
-// };
 
 dbController.prototype.deletePage = function(callback){
 
 };
 
-dbController.prototype.d = function(callback){
-
+dbController.prototype.backup = function(dest, callback){
+    var mysqlDump = require('mysqldump');
+    mysqlDump({
+        host: config.host,
+        port: config.port,
+        user: config.user,
+        password: config.password,
+        database: config.database,
+        dest: dest
+    },function(err){
+        callback(err);
+    })
 };
 
 module.exports = dbController;
