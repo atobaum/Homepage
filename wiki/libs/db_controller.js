@@ -90,8 +90,8 @@ dbController.prototype.editPage = function(data, callback){
         }], function(err){
             if(err){
                 thisClass.conn.rollback(function(roll_err){
-                   if(roll_err) callback(roll_err);
-                   else callback(err);
+                    if(roll_err) callback(roll_err);
+                    else callback(err);
                 });
             } else{
                 thisClass.conn.commit(function(com_err){
@@ -101,6 +101,14 @@ dbController.prototype.editPage = function(data, callback){
             }
 
         });
+    });
+};
+
+dbController.prototype.searchTitles = function(query, callback){
+    var thisClass = this;
+    this.conn.query('SELECT title FROM pages WHERE title LIKE '+ thisClass.conn.escape(query+'%')+ ' AND deleted = 0', [query], function(err, res, fields){
+        callback(err, res);
+
     });
 };
 
@@ -121,5 +129,7 @@ dbController.prototype.backup = function(dest, callback){
         callback(err);
     })
 };
+
+
 
 module.exports = dbController;

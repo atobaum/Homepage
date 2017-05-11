@@ -1,3 +1,3 @@
 forever stopall
 git pull
-forever start ./www
+forever start ./bin/www

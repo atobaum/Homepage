@@ -7,39 +7,28 @@ html
         link(rel='stylesheet', href='/semantic/semantic.min.css')
         script(src="/semantic/semantic.min.js")
         block head
-    
+
     body
         nav.ui.top.inverted.menu
-            a.item(href='/') Home
             .ui.dropdown.item
-                .text 책장
+                .text 바로가기
                 i.dropdown.icon
                 .menu
+                    a.item(href='/') Home
                     a.item(href="/bookshelf") 책장
-                    a.item(href="/bookshelf/reading/add") 읽은 책 추가
-                    a.item(href="/bookshelf/book/add") 책추가
-            a.item(href="/wiki") Wiki
-
-            .item.ui.action.input#search_bar
-                select.ui.compact.selection.dropdown
-                    option(value="all") 통합
-                    option(value="bookshelf") 책장
-                    option(value="wiki") 위키
-                ui.search
-                    .ui.icon.input
-                        input.prompt(placeholder='검색...')
-                        i.search.icon
-                    .results
+                    a.item(href="/wiki") Wiki
+            .right.item
+                block rightNav
 
             .right.item
                 button.ui.button 회원가입
                 button.ui.button 로그인
-        
-        
+
+
         .ui.container
             block content
-        
-        
+
+
         footer.ui.inverted.vertical.footer.segment(style='text-align: center')
             p.
                 hanjitori.com | #[a(href='#') Contact]

@@ -28,12 +28,16 @@ app.get('/', function (req, res, next) {
     res.redirect('/wiki/view/index');
 });
 
+app.get('/search/:page', function(req, res){
+   res.render('noPage', {title: req.params.page});
+});
+
 app.get('/view/:page', function(req, res, next){
     var title = decodeURIComponent(req.params.page);
     wiki.viewPage(title, function(err, page){
         if(err){
             if(err.name == 'NO_PAGE_ERROR') {
-                res.render('noPage', {title: req.params.page});
+                res.redirect('/wiki/search/'+req.params.page);
             } else{
                 res.render('error', {error: err});
             }
@@ -141,6 +145,19 @@ app.post('/api/edit/:page', function(req, res){
             res.json({ok:1});
         }
     });
+});
+
+app.get('/api/titleSearch', function(req, res){
+
+   wiki.searchTitles(req.query.q, function(err, titles){
+
+       if(err){
+           res.json({ok:0 ,error: err});
+       }
+       else{
+           res.json({ok:1, result: titles});
+       }
+   });
 });
 
 // catch 404 and forward to error handler

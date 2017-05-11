@@ -48,6 +48,9 @@ wiki.prototype.deletePage = function(){
 
 };
 
+wiki.prototype.searchTitles = function(title, callback){
+    this.db.searchTitles(title, callback);
+};
 
 
 module.exports = wiki;

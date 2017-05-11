@@ -1,0 +1,13 @@
+extends ../../main/views/layout
+
+block head
+    script(src="/js/wiki/layout.js")
+    block head
+
+block rightNav
+    .item.ui.action.input#wiki_searchbar
+        .ui.search
+            .ui.icon.input
+                input.prompt(placeholder='검색...')
+                i.search.icon
+            .results
