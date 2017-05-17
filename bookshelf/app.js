@@ -51,7 +51,7 @@ app.get('/reading/:id', function(req, res, next){
         if(err){
             res.render('err', {error: err});
         } else{
-            reading.title = reading.title_ko;
+            reading.book.title = reading.book.title_ko;
             res.render('viewReading', reading);
         }
     });

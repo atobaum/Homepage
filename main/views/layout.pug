@@ -10,13 +10,14 @@ html
 
     body
         nav.ui.top.inverted.menu
-            .ui.dropdown.item
-                .text 바로가기
-                i.dropdown.icon
-                .menu
-                    a.item(href='/') Home
-                    a.item(href="/bookshelf") 책장
-                    a.item(href="/wiki") Wiki
+            .item
+                .ui.buttons
+                    a.ui.button(href="/") Home
+                    .ui.dropdown.icon.button
+                        i.dropdown.icon
+                        .menu
+                            a.item(href="/bookshelf") 책장
+                            a.item(href="/wiki") Wiki
             .right.item
                 block rightNav
 
