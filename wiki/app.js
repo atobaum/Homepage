@@ -29,7 +29,7 @@ app.get('/', function (req, res, next) {
 });
 
 app.get('/search/:page', function(req, res){
-   res.render('noPage', {title: req.params.page});
+   res.render('noPage', {title: req.params.page, session: req.session});
 });
 
 app.get('/view/:page', function(req, res, next){
@@ -39,10 +39,10 @@ app.get('/view/:page', function(req, res, next){
             if(err.name == 'NO_PAGE_ERROR') {
                 res.redirect('/wiki/search/'+req.params.page);
             } else{
-                res.render('error', {error: err});
+                res.render('error', {error: err, session: req.session});
             }
         }else{
-            res.render('viewPage', {wiki: page});
+            res.render('viewPage', {wiki: page, session: req.session});
         }
     });
 });
@@ -57,23 +57,23 @@ app.get('/edit/:page', function(req, res, next){
                     rawContent: ''
                 };
             } else{
-                res.render('error', {error: err});
+                res.render('error', {error: err, session: req.session});
             }
         }
-        res.render('editPage', {wiki: page});
+        res.render('editPage', {wiki: page, session: req.session});
     });
 });
 
 app.get('/history/:page', function(req, res, next){
     res.render('main', {
-        "title": "history page: " + req.params.page
+        "title": "history page: " + req.params.page, session: req.session
     });
 });
 
 //backlinks
 app.get('/xref/:page', function(req, res, next){
     res.render('main', {
-        "title": "backlink page: " + req.params.page
+        "title": "backlink page: " + req.params.page, session: req.session
     });
 });
 
@@ -81,7 +81,7 @@ app.get('/xref/:page', function(req, res, next){
 //for backend
 app.get('/delete/:page', function(req, res, next){
     res.render('main', {
-        "title": "delete page: " + req.params.page
+        "title": "delete page: " + req.params.page, session: req.session
     });
 });
 
@@ -92,7 +92,7 @@ app.post('/edit/:page', function(req, res, next){
     data.user = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     wiki.editPage(data, function(err){
         if(err){
-            res.render('error', {error: err});
+            res.render('error', {error: err, session: req.session});
         }else{
             res.redirect('/wiki/view/'+req.params.page);
         }
@@ -148,7 +148,6 @@ app.post('/api/edit/:page', function(req, res){
 });
 
 app.get('/api/titleSearch', function(req, res){
-
    wiki.searchTitles(req.query.q, function(err, titles){
 
        if(err){
@@ -175,7 +174,7 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.render('error', {session: req.session});
 });
 
 

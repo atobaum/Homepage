@@ -9,22 +9,29 @@ html
         block head
 
     body
-        nav.ui.top.inverted.menu
-            .item
-                .ui.buttons
-                    a.ui.button(href="/") Home
-                    .ui.dropdown.icon.button
-                        i.dropdown.icon
-                        .menu
-                            a.item(href="/bookshelf") 책장
-                            a.item(href="/wiki") Wiki
-            .right.item
+        nav.ui.top.inverted.navbar.menu
+            a.brand.item(href="/") Home
+            .ui.dropdown.item
+                i.dropdown.icon
+                .menu
+                    a.item(href="/bookshelf") 책장
+                    a.item(href="/wiki") Wiki
+            .right.menu
                 block rightNav
 
-            .right.item
-                button.ui.button 회원가입
-                button.ui.button 로그인
+                .item.ui.dropdown
+                    i.large.user.icon
+                    .menu
+                        -if(session.nickname){
+                        .header= session.nickname
+                        .ui.divider
+                        a.item(href="#") 계정정보
+                        a.item(href="/auth/logout") 로그아웃
 
+                        -} else{
+                        .item 회원가입
+                        a.item(href="/login") 로그인
+                        -}
 
         .ui.container
             block content
@@ -32,7 +39,7 @@ html
 
         footer.ui.inverted.vertical.footer.segment(style='text-align: center')
             p.
-                hanjitori.com | #[a(href='#') Contact]
+                hanjitori.com | #[a(href='mailto:lereveurdesetoiles@gmail.com') Contact]
             p CopyLeft (c) 2017 Hanjitori All Right No Reserved
         script.
             $('.ui.sidebar').sidebar('setting', 'transition', 'push');

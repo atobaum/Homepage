@@ -25,34 +25,37 @@ app.set('view engine', 'pug');
 //app.use(express.static('../public'));
 
 app.get('/', function (req, res, next) {
-    res.render('main', {"title": "Bookshelf"});
+    res.render('main', {"title": "Bookshelf", session: req.session});
 });
 
 app.get('/reading/add', function(req, res, next){
     res.render('addReading', {
-        "title": "읽은 책 추가하기"
-    });
+        "title": "읽은 책 추가하기", session: req.session});
 });
 
 app.get('/book/add', function(req, res, next){
     res.render('editBook', {
-        title: "책 추가하기"
+        title: "책 추가하기",
+        session: req.session
     });
 });
 
 app.get('/book/:isbn13', function(req, res, next){
     res.render('editBook', {
-
+        session: req.session
     });
 });
 
 app.get('/reading/:id', function(req, res, next){
     dbController.readingInfo(req.params.id, function(err, reading){
         if(err){
-            res.render('err', {error: err});
+            res.render('err', {error: err, session: req.session});
         } else{
             reading.book.title = reading.book.title_ko;
-            res.render('viewReading', reading);
+            res.render('viewReading', {
+                reading: reading,
+                session: req.session
+            });
         }
     });
 });
@@ -67,19 +70,22 @@ app.post('/book/:isbn13', function(req, res, next){
     var book = JSON.parse(req.body);
     dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
             if(err){
-                res.render('error', {error:err});
+                res.render('error', {error:err,
+                    session: req.session});
             } else{
                 res.redirect('error', {error: '책이 이미 존재합니다.'});
             }
         },
         function(err){ //when book doesn't exist
             if(err){
-                res.render('error', {error:err});
+                res.render('error', {error:err,
+                    session: req.session});
                 return;
             }
             dbController.addBook(book, function(err){
                 if(err){
-                    res.render('error', {error:err});
+                    res.render('error', {error:err,
+                        session: req.session});
                 } else{
                     res.redirect('/bookshelf');
                 }
@@ -96,11 +102,13 @@ app.post('/reading', function(req, res, next){
     if(reading.date_finished.length === 0) delete reading.date_finished;
     dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
             if(err){
-                res.render('error', {error:err});
+                res.render('error', {error:err,
+                    session: req.session});
             } else{
                 dbController.addReading(reading, function(err){
                     if(err){
-                        res.render('error', {error:err});
+                        res.render('error', {error:err,
+                            session: req.session});
                     } else{
                         res.redirect('/bookshelf');
                     }
@@ -109,16 +117,19 @@ app.post('/reading', function(req, res, next){
         },
         function(err){ //when book doesn't exist
             if(err){
-                res.render('error', {error:err});
+                res.render('error', {error:err,
+                    session: req.session});
                 return;
             }
             dbController.addBook(book, function(err){
                 if(err){
-                    res.render('error', {error:err});
+                    res.render('error', {error:err,
+                        session: req.session});
                 } else{
                     dbController.addReading(reading, function(err){
                         if(err){
-                            res.render('error', {error:err});
+                            res.render('error', {error:err,
+                                session: req.session});
                         } else{
                             res.redirect('/bookshelf');
                         }
@@ -131,7 +142,8 @@ app.post('/reading', function(req, res, next){
 app.post('/reading/edit', function(req, res, next){
     dbController.editReading(req.body, function(err){
         if(err){
-            res.render('error', {error:err});
+            res.render('error', {error:err,
+                session: req.session});
         } else{
             res.redirect('/bookshelf');
         }
@@ -282,7 +294,7 @@ app.use(function(err, req, res, next) {
 
 // render the error page
     res.status(err.status || 500);
-    res.render('error');
+    res.render('error', {session: req.session});
 });
 
 module.exports = app;
