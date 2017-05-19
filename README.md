@@ -3,24 +3,15 @@ My Homepage
 
 ## Todos
 ### 전체
- * 회원가입(?)
+ * 회원가입
+ * 자동 로그인
 
 ### Wiki
- * Renderer 만들기
+ * Category
 
 ### bookshelf
- * comment 비밀 기능 추가
  * 책, 사람 정보 보기 추가
  * 책 수동 추가 기능
-
-## Directory
-### bookshelf
-### config
-### libs
-### models
-### public
-### routes
-### views
 
 ### 사용한 프로젝트
  * Node.js

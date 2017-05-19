@@ -46,10 +46,10 @@ gulp.task('uglify-js', [], function(){
 });
 
 gulp.task('uglify-css', [], function(){
-	gulp.src(src.main+'/css/*.css')
+	gulp.src(src.main+'/css/main/*.css')
 		.pipe(cleanCSS())
 		.pipe(gulp.dest(dist+'/css'));
-	gulp.src(src.bookshelf+'/css/*.css')
+	gulp.src(src.bookshelf+'/css/main/*.css')
         .pipe(cleanCSS())
         .pipe(gulp.dest(dist+'/css/bookshelf'));
 	gulp.src(src.wiki +'/css/*.css')

@@ -29,7 +29,7 @@ app.get('/', function (req, res, next) {
 });
 
 app.get('/search/:page', function(req, res){
-   res.render('noPage', {title: req.params.page});
+   res.render('noPage', {title: req.params.page, userId: req.session.userId, userName: req.session.userName});
 });
 
 app.get('/view/:page', function(req, res, next){
@@ -42,7 +42,7 @@ app.get('/view/:page', function(req, res, next){
                 res.render('error', {error: err});
             }
         }else{
-            res.render('viewPage', {wiki: page});
+            res.render('viewPage', {wiki: page, userId: req.session.userId, userName: req.session.userName});
         }
     });
 });
@@ -60,7 +60,7 @@ app.get('/edit/:page', function(req, res, next){
                 res.render('error', {error: err});
             }
         }
-        res.render('editPage', {wiki: page});
+        res.render('editPage', {wiki: page, userId: req.session.userId, userName: req.session.userName});
     });
 });
 
@@ -92,7 +92,7 @@ app.post('/edit/:page', function(req, res, next){
     data.user = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     wiki.editPage(data, function(err){
         if(err){
-            res.render('error', {error: err});
+            res.render('error', {error: err, userId: req.session.userId, userName: req.session.userName});
         }else{
             res.redirect('/wiki/view/'+req.params.page);
         }
