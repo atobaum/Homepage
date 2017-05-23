@@ -226,7 +226,6 @@ app.get('/api/bookinfo/aladin', function(req, res, next){
 app.get('/api/searchbook', function(req, res){
     aladin.search("Keyword", req.query.keyword, function(err, data){
         res.json({result: data});
-        console.log(data);
     });
 });
 
@@ -235,7 +234,6 @@ app.get('/api/recentreading', function(req, res){
     dbController.searchReading({type: 'recent', page: page}, function(err, result){
         if(err){
             res.json({ok:0, error: err});
-            console.log(err);
         }else{
             res.json({ok:1, result: result});
         }

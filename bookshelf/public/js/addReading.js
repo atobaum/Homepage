@@ -31,43 +31,51 @@ function resetBook(){
     $('#btns_add_book').show();
 }
 
-function selectBook(isbn13){
+function openManualBookForm(book, error){
+    authors = [];
+    var form = $('#manual_book_form');
 
+    //setting message box
+    if(error){
+        var messageBox = form.parent().find('.ui.message');
+        messageBox.addClass('negative');
+        messageBox.find('.header').text(error.head);
+        messageBox.find('p').text(error.content);
+        messageBox.show();
+    }
+
+    //setting input text
+    if(book) {
+        form.find('input[name="title"]').val(book.title);
+        form.find('input[name="publisher"]').val(book.publisher);
+        form.find('input[name="published_date"]').val(book.published_date);
+        form.find('input[name="isbn"]').val(book.isbn13);
+        form.find('input[name="cover_URL"]').val(book.cover_URL);
+        form.find('input[name="original_title"]').val(book.original_title);
+        form.find('input[name="pages"]').val(book.pages);
+    }
+
+    $('#manual_author_type').dropdown('clear');
+    $('#manual_author_type').dropdown('set selected', 1);
+    $('.modal.small').modal('show');
+    //$('#manual_author_type').dropdown('set selected', 1);
+}
+
+function selectBook(book){
     $.ajax({
-        url: '/bookshelf/api/bookinfo/aladin?isbn13='+isbn13,
+        url: '/bookshelf/api/bookinfo/aladin?isbn13='+book.isbn13,
         dataType: 'json',
         success: function(data){
             if(data.ok === 0){
-                console.log('error');
+                console.log('error: ', data.error);
+                openManualBookForm(book, {head: '책 자동 추가 실패.', content: "책정보를 수동으로 입력해주세요."});
                 return;
             }
-            var book = data.result;
+            book = data.result;
             if(book.authors){
                 setBook(book);
             } else{ //need manual adding
-                authors = [];
-                var form = $('#manual_book_form');
-
-                //setting message box
-                var messageBox = form.parent().find('.ui.message');
-                messageBox.addClass('negative');
-                messageBox.find('.header').text('책 자동 추가 실패. 저자를 수동으로 추가해주세요.');
-                messageBox.find('p').text("저자: " + book.authorsText);
-                messageBox.show();
-
-                //setting input text
-                form.find('input[name="title"]').val(book.title);
-                form.find('input[name="publisher"]').val(book.publisher);
-                form.find('input[name="published_date"]').val(book.published_date);
-                form.find('input[name="isbn"]').val(book.isbn13);
-                form.find('input[name="cover_URL"]').val(book.cover_URL);
-                form.find('input[name="original_title"]').val(book.original_title);
-                form.find('input[name="pages"]').val(book.pages);
-
-                $('#manual_author_type').dropdown('clear');
-                $('#manual_author_type').dropdown('set selected', 1);
-                $('.modal.small').modal('show');
-                //$('#manual_author_type').dropdown('set selected', 1);
+                openManualBookForm(book, {head: '책 자동 추가 실패. 저자를 수동으로 추가해주세요.', content: "저자: " + book.authorsText});
             }
         }
     });
@@ -114,7 +122,6 @@ function setBook(book){
     $('#form_book').val(JSON.stringify(book));
     $('#manual_authors .message').hide();
 }
-
 
 function check_form(){
     $('form .field').removeClass('error');
@@ -180,7 +187,10 @@ $(document).ready(function(){
         searchDelay: 1000,
         //source: content,
         onSelect: function(result, response){
-            selectBook(result.isbn13);
+            if(result.isbn13.length == 0){
+
+            }
+            selectBook(result);
             $('#form_date_started').focus();
         },
         fields:{
