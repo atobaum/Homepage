@@ -117,7 +117,6 @@ Renderer.prototype.list = function(list, notFirst){
 };
 
 Renderer.prototype.toc = function(toks, notFirst) {
-    var ordered = toks[0].ordered;
     var result = !notFirst ? '<div class="ui segment compact wiki_toc">' : '';
     result += `<ol class="${!notFirst ? 'ui list' : ''}">`;
 

@@ -6,4 +6,4 @@ block head
 block content
     h1= title
     p 해당 페이지 없음.
-    a(href="/wiki/edit/"+title) 문서 만들기
+    a(href="/wiki/edit/"+encodeURIComponent(title)) 문서 만들기
