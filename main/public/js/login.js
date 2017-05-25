@@ -7,7 +7,8 @@ function login(){
         "/api/auth/login",
         {
             id: $('#login_id').val(),
-            password: $('#login_passwd').val()
+            password: $('#login_passwd').val(),
+            autoLogin: $('#login_auto').parent().checkbox('is checked')
         },
         function(result){
             switch(result.ok){

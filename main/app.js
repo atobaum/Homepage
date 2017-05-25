@@ -1,6 +1,14 @@
 if(!process.env.NODE_ENV){
     console.log('NODE_ENV is nod defined. Set to development.');
 }
+
+var users = [{
+    id: 1,
+    username: 'admin',
+    password: '1234',
+    nickname: "사람"
+}];
+
 //process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'development' ) ? 'development' : 'production';
 //process.env.NODE_ENV = "development";
 global.env = process.env.NODE_ENV;
@@ -32,21 +40,18 @@ app.use(cookieParser());
 app.use(session({
     secret: 'fdkjl%31nc124*|c',
     resave: false,
-    saveUninitialized: true,
-    cookie:{
-        maxAge: 1000*60*60*24*7 //7days
-    }
+    saveUninitialized: true
 }));
 
 app.use('/bookshelf', bookshelf);
 app.use('/wiki', wiki);
 
 app.get('/', function(req, res){
-    res.render('index', {userId: req.session.userId, userName: req.session.userName});
+    res.render('index', {session: req.session});
 });
 
 app.get('/login', function(req, res){
-   res.render('login', {userId: req.session.userId, userName: req.session.userName});
+   res.render('login', {session: req.session});
 });
 
 app.get('/auth/logout', function(req, res){
@@ -54,19 +59,16 @@ app.get('/auth/logout', function(req, res){
    res.redirect(req.header('Referer'));
 });
 
-var users = [{
-    id: 'admin',
-    name: "사람",
-    password: '1234'
-}];
-
 app.get('/auth/login', function(req, res){
     for(var i = 0; i < users.length; i++){
         var user = users[i];
-        if(user.id == req.query.id){
+        if(user.username == req.query.id){
             if(user.password == req.query.password) {
                 var sess = req.session;
                 sess.userId = user.id;
+                sess.userNickname = user.nickname;
+                if(req.query.autoLogin == "true")
+                    sess.cookie.maxAge = 1000*60*60*24*7; //7 days
                 res.json({ok: 1});
                 return;
             }
@@ -80,10 +82,13 @@ app.get('/auth/login', function(req, res){
 app.get('/api/auth/login', function(req, res){
     for(var i = 0; i < users.length; i++){
         var user = users[i];
-        if(user.id == req.query.id){
+        if(user.username == req.query.id){
             if(user.password == req.query.password) {
                 var sess = req.session;
-                sess.userId = user.id;
+                sess.id = user.id;
+                sess.nickname = user.nickname;
+                if(req.query.autoLogin == "true")
+                    sess.cookie.maxAge = 1000*60*60*24*7; //7 days
                 res.json({ok: 1});
                 return;
             }
@@ -97,19 +102,6 @@ app.get('/api/auth/login', function(req, res){
 // subdomain
 app.use(subdomain('bookshelf', bookshelf));
 app.use(subdomain('wiki', wiki));
-
-/*
- //for test
- app.get('/echo', function(req, res, next){
- res.render('echo');
- });
-
- app.post('/echo', function(req, res, next){
- console.log('post');
- var data = req.body;
- console.log(req.body);
- });
- */
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

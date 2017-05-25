@@ -7,7 +7,7 @@ block head
     title 읽은 책 - 한지토리
 
 block content
-    - if(book){
+    - if(book = reading.book){
     #book_panel.ui.segment(style='height:150px')
         div(style="float:left")
             img#book_cover(src=book.cover_URL)
@@ -49,9 +49,11 @@ block content
             label 읽은 사람
             a(href="#", id="form_user") #{user}
 
+        -if(!session.nickname){
         .field.inline
             label 비밀번호
             input(type="text", id="password")
+        -}
         .ui.buttons
             button#mod_btn.ui.button.yellow(type='button') 수정
             button#del_btn.ui.button.negative(type='button') 삭제

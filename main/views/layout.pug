@@ -22,8 +22,8 @@ html
                 .item.ui.dropdown
                     i.large.user.icon
                     .menu
-                        -if(userId){
-                        .header= userId
+                        -if(session.nickname){
+                        .header= session.nickname
                         .ui.divider
                         a.item(href="#") 계정정보
                         a.item(href="/auth/logout") 로그아웃
