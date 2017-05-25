@@ -29,7 +29,7 @@ app.get('/', function (req, res, next) {
 });
 
 app.get('/search/:page', function(req, res){
-   res.render('noPage', {title: req.params.page, userId: req.session.userId, userName: req.session.userName});
+   res.render('noPage', {title: decodeURIComponent(req.params.page), userId: req.session.userId, userName: req.session.userName});
 });
 
 app.get('/view/:page', function(req, res, next){
@@ -37,7 +37,7 @@ app.get('/view/:page', function(req, res, next){
     wiki.viewPage(title, function(err, page){
         if(err){
             if(err.name == 'NO_PAGE_ERROR') {
-                res.redirect('/wiki/search/'+req.params.page);
+                res.redirect('/wiki/search/'+ encodeURIComponent(title));
             } else{
                 res.render('error', {error: err});
             }
@@ -94,7 +94,7 @@ app.post('/edit/:page', function(req, res, next){
         if(err){
             res.render('error', {error: err, userId: req.session.userId, userName: req.session.userName});
         }else{
-            res.redirect('/wiki/view/'+req.params.page);
+            res.redirect('/wiki/view/'+encodeURIComponent(title));
         }
     });
 });

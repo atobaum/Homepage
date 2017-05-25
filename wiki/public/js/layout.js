@@ -34,7 +34,7 @@ $(function(){
    $('input.prompt')
        .keypress(function(evt){
        if (event.which == 13 || event.keyCode == 13) {
-           window.location.href = "/wiki/view/"+$('input.prompt').val();
+           window.location.href = "/wiki/view/"+encodeURIComponent($('input.prompt').val());
        }
    });
    $('.ui.search').search({
@@ -45,7 +45,7 @@ $(function(){
            results : 'result'
        },
        onSelect: function(result){
-           window.location.href = "/wiki/view/"+result.title;
+           window.location.href = "/wiki/view/"+encodeURIComponent(result.title);
        },
        searchDelay: 500
    });
