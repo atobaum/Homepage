@@ -5,12 +5,12 @@ function wiki(config){
     this.parser = require('./parser');
     this.parser = new this.parser();
     this.db = require('./db_controller');
-    this.db = new this.db(config.db);
+    this.db = new this.db(config.db, {wiki: this});
 };
 
 wiki.prototype.rawPage = function(title, callback){
     var thisClass = this;
-    this.db.getPage(title, function(err, page){
+    this.db.getRawPage(title, null, function(err, page){
         if(err){
             callback(err);
             return;
@@ -25,33 +25,22 @@ wiki.prototype.parse = function(src){
 
 wiki.prototype.viewPage = function(title, callback){
     var thisClass = this;
-    this.db.getPage(title, function(err, page){
+    this.db.getParsedPage(title, null, function(err, page){
         if(err){
             callback(err);
             return;
         }
-        page.parsedContent = thisClass.parser.out(page.content, page.title);
-        delete page.content;
         callback(null, page);
     });
 };
 
-wiki.prototype.createPage = function(data, callback){
-    this.db.createPage(data, callback);
-};
-
 wiki.prototype.editPage = function(data, callback){
-    this.db.editPage(data, callback);
+    this.db.editPage(data, null, callback);
 };
 
-wiki.prototype.deletePage = function(){
-
+wiki.prototype.deletePage = function(title, callback){
+    this.db.deletePage(title, null, callback)
 };
-
-wiki.prototype.searchTitles = function(title, callback){
-    this.db.searchTitles(title, callback);
-};
-
 
 module.exports = wiki;
 
