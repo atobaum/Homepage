@@ -34,7 +34,8 @@ app.get('/search/:page', function(req, res){
 
 app.get('/view/:page', function(req, res, next){
     var title = decodeURIComponent(req.params.page);
-    wiki.viewPage(title, function(err, page){
+    var userId = req.session ? req.session.userId : null;
+    wiki.getParsedPage(title, userId, function(err, page){
         if(err){
             if(err.name == 'NO_PAGE_ERROR') {
                 res.redirect('/wiki/search/'+ encodeURIComponent(title));
@@ -49,7 +50,8 @@ app.get('/view/:page', function(req, res, next){
 
 app.get('/edit/:page', function(req, res, next){
     var title = decodeURIComponent(req.params.page);
-    wiki.rawPage(title, function(err, page){
+    var userId = req.session ? req.session.userId : null;
+    wiki.getRawPage(title, userId, function(err, page){
         if(err){
             if(err.name == 'NO_PAGE_ERROR') {
                 page = {
@@ -89,8 +91,9 @@ app.post('/edit/:page', function(req, res, next){
     var title = decodeURIComponent(req.params.page);
     var data = req.body;
     data.title = title;
-    data.user = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    wiki.editPage(data, function(err){
+    userId = req.session ? req.session.userId : null;
+    data.userText = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    wiki.editPage(data, userId, function(err){
         if(err){
             res.render('error', {error: err, session: req.session});
         }else{
@@ -105,7 +108,8 @@ app.post('/api/parse', function(req, res){
 
 app.get('/api/parse/:page', function(req, res){
     var title = decodeURIComponent(req.params.page);
-    wiki.viewPage(title, function(err, page){
+    var userId = req.session ? req.session.userId : null;
+    wiki.getParsedPage(title, userId, function(err, page){
         if(err){
             if(err.name == 'NO_PAGE_ERROR') {
                 res.json({ok:2, error: err});
@@ -120,7 +124,8 @@ app.get('/api/parse/:page', function(req, res){
 
 app.get('/api/rawtext/:page', function(req, res){
     var title = decodeURIComponent(req.params.page);
-    wiki.rawPage(title, function(err, page){
+    var userId = req.session ? req.session.userId : null;
+    wiki.getRawPage(title, userId, function(err, page){
         if(err){
             if(err.name == 'NO_PAGE_ERROR') {
                 res.json({ok:2, error: err});
@@ -137,8 +142,9 @@ app.post('/api/edit/:page', function(req, res){
     var title = decodeURIComponent(req.params.page);
     var data = req.body;
     data.title = title;
-    data.user = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    wiki.editPage(data, function(err){
+    data.userText = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    var userId = req.session ? req.session.userId : null;
+    wiki.editPage(data, userId, function(err){
         if(err){
             res.json({ok:0, error: err});
         }else{

@@ -79,7 +79,7 @@ Parser.prototype.out = function(src, title){
         preType = tok.type;
     }
     content += '<br>'+this.renderer.footnotes(this.additional.footnotes);
-    content = this.renderer.title({text:title}) + (this.additional.toc.toks.length == 0 ? '' : this.renderer.toc(this.parseHeadings(this.additional.toc.toks))) + content;
+    content = (this.additional.toc.toks.length == 0 ? '' : this.renderer.toc(this.parseHeadings(this.additional.toc.toks))) + content;
     return content;
 };
 

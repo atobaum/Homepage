@@ -13,7 +13,7 @@ block content
             a.item.active(data-tab="edit") 편집
             a.item(data-tab="preview") 미리보기
         .ui.bottom.attached.tab.segment.active(data-tab="edit")
-            textarea.ui.textarea(rows=25 name="content") !{wiki.text}
+            textarea.ui.textarea(rows=25 name="text") !{wiki.text}
         .ui.bottom.attached.tab.segment(data-tab="preview")
             .preview
 
@@ -28,7 +28,7 @@ block content
             $('.tabular.menu a.item[data-tab="preview"]').click(function () {
                 $.post({
                     url: '/wiki/api/parse',
-                    data: {content: $('.tab textarea').val()},
+                    data: {text: $('.tab textarea').val()},
                     success: function (res) {
                         $('.preview').html(res);
                     }
