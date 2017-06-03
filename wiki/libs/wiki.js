@@ -59,7 +59,7 @@ wiki.prototype.checkAC = function(nsId, pageId, userId, type, callback){
         if(err) callback(err);
         else if(rows.length == 0) callback(null, false);
         else{
-            for(var i = 1; i < rows.length; i++){
+            for(var i = 0; i < rows.length; i++){
                 if(rows[i].AC & type){
                     callback(null, true);
                     return;
