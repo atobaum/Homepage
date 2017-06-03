@@ -30,6 +30,7 @@ block content
                 cache: false
             });
             $('.tabular.menu a.item[data-tab="preview"]').click(function () {
+                $('.ui.dimmer').dimmer('show');
                 $.post({
                     url: '/wiki/api/parse',
                     data: {text: $('.tab textarea').val()},

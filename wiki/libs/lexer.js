@@ -13,7 +13,7 @@ var blocks = {
     // code: /^<code>(.+)<\/code>(\r?\n|$)/,
     // math: /^<math>(.+)<\/math>(\r?\n|$)/,
     // table: /^/,
-    emptyline: /^\r?\n(?:\s*)/,
+    emptyline: /^(?:\s*)\r?\n/,
     paragraph: /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/,
     text: /^(\r?\n|$)/
 };

@@ -102,6 +102,10 @@ Renderer.prototype.emptyline = function(data){
     return '<br />';
 };
 
+Renderer.prototype.hr = function(){
+    return '<hr />';
+}
+
 Renderer.prototype.list = function(list, notFirst){
     var ordered = list[0].ordered;
     var result = !notFirst ? '<div class="wiki_list">' : '';
