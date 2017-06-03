@@ -60,6 +60,7 @@ app.get('/edit/:page', function(req, res, next){
                 };
             } else{
                 res.render('error', {error: err, session: req.session});
+                return;
             }
         }
         res.render('editPage', {wiki: page, session: req.session});
@@ -183,5 +184,13 @@ app.use(function(err, req, res, next) {
   res.render('error', {session: req.session});
 });
 
+app.login = function(uname, passwd, callback){
+    wiki.login(uname, passwd, callback);
+};
+app.userInfo = wiki.userInfo;
+app.createUser = wiki.createUser;
+app.updateUser = wiki.updateUser;
+app.checkUsername = wiki.checkUsername;
+app.checkNickname = wiki.checkNickname;
 
 module.exports = app;

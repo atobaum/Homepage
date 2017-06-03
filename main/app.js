@@ -1,5 +1,5 @@
 if(!process.env.NODE_ENV){
-    console.log('NODE_ENV is nod defined. Set to development.');
+    console.log('NODE_ENV is undefined. Set to development.');
 }
 
 var users = [{
@@ -19,6 +19,8 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var subdomain = require('express-subdomain');
 var session = require('express-session');
+var mysql = require('mysql');
+
 var bookshelf = require('../bookshelf/app');
 var wiki = require('../wiki/app');
 
@@ -59,44 +61,17 @@ app.get('/auth/logout', function(req, res){
    res.redirect(req.header('Referer'));
 });
 
-app.get('/auth/login', function(req, res){
-    for(var i = 0; i < users.length; i++){
-        var user = users[i];
-        if(user.username == req.query.id){
-            if(user.password == req.query.password) {
-                var sess = req.session;
-                sess.userId = user.id;
-                sess.userNickname = user.nickname;
-                if(req.query.autoLogin == "true")
-                    sess.cookie.maxAge = 1000*60*60*24*7; //7 days
-                res.json({ok: 1});
-                return;
-            }
-            res.json({ok:2});
-            return;
-        }
-    }
-    res.json({ok:0});
-});
-
 app.get('/api/auth/login', function(req, res){
-    for(var i = 0; i < users.length; i++){
-        var user = users[i];
-        if(user.username == req.query.id){
-            if(user.password == req.query.password) {
-                var sess = req.session;
-                sess.id = user.id;
-                sess.nickname = user.nickname;
-                if(req.query.autoLogin == "true")
-                    sess.cookie.maxAge = 1000*60*60*24*7; //7 days
-                res.json({ok: 1});
-                return;
-            }
-            res.json({ok:2});
-            return;
+    wiki.login(req.query.id, req.query.password, function(err, result, user){
+        if(result == 1){
+            var sess = req.session;
+            sess.userId = user.user_id;
+            sess.userNickname = user.nickname;
+            if(req.query.autoLogin == "true")
+                sess.cookie.maxAge = 1000*60*60*24*7; //7 days
         }
-    }
-    res.json({ok:0});
+        res.json({ok:result, error: err});
+    });
 });
 
 // subdomain
