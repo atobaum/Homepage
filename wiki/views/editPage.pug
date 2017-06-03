@@ -6,19 +6,23 @@ block head
 block content
     h1
         a(href="/wiki/view/"+wiki.title)= wiki.title
-        - var editType = wiki.rev_id ? "(R"+wiki.rev_id+" 수정)" : "(새 문서 만들기)";
+        - var editType = wiki.rev_id ? " (R"+wiki.rev_id+" 수정)" : " (새 문서 만들기)";
         small !{editType}
     form.ui.form(method="POST" action="/wiki/edit/"+encodeURIComponent(wiki.title))
         .ui.top.attached.tabular.menu
             a.item.active(data-tab="edit") 편집
             a.item(data-tab="preview") 미리보기
         .ui.bottom.attached.tab.segment.active(data-tab="edit")
+            - if(!wiki.readOnly){
             textarea.ui.textarea(rows=25 name="text") !{wiki.text}
+            - } else{
+            textarea.ui.textarea(rows=25 name="text" readonly='') !{wiki.text}
+            - }
         .ui.bottom.attached.tab.segment(data-tab="preview")
             .preview
-
-
+        - if(!wiki.readOnly){
         button.ui.button(type='submit') 제출
+        - }
 
     script.
         $(function(){

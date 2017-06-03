@@ -39,6 +39,9 @@ app.get('/view/:page', function(req, res, next){
         if(err){
             if(err.name == 'NO_PAGE_ERROR') {
                 res.redirect('/wiki/search/'+ encodeURIComponent(title));
+
+            } else if (err.name == "NO_PRIVILEGE"){
+                res.render('noPrivilege', {wikiTitle: title, priType: 4 ,session:req.session});
             } else{
                 res.render('error', {error: err, session: req.session});
             }
@@ -58,12 +61,16 @@ app.get('/edit/:page', function(req, res, next){
                     title: title,
                     rawContent: ''
                 };
+                res.render('editPage', {wiki: page, session: req.session});
+            } else if (err.name == "NO_PRIVILEGE"){
+                res.render('noPrivilege', {wikiTitle: title, priType: 4 ,session:req.session});
             } else{
                 res.render('error', {error: err, session: req.session});
                 return;
             }
+        } else{
+            res.render('editPage', {wiki: page, session: req.session});
         }
-        res.render('editPage', {wiki: page, session: req.session});
     });
 });
 
@@ -96,7 +103,9 @@ app.post('/edit/:page', function(req, res, next){
     data.userText = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     wiki.editPage(data, userId, function(err){
         if(err){
-            res.render('error', {error: err, session: req.session});
+            if (err.name == "NO_PRIVILEGE"){
+                res.render('noPrivilege', {wikiTitle: title, priType: 2 ,session:req.session});
+            } else res.render('error', {error: err, session: req.session});
         }else{
             res.redirect('/wiki/view/'+encodeURIComponent(title));
         }
@@ -104,7 +113,7 @@ app.post('/edit/:page', function(req, res, next){
 });
 
 app.post('/api/parse', function(req, res){
-    res.json(wiki.parse(req.body.content));
+    res.json(wiki.parse(req.body.text));
 });
 
 app.get('/api/parse/:page', function(req, res){

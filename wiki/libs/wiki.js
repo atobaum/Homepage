@@ -111,7 +111,20 @@ wiki.prototype.getRawPage = function(title, userId, callback){
         query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
         thisClass.conn.query(query, [pageInfo.page_id, pageInfo.rev_id], function (err, rows) {
             if(err) callback(err);
-            else callback(null, {title: title, touched: pageInfo.touched, text: rows[0].text});
+            else {
+                var data = {title: title, rev_id: pageInfo.rev_id ,touched: pageInfo.touched, text: rows[0].text};
+                if((pageInfo.page_PAC && pageInfo.page_PAC & 2) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 2)) callback(null, data);
+                else if(userId){
+                    thisClass.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 2, function(err, ac){
+                        if(err) {next(err); return;}
+                        else if(!ac) data.readOnly=true;
+                        callback(null, data);
+                    });
+                } else{
+                    data.readOnly = true;
+                    callback(null, data);
+                }
+            }
         });
     }], callback);
 };
@@ -188,7 +201,6 @@ wiki.prototype.getParsedPage = function(title, userId, callback){
  * @param callback(err)
  */
 wiki.prototype.editPage = function(page, userId, callback){
-    console.log(page);
     var parsedTitle = regexTitle.exec(page.title);
     var ns_title = parsedTitle[1] || "Main";
     var page_title = parsedTitle[2];
@@ -235,7 +247,6 @@ wiki.prototype.editPage = function(page, userId, callback){
                 next(null, ns_PAC, rows[0].page_PAC, created);
             });
         }, function(ns_PAC, page_PAC, created, next){ //check access control
-            console.log(ns_PAC, page_PAC, created);
             if(created){ //create page
                 if(ns_PAC & 8){
                     next(null, true);
