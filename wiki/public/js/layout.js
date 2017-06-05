@@ -12,7 +12,7 @@ $(function(){
    $('input.prompt')
        .keypress(function(evt){
        if (event.which == 13 || event.keyCode == 13) {
-           window.location.href = "/wiki/view/"+encodeURIComponent(formatTitle($('input.prompt').val()));
+           window.location.href = "/wiki/view/"+encodeURI(formatTitle($('input.prompt').val()));
        }
    });
    $('.ui.search').search({
@@ -23,7 +23,7 @@ $(function(){
            results : 'result'
        },
        onSelect: function(result){
-           window.location.href = "/wiki/view/"+encodeURIComponent(formatTitle(result.title));
+           window.location.href = "/wiki/view/"+encodeURI(formatTitle(result.title));
        },
        searchDelay: 500
    });

@@ -8,7 +8,7 @@ block content
         a(href="/wiki/view/"+wiki.title)= wiki.title
         - var editType = wiki.rev_id ? " (R"+wiki.rev_id+" 수정)" : " (새 문서 만들기)";
         small !{editType}
-    form.ui.form(method="POST" action="/wiki/edit/"+encodeURIComponent(wiki.title))
+    form.ui.form(method="POST" action="/wiki/edit/"+encodeURI(wiki.title))
         .ui.top.attached.tabular.menu
             a.item.active(data-tab="edit") 편집
             a.item(data-tab="preview") 미리보기

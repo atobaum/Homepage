@@ -2,13 +2,6 @@ if(!process.env.NODE_ENV){
     console.log('NODE_ENV is undefined. Set to development.');
 }
 
-var users = [{
-    id: 1,
-    username: 'admin',
-    password: '1234',
-    nickname: "사람"
-}];
-
 //process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'development' ) ? 'development' : 'production';
 //process.env.NODE_ENV = "development";
 global.env = process.env.NODE_ENV;

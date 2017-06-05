@@ -6,6 +6,11 @@ body {
 a {
   color: #00B7FF;
 }
+
+nav{
+    margin: 0 !important;
+}
+
 nav ul {
     list-style-type: none;
 }

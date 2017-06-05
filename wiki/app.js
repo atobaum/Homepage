@@ -28,17 +28,17 @@ app.get('/', function (req, res, next) {
     res.redirect('/wiki/view/index');
 });
 
-app.get('/search/:page', function(req, res){
-   res.render('noPage', {title: decodeURIComponent(req.params.page), session: req.session});
+app.get(/\/search\/(.*)/, function(req, res){
+   res.render('noPage', {title: decodeURI(req.params[0]), session: req.session});
 });
 
-app.get('/view/:page', function(req, res, next){
-    var title = decodeURIComponent(req.params.page);
+app.get(/\/view\/(.*)/, function(req, res, next){
+    var title = decodeURI(req.params[0]);
     var userId = req.session ? req.session.userId : null;
     wiki.getParsedPage(title, userId, function(err, page){
         if(err){
             if(err.name == 'NO_PAGE_ERROR') {
-                res.redirect('/wiki/search/'+ encodeURIComponent(title));
+                res.redirect('/wiki/search/'+ encodeURI(title));
 
             } else if (err.name == "NO_PRIVILEGE"){
                 res.render('noPrivilege', {wikiTitle: title, priType: 4 ,session:req.session});
@@ -51,8 +51,8 @@ app.get('/view/:page', function(req, res, next){
     });
 });
 
-app.get('/edit/:page', function(req, res, next){
-    var title = decodeURIComponent(req.params.page);
+app.get(/\/edit\/(.*)/, function(req, res, next){
+    var title = decodeURI(req.params[0]);
     var userId = req.session ? req.session.userId : null;
     wiki.getRawPage(title, userId, function(err, page){
         if(err){
@@ -74,14 +74,14 @@ app.get('/edit/:page', function(req, res, next){
     });
 });
 
-app.get('/history/:page', function(req, res, next){
+app.get(/\/history\/(.*)/, function(req, res, next){
     res.render('main', {
         "title": "history page: " + req.params.page, session: req.session
     });
 });
 
 //backlinks
-app.get('/xref/:page', function(req, res, next){
+app.get(/\/xref\/(.*)/, function(req, res, next){
     res.render('main', {
         "title": "backlink page: " + req.params.page, session: req.session
     });
@@ -89,14 +89,14 @@ app.get('/xref/:page', function(req, res, next){
 
 
 //for backend
-app.get('/delete/:page', function(req, res, next){
+app.get(/\/delete\/(.*)/, function(req, res, next){
     res.render('main', {
         "title": "delete page: " + req.params.page,
     });
 });
 
-app.post('/edit/:page', function(req, res, next){
-    var title = decodeURIComponent(req.params.page);
+app.post(/\/edit\/(.*)/, function(req, res, next){
+    var title = decodeURI=(req.params[0]);
     var data = req.body;
     data.title = title;
     userId = req.session ? req.session.userId : null;
@@ -107,7 +107,7 @@ app.post('/edit/:page', function(req, res, next){
                 res.render('noPrivilege', {wikiTitle: title, priType: 2 ,session:req.session});
             } else res.render('error', {error: err, session: req.session});
         }else{
-            res.redirect('/wiki/view/'+encodeURIComponent(title));
+            res.redirect('/wiki/view/'+encodeURI(title));
         }
     });
 });
@@ -116,8 +116,8 @@ app.post('/api/parse', function(req, res){
     res.json(wiki.parse(req.body.text));
 });
 
-app.get('/api/parse/:page', function(req, res){
-    var title = decodeURIComponent(req.params.page);
+app.get(/\/api\/parse\/(.*)/, function(req, res){
+    var title = decodeURI(req.params[0]);
     var userId = req.session ? req.session.userId : null;
     wiki.getParsedPage(title, userId, function(err, page){
         if(err){
@@ -132,8 +132,8 @@ app.get('/api/parse/:page', function(req, res){
     });
 });
 
-app.get('/api/rawtext/:page', function(req, res){
-    var title = decodeURIComponent(req.params.page);
+app.get(/\/api\/rawtext\/(.*)/, function(req, res){
+    var title = decodeURI(req.params[0]);
     var userId = req.session ? req.session.userId : null;
     wiki.getRawPage(title, userId, function(err, page){
         if(err){
@@ -148,8 +148,8 @@ app.get('/api/rawtext/:page', function(req, res){
     });
 });
 
-app.post('/api/edit/:page', function(req, res){
-    var title = decodeURIComponent(req.params.page);
+app.post(/\/api\/edit\/(.*)/, function(req, res){
+    var title = decodeURI(req.params[0]);
     var data = req.body;
     data.title = title;
     data.userText = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
