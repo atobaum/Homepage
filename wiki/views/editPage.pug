@@ -3,6 +3,7 @@ extends layout
 block head2
     title #{wiki.title} - Wiki
     link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css")
+    link(rel="stylesheet" href='/css/wiki/wiki_view.css')
 
 block content
     h1
@@ -37,7 +38,7 @@ block content
                     data: {text: $('.tab textarea').val()},
                     success: function (res) {
                         $('.preview').html(res);
-                        Prism.highlightAll(false);
+                        $('pre code').each((i, elem) => {Prism.highlightElement(elem)});
                     }
                 })
             });

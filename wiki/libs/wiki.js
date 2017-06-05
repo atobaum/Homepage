@@ -136,7 +136,7 @@ wiki.prototype.updatePageCache = function(page_id, rev_id, callback){
         if(err) callback(err);
         else {
             query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
-            var content = thisClass.parse(rows[0].text);
+            var content = thisClass.parser.out(rows[0].text);
             thisClass.conn.query(query, [page_id, content, content], function(err){
                 callback(err, content);
             });
@@ -258,7 +258,7 @@ wiki.prototype.editPage = function(page, userId, callback){
             } else if((page_PAC && page_PAC & 2) || (!page_PAC && ns_PAC & 2)) { //edit page
                 next(null, true);
             } else{
-                thisClass.checkAC(data.ns_id, data.page_id, userId, 2, rev_id, next);
+                thisClass.checkAC(data.ns_id, data.page_id, userId, 2, next);
             }
         }, function(acResult, next){
             if(acResult) next(null);

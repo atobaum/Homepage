@@ -1,11 +1,16 @@
 extends layout
 
 block head2
-    link(rel="stylesheet" href='/css/wiki/wiki_view.css')
-    link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css")
     title #{wiki.title} - Wiki
+    link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css")
+    link(rel="stylesheet" href='/css/wiki/wiki_view.css')
 
 block content
     h1.wiki_title= wiki.title
     .wiki_content.language-javascript !{wiki.parsedContent}
     a.ui.button(href='/wiki/edit/'+wiki.title) 수정
+
+    script.
+        $(()=>{
+            $('pre code').each((i, elem) => {Prism.highlightElement(elem)});
+        });

@@ -17,3 +17,8 @@ i.icon{
     list-style: none;
     padding: 0px;
 }
+
+code {
+    background-color: rgb(226, 226, 226);
+    color: rgb(216, 0, 0);
+}

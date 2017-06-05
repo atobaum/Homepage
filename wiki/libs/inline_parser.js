@@ -2,7 +2,7 @@
  * Created by Le Reveur on 2017-05-03.
  */
 var inlineTockens = {
-    escape: /^\\([>\$\\\`'\^_~\(\)*{}\[\]#])/,
+    escape: /^\\([>\$\\\`'\^_~\(\)*{}\[\]#t])/,
     italic: /^''(?!')(?=\S)([\s\S]*?\S)''/,
     bold: /^'''(?!')(?=\S)([\s\S]*?\S)'''/,
     underline: /^__(.+)__/,
@@ -142,7 +142,13 @@ InlineParser.prototype.out = function(src) {
 
         //escape
         if(cap = inlineTockens.escape.exec(src)){
-            result +=cap[1];
+            switch (cap[1]) {
+                case 't':
+                    result += '&emsp;';
+                    break;
+                default:
+                    result += cap[1];
+            }
             src = src.substr(cap[0].length);
             continue;
         }
@@ -162,7 +168,7 @@ InlineParser.prototype.out = function(src) {
 InlineParser.prototype.macro = function(type, param, text){
     switch (type.toLowerCase()){
         case '':
-            return `<pre>${this.renderer.escapeHTML(text)}</pre>`;
+            return `<code>${this.renderer.escapeHTML(text)}</code>`;
             break;
         case 'html':
             if(param) return `<${param}>${text}</${param}>`;

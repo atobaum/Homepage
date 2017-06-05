@@ -8,7 +8,7 @@ function Renderer(){
 
 Renderer.prototype.blockquote = function(text){
     "use strict";
-    return `<blockquote class="ui piled segment"><p>${text}</p></blockquote>`
+    return `<blockquote class="ui raised segment"><p>${text}</p></blockquote>`
 };
 
 Renderer.prototype.title = function(data){
@@ -164,7 +164,7 @@ Renderer.prototype.cat = function(categories){
 };
 
 Renderer.prototype.syntax = function(tok){
-    var result = "<pre class='line-numbers"+(tok.param ? " language-"+tok.param : "")+"'><code>";
+    var result = "<pre class='wiki-syntaxhl line-numbers"+(tok.param ? " language-"+tok.param : "")+"'><code>";
     result += tok.text;
     result += "</code></pre>";
     return result;
@@ -176,7 +176,7 @@ Renderer.prototype.error = function(tok){
 };
 
 Renderer.prototype.table = function(table){
-    var result = '<table class="ui celled table">';
+    var result = '<table class="ui celled collapsing table">';
     for(var item of table){
         if(item.additional == "h"){
             result += '<thead><tr>';

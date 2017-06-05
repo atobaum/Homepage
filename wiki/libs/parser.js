@@ -66,8 +66,15 @@ Parser.prototype.parseTable = function(toks){
 Parser.prototype.macro = function(tok){
     "use strict";
     switch (tok.macro.toLowerCase()){
+        case(''):
+        case(null):
+            return '<pre>'+this.renderer.escapeHTML(tok.text)+'</pre>';
+            break;
         case('syntax'):
             return this.renderer.syntax(tok);
+            break;
+        case('html'):
+            return tok.text;
             break;
     }
 };
