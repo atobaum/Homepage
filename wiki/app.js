@@ -29,7 +29,7 @@ app.get('/', function (req, res, next) {
 });
 
 app.get(/\/search\/(.*)/, function(req, res){
-   res.render('noPage', {title: decodeURI(req.params[0]), session: req.session});
+    res.render('noPage', {title: decodeURI(req.params[0]), session: req.session});
 });
 
 app.get(/\/view\/(.*)/, function(req, res, next){
@@ -39,7 +39,6 @@ app.get(/\/view\/(.*)/, function(req, res, next){
         if(err){
             if(err.name == 'NO_PAGE_ERROR') {
                 res.redirect('/wiki/search/'+ encodeURI(title));
-
             } else if (err.name == "NO_PRIVILEGE"){
                 res.render('noPrivilege', {wikiTitle: title, priType: 4 ,session:req.session});
             } else{
@@ -96,7 +95,7 @@ app.get(/\/delete\/(.*)/, function(req, res, next){
 });
 
 app.post(/\/edit\/(.*)/, function(req, res, next){
-    var title = decodeURI=(req.params[0]);
+    var title = decodeURI(req.params[0]);
     var data = req.body;
     data.title = title;
     userId = req.session ? req.session.userId : null;

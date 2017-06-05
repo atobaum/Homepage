@@ -115,7 +115,7 @@ Parser.prototype.out = function(src, title){
         preType = tok.type;
     }
     content += '<br>'+this.renderer.footnotes(this.additional.footnotes);
-    content = (this.additional.toc.toks.length == 0 ? '' : this.renderer.toc(this.parseHeadings(this.additional.toc.toks))) + content + this.renderer.cat(this.additional.cat);
+    content = (this.additional.toc.toks.length == 0 ? '' : this.renderer.toc(this.parseHeadings(this.additional.toc.toks))) + content + (this.additional.cat.length != 0 ? this.renderer.cat(this.additional.cat) : '');
     return content;
 };
 

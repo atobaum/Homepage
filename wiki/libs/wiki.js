@@ -237,13 +237,14 @@ wiki.prototype.editPage = function(page, userId, callback){
                 }
             });
         }, function(ns_PAC, created, next){ //get page_id
-            thisClass.conn.query('SELECT page_id, rev_counter, page_PAC FROM page WHERE ns_id=? and page_title=?', [data.ns_id, data.page_title], function(err, rows){
+            thisClass.conn.query('SELECT page_id, rev_id, rev_counter, page_PAC FROM page WHERE ns_id=? and page_title=?', [data.ns_id, data.page_title], function(err, rows){
                 if(err){
                     next(err);
                     return;
                 }
                 data.page_id = rows[0].page_id;
                 data.rev_id = rows[0].rev_counter + 1;
+                data.parent_id = rows[0].rev_id;
                 next(null, ns_PAC, rows[0].page_PAC, created);
             });
         }, function(ns_PAC, page_PAC, created, next){ //check access control
@@ -257,7 +258,7 @@ wiki.prototype.editPage = function(page, userId, callback){
             } else if((page_PAC && page_PAC & 2) || (!page_PAC && ns_PAC & 2)) { //edit page
                 next(null, true);
             } else{
-                thisClass.checkAC(data.ns_id, data.page_id, userId, 2, next);
+                thisClass.checkAC(data.ns_id, data.page_id, userId, 2, rev_id, next);
             }
         }, function(acResult, next){
             if(acResult) next(null);
@@ -272,7 +273,8 @@ wiki.prototype.editPage = function(page, userId, callback){
                 rev_id: data.rev_id,
                 user_id: userId,
                 user_text: page.userText,
-                text: page.text
+                text: page.text,
+                parent_id: data.parent_id
             };
             thisClass.conn.query("INSERT INTO revision SET ?", [revision], function(err, rows){
                 next(err);
