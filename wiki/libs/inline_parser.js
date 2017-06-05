@@ -2,7 +2,7 @@
  * Created by Le Reveur on 2017-05-03.
  */
 var inlineTockens = {
-    escape: /^\\([\\`*{}\[\]()#+\-.!_>])/,
+    escape: /^\\([$\\\`*{}\[\]()#+\-.!_>])/,
     italic: /^''(?!')(?=\S)([\s\S]*?\S)''/,
     bold: /^'''(?!')(?=\S)([\s\S]*?\S)'''/,
     underline: /^__(.+)__/,
@@ -15,10 +15,12 @@ var inlineTockens = {
     footnote: /^\(\((.+)\)\)/,
     fontsize: /./,
     fontcolor: /./,
-    text: /^.+?(?=''|__|\^\^|,,|\[\[|~~| {2,}|\(\(|\n|$)/
+    text: /^.+?(?=\\|\$|''|__|\^\^|,,|\[\[|~~| {2,}|\(\(|\n|$)/,
+    inlineLatex: /^\$([^\$]+?)\$/,
+    blockLatex: /^\$\$([^\$]+?)\$\$/
 };
 
-
+var katex = require("katex");
 
 function InlineParser(renderer, additional){
     this.renderer = renderer;
@@ -115,7 +117,25 @@ InlineParser.prototype.out = function(src) {
         //     continue;
         // }
 
+        if(cap = inlineTockens.inlineLatex.exec(src)){
+            result += katex.renderToString(cap[1]);
+            src = src.substr(cap[0].length);
+            continue;
+        }
 
+
+        if(cap = inlineTockens.blockLatex.exec(src)){
+            result += katex.renderToString(cap[1], {displayMode: true});
+            src = src.substr(cap[0].length);
+            continue;
+        }
+
+        //escape
+        if(cap = inlineTockens.escape.exec(src)){
+            result +=cap[1];
+            src = src.substr(cap[0].length);
+            continue;
+        }
         //else: text
         if (cap = inlineTockens.text.exec(src)) {
             result += cap[0];

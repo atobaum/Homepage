@@ -9,10 +9,9 @@ var blocks = {
     // indent: /^:{1,}(.+)(\r?\n|$)/,
     hr: /^-{3,}\s*(\r?\n|$)/,
     // quote: /^/,
-    // quote2: /^/,
+    // textbox: /^/,
     // code: /^<code>(.+)<\/code>(\r?\n|$)/,
-    // math: /^<math>(.+)<\/math>(\r?\n|$)/,
-    // table: /^/,
+    table: /^(\|\|.*)(\r?\n|$)/,
     emptyline: /^(?:\s*)\r?\n/,
     paragraph: /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/,
     text: /^(\r?\n|$)/
@@ -128,27 +127,19 @@ Lexer.prototype.scan = function(src){
         //     src = src.substr(cap[0].length);
         //     continue;
         // }
-        //
-        // //math
-        // if (cap = blocks.math.exec(src)) {
-        //     toks.push({
-        //         type: 'math',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-        //
-        // //table
-        // if (cap = blocks.table.exec(src)) {
-        //     toks.push({
-        //         type: 'table',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
-        //
+
+        //table
+        if (cap = blocks.table.exec(src)) {
+            var list = cap[1].split('||').slice(1).map(function(item){return item.trim();});
+            toks.push({
+                type: 'table',
+                additional: list.pop(),
+                row: list.map(this.inlineParser.out)
+            });
+            src = src.substr(cap[0].length);
+            continue;
+        }
+
         // //html
         // if (cap = blocks.html.exec(src)) {
         //     toks.push({

@@ -134,4 +134,22 @@ Renderer.prototype.toc = function(toks, notFirst) {
     return result;
 };
 
+Renderer.prototype.table = function(table){
+    console.log(table);
+    var result = '<table class="ui celled table">';
+    for(var item of table){
+
+        if(item.additional == "h"){
+            result += '<thead><tr>';
+            item.row.forEach((cell)=>{result += `<th>${cell}</th>`});
+            result += '</tr></thead>';
+        } else{
+            result += '</tr>';
+            item.row.forEach((cell)=>{result += `<td>${cell}</td>`});
+            result += '</tr>';
+        }
+    }
+    return result + '</table>';
+};
+
 module.exports = Renderer;

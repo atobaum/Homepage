@@ -54,6 +54,14 @@ Parser.prototype.parseHeadings = function(toks){
     return list;
 };
 
+Parser.prototype.parseTable = function(toks){
+    var tables = [];
+    while (toks[0] && toks[0].type == 'table'){
+        tables.push(toks.shift());
+    }
+    return tables;
+};
+
 Parser.prototype.out = function(src, title){
     var content = '';
     this.initAdditional();
@@ -67,6 +75,9 @@ Parser.prototype.out = function(src, title){
                 break;
             case 'list':
                 content += this.renderer.list(this.parseList(toks));
+                break;
+            case 'table':
+                content += this.renderer.table(this.parseTable(toks));
                 break;
             default:
                 if(this.renderer[tok.type])
