@@ -6,8 +6,29 @@ function Renderer(){
 
 }
 
+Renderer.prototype.blockquote = function(text){
+    "use strict";
+    return `<blockquote class="ui piled segment"><p>${text}</p></blockquote>`
+};
+
 Renderer.prototype.title = function(data){
     return `<h1 class="ui block header">${data.text}</h1>`;
+};
+
+Renderer.prototype.escapeHTML = function(str){
+    "use strict";
+    return str.replace(/[&<"']/g, function(m) {
+        switch (m) {
+            case '&':
+                return '&amp;';
+            case '<':
+                return '&lt;';
+            case '"':
+                return '&quot;';
+            default:
+                return '&#039;';
+        }
+    });
 };
 
 Renderer.prototype.heading = function(data) {
@@ -134,11 +155,29 @@ Renderer.prototype.toc = function(toks, notFirst) {
     return result;
 };
 
+Renderer.prototype.cat = function(categories){
+    "use strict";
+    var result = categories.map((item)=>{
+        return `<sapn><a href="/wiki/view/Category:${item}">${item}</a></sapn>`
+    }).join(' | ');
+    return '<div class="wiki-cat ui segment">카테고리: '+result+'</div>';
+};
+
+Renderer.prototype.syntax = function(tok){
+    var result = "<pre class='line-numbers"+(tok.param ? " language-"+tok.param : "")+"'><code>";
+    result += tok.text;
+    result += "</code></pre>";
+    return result;
+};
+
+Renderer.prototype.error = function(tok){
+    "use strict";
+    return `<div class="ui negative message"><div class="header">${tok.name}</div><p>${tok.text}</p></div>`
+};
+
 Renderer.prototype.table = function(table){
-    console.log(table);
     var result = '<table class="ui celled table">';
     for(var item of table){
-
         if(item.additional == "h"){
             result += '<thead><tr>';
             item.row.forEach((cell)=>{result += `<th>${cell}</th>`});

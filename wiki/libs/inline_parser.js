@@ -2,7 +2,7 @@
  * Created by Le Reveur on 2017-05-03.
  */
 var inlineTockens = {
-    escape: /^\\([$\\\`*{}\[\]()#+\-.!_>])/,
+    escape: /^\\([>\$\\\`'\^_~\(\)*{}\[\]#])/,
     italic: /^''(?!')(?=\S)([\s\S]*?\S)''/,
     bold: /^'''(?!')(?=\S)([\s\S]*?\S)'''/,
     underline: /^__(.+)__/,
@@ -15,16 +15,18 @@ var inlineTockens = {
     footnote: /^\(\((.+)\)\)/,
     fontsize: /./,
     fontcolor: /./,
-    text: /^.+?(?=\\|\$|''|__|\^\^|,,|\[\[|~~| {2,}|\(\(|\n|$)/,
+    text: /^.+?(?={{|\\|\$|''|__|\^\^|,,|\[\[|~~| {2,}|\(\(|\n|$)/,
     inlineLatex: /^\$([^\$]+?)\$/,
-    blockLatex: /^\$\$([^\$]+?)\$\$/
+    blockLatex: /^\$\$([^\$]+?)\$\$/,
+    macro: /^{{(.*?)(?:\((.*?)\))?(?: (.*?))?}}/
 };
 
 var katex = require("katex");
 
-function InlineParser(renderer, additional){
-    this.renderer = renderer;
-    this.additional = additional;
+function InlineParser(parser){
+    this.parser = parser;
+    this.renderer = parser.renderer;
+    this.additional = parser.additional;
 }
 
 InlineParser.prototype.out = function(src) {
@@ -117,6 +119,7 @@ InlineParser.prototype.out = function(src) {
         //     continue;
         // }
 
+        //math
         if(cap = inlineTockens.inlineLatex.exec(src)){
             result += katex.renderToString(cap[1]);
             src = src.substr(cap[0].length);
@@ -126,6 +129,13 @@ InlineParser.prototype.out = function(src) {
 
         if(cap = inlineTockens.blockLatex.exec(src)){
             result += katex.renderToString(cap[1], {displayMode: true});
+            src = src.substr(cap[0].length);
+            continue;
+        }
+
+        //macro
+        if(cap = inlineTockens.macro.exec(src)){
+            result += this.macro(cap[1], cap[2], cap[3]);
             src = src.substr(cap[0].length);
             continue;
         }
@@ -143,11 +153,32 @@ InlineParser.prototype.out = function(src) {
             continue;
         }
 
-        console.error('result: '+result);
-        console.error('src: '+src);
-        throw new Error('Infinite loop');
+        result += this.renderer.error({name:"Infinite Loop in Inline Parser", text: 'Error occurred while processing '+src});
+        break;
     }
     return result;
+};
+
+InlineParser.prototype.macro = function(type, param, text){
+    switch (type.toLowerCase()){
+        case '':
+            return `<pre>${this.renderer.escapeHTML(text)}</pre>`;
+            break;
+        case 'html':
+            if(param) return `<${param}>${text}</${param}>`;
+            else return text;
+        case 'cat':
+        case 'category':
+            this.parser.addCat(text);
+            return '';
+        case 'label':
+            return `<a id="${text}"></a>`;
+        case 'br':
+            return `<br />`;
+        default:
+            console.log(this.renderer.error({name:"Inline Macro Error", text: 'Inline macro '+type+' doesn\'t supported.'}));
+            return this.renderer.error({name:"Inline Macro Error", text: 'Inline macro '+type+' doesn\'t supported.'});
+    }
 };
 
 module.exports = InlineParser;

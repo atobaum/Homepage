@@ -7,5 +7,5 @@ block head2
 
 block content
     h1.wiki_title= wiki.title
-    .wiki_content !{wiki.parsedContent}
+    .wiki_content.language-javascript !{wiki.parsedContent}
     a.ui.button(href='/wiki/edit/'+wiki.title) 수정

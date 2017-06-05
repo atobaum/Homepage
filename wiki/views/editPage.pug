@@ -37,6 +37,7 @@ block content
                     data: {text: $('.tab textarea').val()},
                     success: function (res) {
                         $('.preview').html(res);
+                        Prism.highlightAll(false);
                     }
                 })
             });

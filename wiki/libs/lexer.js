@@ -8,18 +8,19 @@ var blocks = {
     list: /^(\s+)([*-]) (.+)(\r?\n|$)/,
     // indent: /^:{1,}(.+)(\r?\n|$)/,
     hr: /^-{3,}\s*(\r?\n|$)/,
-    // quote: /^/,
+    quote: /^> (.*?)(\r?\n|$)/,
     // textbox: /^/,
     // code: /^<code>(.+)<\/code>(\r?\n|$)/,
     table: /^(\|\|.*)(\r?\n|$)/,
     emptyline: /^(?:\s*)\r?\n/,
     paragraph: /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/,
-    text: /^(\r?\n|$)/
+    macro: /^{{{(.*?)(?:\((.*?)\))?\s*\r?\n([\s\S]*?)(\r?\n)?}}}\s*(\r?\n|$)/,
+    comment: /^## .*(\r?\n|$)/
 };
 
-function Lexer(additional, inlineParser){
-    this.additional = additional;
-    this.inlineParser = inlineParser;
+function Lexer(parser){
+    this.additional = parser.additional;
+    this.inlineParser = parser.inlineParser;
 }
 
 Lexer.prototype.scan = function(src){
@@ -97,36 +98,22 @@ Lexer.prototype.scan = function(src){
         //     src = src.substr(cap[0].length);
         //     continue;
         // }
-        //
-        // //quote
-        // if (cap = blocks.quote.exec(src)) {
-        //     toks.push({
-        //         type: 'quote',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
 
-        //quote2
-        // if (cap = blocks.quote2.exec(src)) {
-        //     toks.push({
-        //         type: '',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
+        //quote
+        if (cap = blocks.quote.exec(src)) {
+            toks.push({
+                type: 'quote',
+                text: this.inlineParser.out(cap[1])
+            });
+            src = src.substr(cap[0].length);
+            continue;
+        }
 
-        // //code
-        // if (cap = blocks.code.exec(src)) {
-        //     toks.push({
-        //         type: 'code',
-        //         text:
-        //     });
-        //     src = src.substr(cap[0].length);
-        //     continue;
-        // }
+        //comment
+        if (cap = blocks.comment.exec(src)) {
+            src = src.substr(cap[0].length);
+            continue;
+        }
 
         //table
         if (cap = blocks.table.exec(src)) {
@@ -134,8 +121,9 @@ Lexer.prototype.scan = function(src){
             toks.push({
                 type: 'table',
                 additional: list.pop(),
-                row: list.map(this.inlineParser.out)
+                row: list.map((text)=>{return this.inlineParser.out(text)})
             });
+
             src = src.substr(cap[0].length);
             continue;
         }
@@ -179,6 +167,18 @@ Lexer.prototype.scan = function(src){
             continue;
         }
 
+        //macro
+        if (cap = blocks.macro.exec(src)){
+            toks.push({
+                type: 'macro',
+                macro: cap[1],
+                param: cap[2],
+                text: cap[3]
+            });
+            src = src.substr(cap[0].length);
+            continue;
+        }
+
 
         //paragraph
         if (cap = blocks.paragraph.exec(src)) {
@@ -192,8 +192,12 @@ Lexer.prototype.scan = function(src){
 
 
         if(src){
-            console.error(src);
-            throw new Error('Infinite loop on byte: ' + src.charCodeAt(0));
+            toks.push({
+                type: 'error',
+                name: 'Scan Error',
+                text: 'Disable to scan: '+src.substr(0, 10)+'...'
+            });
+            return toks;
         }
     }
     return toks;
