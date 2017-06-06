@@ -319,7 +319,7 @@ wiki.prototype.searchTitles = function(title, callback){
     let query = 'SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%'+ns_title+'%" AND page_title LIKE "'+parseTitle[2]+'%" AND deleted = 0 LIMIT 7';
     this.conn.query(query, function(err, res, fields){
         if(!err){
-            let result = res.map((item) => {
+            var result = res.map((item) => {
                 "use strict";
                 let data;
                 if(parseTitle[1]) data = {title: item.ns_title + ':' + item.page_title};

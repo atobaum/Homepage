@@ -99,7 +99,6 @@ app.post(/\/edit\/(.*)/, function(req, res, next){
     var title = decodeURI(req.params[0]);
     var data = req.body;
     data.title = title;
-    console.log(data);
     userId = req.session ? req.session.userId : null;
     data.userText = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     wiki.editPage(data, userId, function(err){

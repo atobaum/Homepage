@@ -6,7 +6,7 @@ block head2
     link(rel="stylesheet" href='/css/wiki/wiki_view.css')
 
 block content
-    .ui.segment
+    .ui
         h1
             a(href="/wiki/view/"+wiki.title)= wiki.title
             - var editType = wiki.rev_id ? " (R"+wiki.rev_id+" 수정)" : " (새 문서 만들기)";
