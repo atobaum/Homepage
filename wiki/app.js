@@ -75,23 +75,23 @@ app.get(/\/edit\/(.*)/, function(req, res, next){
 });
 
 app.get(/\/history\/(.*)/, function(req, res, next){
-    res.render('main', {
-        "title": "history page: " + req.params.page, session: req.session
+    res.render('error', {
+        error: {message: "준비중..."}
     });
 });
 
 //backlinks
 app.get(/\/xref\/(.*)/, function(req, res, next){
-    res.render('main', {
-        "title": "backlink page: " + req.params.page, session: req.session
+    res.render('error', {
+        error: {message: "준비중..."}
     });
 });
 
 
 //for backend
 app.get(/\/delete\/(.*)/, function(req, res, next){
-    res.render('main', {
-        "title": "delete page: " + req.params.page,
+    res.render('error', {
+        error: {message: "준비중..."}
     });
 });
 
@@ -99,6 +99,7 @@ app.post(/\/edit\/(.*)/, function(req, res, next){
     var title = decodeURI(req.params[0]);
     var data = req.body;
     data.title = title;
+    console.log(data);
     userId = req.session ? req.session.userId : null;
     data.userText = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     wiki.editPage(data, userId, function(err){
@@ -201,5 +202,6 @@ app.createUser = wiki.createUser;
 app.updateUser = wiki.updateUser;
 app.checkUsername = wiki.checkUsername;
 app.checkNickname = wiki.checkNickname;
+app.conn = wiki.conn;
 
 module.exports = app;

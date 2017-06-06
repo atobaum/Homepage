@@ -1,136 +1,155 @@
 /**
  * Created by Le Reveur on 2017-04-24.
  */
+"use strict";
 
 var Lexer = require('./lexer');
 var InlineParser = require('./inline_parser');
 var Renderer = require('./renderer');
 
-function Parser(){
-    this.additional = {};
-    this.initAdditional();
-    this.renderer = new Renderer();
-    this.inlineParser = new InlineParser(this);
-    this.lexer = new Lexer(this);
-}
-
-Parser.prototype.initAdditional = function(){
-    this.additional.footnotes = [];
-    this.additional.cat = [];
-    this.additional.toc = {curLevel: [], toks: []};
-};
-
-Parser.prototype.reloadRenderer = function(){
-    this.renderer = new Renderer();
-    this.inlineParser = new InlineParser(this.renderer);
-};
-
-Parser.prototype.parseList = function(toks){
-    var list = [],
-        curOrdered = toks[0].ordered,
-        curLevel = toks[0].level;
-
-    while(toks[0] && toks[0].type == 'list' && (toks[0].level == curLevel) && (toks[0].ordered == curOrdered)){
-        var tok = toks.shift();
-        if(toks[0] && toks[0].type == 'list' && toks[0].level > curLevel)
-            tok.child = this.parseList(toks);
-        list.push(tok);
+class Parser{
+    constructor(){
+        this.additional = {};
+        this.initAdditional();
+        this.renderer = new Renderer();
+        this.inlineParser = new InlineParser(this);
+        this.lexer = new Lexer(this);
+        this.headings;
     }
-    return list;
-};
 
-Parser.prototype.parseHeadings = function(toks){
-    if(toks.length == 0)
-        return [];
-    var list = [],
-        curOrdered = toks[0].ordered,
-        curLevel = toks[0].level;
-
-    while(toks[0] && (toks[0].level == curLevel)){
-        var tok = toks.shift();
-        if(toks[0] && toks[0].level > curLevel)
-            tok.child = this.parseHeadings(toks);
-        list.push(tok);
+    initAdditional(){
+        this.additional.footnotes = [];
+        this.additional.cat = [];
+        this.toks = [];
     }
-    return list;
-};
 
-Parser.prototype.parseTable = function(toks){
-    var tables = [];
-    while (toks[0] && toks[0].type == 'table'){
-        tables.push(toks.shift());
+    reloadRenderer(){
+        this.renderer = new Renderer();
+        this.inlineParser = new InlineParser(this.renderer);
     }
-    return tables;
-};
 
-Parser.prototype.macro = function(tok){
-    "use strict";
-    switch (tok.macro.toLowerCase()){
-        case(''):
-        case(null):
-            return '<pre>'+this.renderer.escapeHTML(tok.text)+'</pre>';
-            break;
-        case('syntax'):
-            return this.renderer.syntax(tok);
-            break;
-        case('html'):
-            return tok.text;
-            break;
+    parseList(){
+        let list = [],
+            curOrdered = this.toks[0].ordered,
+            curLevel = this.toks[0].level;
+
+        while(this.toks[0] && this.toks[0].type == 'list' && (this.toks[0].level == curLevel) && (this.toks[0].ordered == curOrdered)){
+            let tok = this.toks.shift();
+            if(this.toks[0] && this.toks[0].type == 'list' && this.toks[0].level > curLevel)
+                tok.child = this.parseList(this.toks);
+            list.push(tok);
+        }
+        return list;
     }
-};
 
-Parser.prototype.parseQuote = function(toks){
-    "use strict";
-    var text = toks.shift().text;
-    while (toks[0] && toks[0].type == 'quote'){
-        text += ' '+toks.shift().text;
+    parseTable(){
+        var tables = [];
+        while (this.toks[0] && this.toks[0].type === 'table'){
+            tables.push(this.toks.shift());
+        }
+        return tables;
     }
-    return text;
-};
 
-Parser.prototype.out = function(src, title){
-    var content = '';
-    this.initAdditional();
-    var toks = this.lexer.scan(src);
-    var preType = ''; //type of previous token.
-    while (tok = toks[0]){
-        switch(tok.type){
-            case 'heading':
-                content += this.renderer.heading(toks.shift());
+    macro(tok){
+        switch (tok.macro.toLowerCase()){
+            case(''):
+            case(null):
+                return '<pre>'+this.renderer.escapeHTML(tok.text)+'</pre>';
                 break;
-            case 'list':
-                content += this.renderer.list(this.parseList(toks));
+            case('syntax'):
+                return this.renderer.syntax(tok);
                 break;
-            case 'table':
-                content += this.renderer.table(this.parseTable(toks));
-                break;
-            case 'macro':
-                content += this.macro(toks.shift());
-                break;
-            case 'quote':
-                content += this.renderer.blockquote(this.parseQuote(toks));
-                break;
-            case 'LaTeX':
-                content += this.renderer.KaTeX(toks.shift());
-                break;
-            default:
-                if(this.renderer[tok.type])
-                    content += this.renderer[tok.type](toks.shift());
-                else{
-                    content += this.renderer.error({name: "Unsupported Token", text: "Token type is unsupported: "+tok.type});
-                    return content;
-                }
+            case('html'):
+                return tok.text;
                 break;
         }
-        preType = tok.type;
-    }
-    content += '<br>'+this.renderer.footnotes(this.additional.footnotes);
-    content = (this.additional.toc.toks.length == 0 ? '' : this.renderer.toc(this.parseHeadings(this.additional.toc.toks))) + content + (this.additional.cat.length != 0 ? this.renderer.cat(this.additional.cat) : '');
-    return content;
-};
+    };
 
-Parser.prototype.addCat = function(title){
-    this.additional.cat.push(title);
-};
+    parseQuote(){
+        let text = this.toks.shift().text;
+        while (this.toks[0] && this.toks[0].type === 'quote'){
+            text += ' '+this.toks.shift().text;
+        }
+        return text;
+    };
+
+    out(src, title){
+        let content = '';
+        this.initAdditional();
+        [this.toks, this.headings] = this.lexer.scan(src);
+        this.headings = parseHeadings(this.headings);
+        let headingInfo = iteratorList(this.headings);
+        let tok;
+        while (tok = this.toks[0]){
+            switch(tok.type){
+                case 'heading':
+                    this.toks.shift();
+                    content += this.renderer.heading(headingInfo.next().value);
+                    break;
+                case 'list':
+                    content += this.renderer.list(this.parseList());
+                    break;
+                case 'table':
+                    content += this.renderer.table(this.parseTable());
+                    break;
+                case 'macro':
+                    content += this.macro(this.toks.shift());
+                    break;
+                case 'quote':
+                    content += this.renderer.blockquote(this.parseQuote());
+                    break;
+                case 'LaTeX':
+                    content += this.renderer.KaTeX(this.toks.shift());
+                    break;
+                default:
+                    if(this.renderer[tok.type])
+                        content += this.renderer[tok.type](this.toks.shift());
+                    else{
+                        content += this.renderer.error({name: "Unsupported Token", text: "Token type is unsupported: "+tok.type});
+                        return content;
+                    }
+                    break;
+            }
+        }
+        content += (this.additional.footnotes.length !== 0 ? '<br>'+this.renderer.footnotes(this.additional.footnotes) : '');
+        content = (this.headings.length == 0 ? '' : this.renderer.toc(this.headings)) + content + (this.additional.cat.length != 0 ? this.renderer.cat(this.additional.cat) : '');
+        return content;
+    };
+
+    addCat(title){
+        this.additional.cat.push(title);
+    };
+}
+
+/**
+ *
+ * @param headings{[[num, String]]}
+ * @param headings[*].level{num} - heading level
+ * @param headings[*].text{String} - heading text
+ * @returns {Array}
+ */
+function parseHeadings(headings, level=[0]){
+    if(headings.length == 0)
+        return [];
+    let list = [];
+    while(headings[0] && (headings[0].level >= level.length)) {
+        if (headings[0].level > level.length){
+            list = list.concat(parseHeadings(headings, [...level, 0]));
+        }else{
+            level[level.length-1]++;
+            let tok = headings.shift();
+            //console.log(tok);
+            tok.level = level.slice();
+            list.push(tok);
+        }
+    }
+    return list;
+}
+
+function* iteratorList(list){
+    for(let i = 0; i < list.length; i++){
+        yield list[i];
+    }
+}
 
 module.exports = Parser;

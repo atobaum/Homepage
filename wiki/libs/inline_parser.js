@@ -5,6 +5,7 @@ var inlineTockens = {
     escape: /^\\([>\$\\\`'\^_~\(\)*{}\[\]#t])/,
     italic: /^''(?!')(?=\S)([\s\S]*?\S)''/,
     bold: /^'''(?!')(?=\S)([\s\S]*?\S)'''/,
+    italicbold: /^'''''(?!')(?=\S)([\s\S]*?\S)'''''/,
     underline: /^__(.+)__/,
     sup: /^\^\^(.+?)\^\^/,
     sub: /^,,(.+),,/,
@@ -34,6 +35,13 @@ InlineParser.prototype.out = function(src) {
     var cap;
     var renderer = this.renderer;
     while (src) {
+        //italicbold
+        if (cap = inlineTockens.italicbold.exec(src)) {
+            result += renderer.italicbold({text: cap[1]});
+            src = src.substr(cap[0].length);
+            continue;
+        }
+
         //italic
         if (cap = inlineTockens.italic.exec(src)) {
             result += renderer.italic({text: cap[1]});

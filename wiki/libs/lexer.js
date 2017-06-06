@@ -1,10 +1,10 @@
 /**
  * Created by Le Reveur on 2017-05-03.
  */
-
+"use strict";
 var InlineParser = require('./inline_parser');
 var blocks = {
-    heading: /^(={2,5}) (.+) ={2,5}(\r?\n|$)/,
+    heading: /^(={2,6}) (.+) ={2,6}(\r?\n|$)/,
     list: /^(\s+)([*-]) (.+)(\r?\n|$)/,
     // indent: /^:{1,}(.+)(\r?\n|$)/,
     hr: /^-{3,}\s*(\r?\n|$)/,
@@ -25,46 +25,14 @@ function Lexer(parser){
 }
 
 Lexer.prototype.scan = function(src){
-    var toks = [];
-    var cap;
+    let toks = [];
+    let cap;
+    let headings = [];
     while (src) {
         //heading
         if (cap = blocks.heading.exec(src)) {
-            var level = cap[1].length - 1;
-            var toc = this.additional.toc;
-            if(level > toc.curLevel.length)
-                toc.curLevel.push(1);
-            else if (level == toc.curLevel.length)
-                toc.curLevel[level - 1]++;
-            else {
-                toc.curLevel.pop();
-                toc.curLevel[toc.curLevel.length - 1]++;
-            }
-
-            var id = 'h-';
-            var prefix = '';
-            for(var i = 0; i < toc.curLevel.length; i++){
-                id += toc.curLevel[i] + '-';
-                prefix += toc.curLevel[i] + '.';
-            }
-            id = id.substr(0, id.length - 1);
-            prefix = prefix.substr(0, prefix.length - 1);
-
-
-            var text = this.inlineParser.out(cap[2]);
-            toc.toks.push({
-                level: cap[1].length - 1,
-                text: text,
-                id: id,
-                prefix: prefix
-            });
-
-            toks.push({
-                type: 'heading',
-                level: cap[1].length - 1,
-                text: text,
-                id: id
-            });
+            headings.push({level: cap[1].length - 1, text: this.inlineParser.out(cap[2])}); //[level, text]
+            toks.push({type: 'heading'});
             src = src.substr(cap[0].length);
             continue;
         }
@@ -212,6 +180,6 @@ Lexer.prototype.scan = function(src){
             return toks;
         }
     }
-    return toks;
+    return [toks, headings];
 };
 module.exports = Lexer;

@@ -1,3 +1,5 @@
+"use strict";
+
 if(!process.env.NODE_ENV){
     console.log('NODE_ENV is undefined. Set to development.');
 }
@@ -22,20 +24,26 @@ var app = express();
 app.set('views', __dirname+'/views');
 app.set('view engine', 'pug');
 
-// uncomment after placing your favicon in /public
 app.use(favicon(__dirname + '/../public/' + 'favicon.ico'));
 app.use(express.static(__dirname+'/../public'));
 if(process.env.NODE_ENV == 'development') {
-    logger = require('morgan');
+    let logger = require('morgan');
     app.use(logger('dev'));
 }
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+
+//session setting
+var session = require('express-session');
+var MySQLStore = require('express-mysql-session')(session);
+var sessionStore = new MySQLStore({}, wiki.conn);
 app.use(session({
     secret: 'fdkjl%31nc124*|c',
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    store: sessionStore
 }));
 
 app.use('/bookshelf', bookshelf);

@@ -1,6 +1,7 @@
 /**
  * Created by Le Reveur on 2017-05-01.
  */
+"use strict";
 var mysql = require('mysql');
 var async = require('async');
 var regexTitle = /^(?:(.*?):)?(.+?)$/;
@@ -21,26 +22,32 @@ function wiki(config){
 };
 
 wiki.prototype.parse = function(src){
-    return this.parser.out(src);
+    try {
+        return this.parser.out(src);
+    } catch(e){
+        console.log(e);
+        throw e;
+    }
 };
 
 wiki.prototype.getPageInfo = function(title, callback){
     var parsedTitle = regexTitle.exec(title);
+    let nsTitle;
     if (parsedTitle[1]){
-        var nsTitle = parsedTitle[1];
+        nsTitle = parsedTitle[1];
     } else{
-        var nsTitle = "Main";
-        var title = false;
+        nsTitle = "Main";
+        title = false;
     }
-    var query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
+    let query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
     this.conn.query(query, [nsTitle, parsedTitle[2]], function(err, rows){
         if(err) callback(err);
         else if(rows.length == 0){
-            var error = new Error('There\'s no such page.');
+            let error = new Error('There\'s no such page.');
             error.name = "NO_PAGE_ERROR";
             callback(error);
         } else {
-            var pageInfo = rows[0];
+            let pageInfo = rows[0];
             pageInfo.title = (title ? pageInfo.ns_title+':' : '') + pageInfo.page_title;
             callback(null, pageInfo);
         }
@@ -57,12 +64,12 @@ wiki.prototype.getPageInfo = function(title, callback){
  * @property result - true if you can access.
  */
 wiki.prototype.checkAC = function(nsId, pageId, userId, type, callback){
-    var query = "SELECT AC FROM ACL WHERE user_id = ? and (ns_id = ? OR page_id = ?)";
+    let query = "SELECT AC FROM ACL WHERE user_id = ? and (ns_id = ? OR page_id = ?)";
     this.conn.query(query, [userId, nsId, pageId], function(err, rows){
         if(err) callback(err);
-        else if(rows.length == 0) callback(null, false);
+        else if(rows.length === 0) callback(null, false);
         else{
-            for(var i = 0; i < rows.length; i++){
+            for(let i = 0; i < rows.length; i++){
                 if(rows[i].AC & type){
                     callback(null, true);
                     return;
@@ -83,12 +90,12 @@ wiki.prototype.checkAC = function(nsId, pageId, userId, type, callback){
  * @property page.text
  */
 wiki.prototype.getRawPage = function(title, userId, callback){
-    var thisClass = this;
+    let thisClass = this;
     async.waterfall([function(next){
         thisClass.getPageInfo(title, next);
     }, function(pageInfo, next){
         if(pageInfo.deleted){
-            var error = new Error('Page is deleted.');
+            let error = new Error('Page is deleted.');
             error.name = "DELETED_PAGE";
             callback(error);
         } else if((pageInfo.page_PAC && pageInfo.page_PAC & 4) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 4)){ //can read
@@ -99,23 +106,23 @@ wiki.prototype.getRawPage = function(title, userId, callback){
                     if(err) next(err);
                     else if(ac) next(null, pageInfo);
                     else{
-                        var error = new Error('You have no privilege for this page.');
+                        let error = new Error('You have no privilege for this page.');
                         error.name = "NO_PRIVILEGE";
                         callback(error);
                     }
                 });
             } else{
-                var error = new Error('You have no privilege for this page.');
+                let error = new Error('You have no privilege for this page.');
                 error.name = "NO_PRIVILEGE";
                 callback(error);
             }
         }
     }, function(pageInfo){ //read page
-        query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
+        let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
         thisClass.conn.query(query, [pageInfo.page_id, pageInfo.rev_id], function (err, rows) {
             if(err) callback(err);
             else {
-                var data = {title: pageInfo.title, rev_id: pageInfo.rev_id ,touched: pageInfo.touched, text: rows[0].text};
+                let data = {title: pageInfo.title, rev_id: pageInfo.rev_id ,touched: pageInfo.touched, text: rows[0].text};
                 if((pageInfo.page_PAC && pageInfo.page_PAC & 2) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 2)) callback(null, data);
                 else if(userId){
                     thisClass.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 2, function(err, ac){
@@ -133,13 +140,19 @@ wiki.prototype.getRawPage = function(title, userId, callback){
 };
 
 wiki.prototype.updatePageCache = function(page_id, rev_id, callback){
-    var thisClass = this;
-    var query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
+    let thisClass = this;
+    let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
     thisClass.conn.query(query, [page_id, rev_id], function (err, rows) {
+        let content;
         if(err) callback(err);
         else {
             query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
-            var content = thisClass.parser.out(rows[0].text);
+            try {
+                content = thisClass.parser.out(rows[0].text);
+            }catch(e){
+                console.log(e);
+                throw e;
+            }
             thisClass.conn.query(query, [page_id, content, content], function(err){
                 callback(err, content);
             });
@@ -148,12 +161,12 @@ wiki.prototype.updatePageCache = function(page_id, rev_id, callback){
 };
 
 wiki.prototype.getParsedPage = function(title, userId, callback){
-    var thisClass = this;
+    let thisClass = this;
     async.waterfall([function(next){
         thisClass.getPageInfo(title, next);
     }, function(pageInfo, next){
         if(pageInfo.deleted){
-            var error = new Error('Page is deleted.');
+            let error = new Error('Page is deleted.');
             error.name = "DELETED_PAGE";
             callback(error, pageInfo);
         } else if((pageInfo.page_PAC && pageInfo.page_PAC & 4) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 4)){ //can read
@@ -164,13 +177,13 @@ wiki.prototype.getParsedPage = function(title, userId, callback){
                     if(err) next(err);
                     else if(ac) next(null, pageInfo);
                     else{
-                        var error = new Error('You have no privilege for this page.');
+                        let error = new Error('You have no privilege for this page.');
                         error.name = "NO_PRIVILEGE";
                         callback(error, pageInfo);
                     }
                 });
             } else{
-                var error = new Error('You have no privilege for this page.');
+                let error = new Error('You have no privilege for this page.');
                 error.name = "NO_PRIVILEGE";
                 callback(error, pageInfo);
             }
@@ -179,10 +192,10 @@ wiki.prototype.getParsedPage = function(title, userId, callback){
         if(pageInfo.redirect){
             callback(null, {redirectFrom: pageInfo.title, redirectTo: pageInfo.redirect});
         } else if(pageInfo.cached){
-            query = "SELECT content FROM caching WHERE page_id = ?";
+            let query = "SELECT content FROM caching WHERE page_id = ?";
             thisClass.conn.query(query, [pageInfo.page_id], function (err, rows) {
                 if(err) callback(err);
-                else if(rows.length == 0) callback(new Error('fatal error: cache data doen\'t exists for page_id='+pageInfo.page_id));
+                else if(rows.length === 0) callback(new Error('fatal error: cache data doen\'t exists for page_id='+pageInfo.page_id));
                 else callback(null, {title: pageInfo.title, touched: pageInfo.touched, parsedContent: rows[0].content});
             });
         } else{
@@ -204,10 +217,9 @@ wiki.prototype.getParsedPage = function(title, userId, callback){
  * @param callback(err)
  */
 wiki.prototype.editPage = function(page, userId, callback){
-    var parsedTitle = regexTitle.exec(page.title);
-    var ns_title = parsedTitle[1] || "Main";
-    var page_title = parsedTitle[2];
-    var thisClass = this;
+    let ns_title, page_title;
+    [ ,ns_title = "Main", page_title] = regexTitle.exec(page.title);
+    let thisClass = this;
     this.conn.beginTransaction(function(err) {
         if (err) {
             callback(err);
@@ -220,8 +232,8 @@ wiki.prototype.editPage = function(page, userId, callback){
         async.waterfall([function(next) { //get ns_id
             thisClass.conn.query("SELECT * FROM namespace WHERE ns_title = ?", [ns_title], function(err, rows){
                 if(err) next(err);
-                else if(rows.length == 0){
-                    var error = new Error("namespace doesn't exist: "+ns_title);
+                else if(rows.length === 0){
+                    let error = new Error("namespace doesn't exist: "+ns_title);
                     error.name = "NO_NAMESPACE";
                     next(error);
                 } else {
@@ -230,7 +242,7 @@ wiki.prototype.editPage = function(page, userId, callback){
                 }
             });
         }, function(ns_PAC, next){ //insert page
-            var query = "INSERT INTO page (ns_id, page_title, user_ID, user_text) VALUES (?, ?, ?, ?)";
+            let query = "INSERT INTO page (ns_id, page_title, user_ID, user_text) VALUES (?, ?, ?, ?)";
             thisClass.conn.query(query, [data.ns_id, data.page_title, userId, page.userText], function (err) {
                 if(err && err.code == "ER_DUP_ENTRY"){
                     next(null, ns_PAC, false);
@@ -271,13 +283,15 @@ wiki.prototype.editPage = function(page, userId, callback){
                 next(error);
             }
         }, function(next){ //add revision
-            var revision = {
+            let revision = {
                 page_id: data.page_id,
                 rev_id: data.rev_id,
                 user_id: userId,
                 user_text: page.userText,
                 text: page.text,
-                parent_id: data.parent_id
+                parent_id: data.parent_id,
+                minor: page.minor,
+                comment: page.comment
             };
             thisClass.conn.query("INSERT INTO revision SET ?", [revision], function(err, rows){
                 next(err);
@@ -299,17 +313,17 @@ wiki.prototype.editPage = function(page, userId, callback){
     });
 };
 
-wiki.prototype.searchTitles = function(query, callback){
-    var parseTitle = regexTitle.exec(query);
-    var thisClass = this;
-    var ns_title = parseTitle[1] || 'Main';
-    var query = 'SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%'+ns_title+'%" AND page_title LIKE "'+parseTitle[2]+'%" AND deleted = 0 LIMIT 7';
+wiki.prototype.searchTitles = function(title, callback){
+    let parseTitle = regexTitle.exec(title);
+    let ns_title = parseTitle[1] || 'Main';
+    let query = 'SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%'+ns_title+'%" AND page_title LIKE "'+parseTitle[2]+'%" AND deleted = 0 LIMIT 7';
     this.conn.query(query, function(err, res, fields){
         if(!err){
-            var result = res.map((item) => {
+            let result = res.map((item) => {
                 "use strict";
-                if(parseTitle[1]) var data = {title: item.ns_title + ':' + item.page_title};
-                else var data = {title: item.page_title};
+                let data;
+                if(parseTitle[1]) data = {title: item.ns_title + ':' + item.page_title};
+                else data = {title: item.page_title};
                 data.url = '/wiki/view/'+data.title;
                 return data;
             });
@@ -339,7 +353,7 @@ wiki.prototype.backup = function(dest, callback){
 wiki.prototype.login = function(username, password, callback){
     this.conn.query("SELECT user_id, nickname, password = PASSWORD(?) as correct FROM user WHERE username = ?", [password, username], function (err, rows) {
         if(err) callback(err);
-        else if(rows.length == 0) callback(null, 2);
+        else if(rows.length === 0) callback(null, 2);
         else callback(null, rows[0].correct, rows[0]);
      });
 };
@@ -358,13 +372,13 @@ wiki.prototype.updateUser = function(){
 
 wiki.prototype.checkUsername = function(username, callback){
     this.conn.query("SELECT user_id FROM user WHERE username=?", [username], function(err, rows){
-       callback(err, rows.length != 0);
+       callback(err, rows.length !== 0);
     });
 };
 
 wiki.prototype.checkNickname = function(nickname, callback){
     this.conn.query("SELECT user_id FROM user WHERE nickname=?", [nickname], function(err, rows){
-        callback(err, rows.length != 0);
+        callback(err, rows.length !== 0);
     });
 };
 

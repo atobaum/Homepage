@@ -1,10 +1,9 @@
-extends layout
+html
+  head
+    title Error
 
-block head2
-  title Error
-
-block content
-  h1= message
-  h2= error.status
-  h2= error.message
-  pre #{error.stack}
+  body
+    h1= message
+    h2= error.status
+    h2= error.message
+    pre #{error.stack}
