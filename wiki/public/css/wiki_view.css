@@ -22,3 +22,13 @@ code {
     background-color: rgb(226, 226, 226);
     color: rgb(216, 0, 0);
 }
+
+
+pre {
+    background-color: rgb(226, 226, 226);
+    color: rgb(216, 0, 0);
+}
+
+.wiki_article_menu {
+    float:right;
+}

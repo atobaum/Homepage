@@ -1,9 +1,9 @@
 /**
  * Created by Le Reveur on 2017-04-24.
  */
+var katex = require("katex");
 
 function Renderer(){
-
 }
 
 Renderer.prototype.blockquote = function(text){
@@ -92,6 +92,10 @@ Renderer.prototype.text = function(data){
     return data.text;
 };
 
+Renderer.prototype.KaTeX = function(tok){
+    "use strict";
+    return katex.renderToString(tok.text, {displayMode: tok.displayMode});
+};
 //footnote reference
 Renderer.prototype.rfn = function(data){
     return `<sup><a class="wiki_rfn" id="rfn_${data.index}" href="#fn_${data.index}" title="${data.text}">[${data.index}]</a></sup>`

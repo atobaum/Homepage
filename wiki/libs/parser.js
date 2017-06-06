@@ -110,6 +110,9 @@ Parser.prototype.out = function(src, title){
             case 'quote':
                 content += this.renderer.blockquote(this.parseQuote(toks));
                 break;
+            case 'LaTeX':
+                content += this.renderer.KaTeX(toks.shift());
+                break;
             default:
                 if(this.renderer[tok.type])
                     content += this.renderer[tok.type](toks.shift());

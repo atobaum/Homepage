@@ -15,7 +15,8 @@ var blocks = {
     emptyline: /^(?:\s*)\r?\n/,
     paragraph: /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/,
     macro: /^{{{(.*?)(?:\((.*?)\))?\s*\r?\n([\s\S]*?)(\r?\n)?}}}\s*(\r?\n|$)/,
-    comment: /^## .*(\r?\n|$)/
+    comment: /^## .*(\r?\n|$)/,
+    blockLaTeX: /^\$\$([^\$]+?)\$\$/
 };
 
 function Lexer(parser){
@@ -84,6 +85,17 @@ Lexer.prototype.scan = function(src){
                 ordered: cap[2] == '-',
                 level: cap[1].length,
                 text: this.inlineParser.out(cap[3])
+            });
+            src = src.substr(cap[0].length);
+            continue;
+        }
+
+        //blocklatex
+        if (cap = blocks.blockLaTeX.exec(src)) {
+            toks.push({
+                type: 'LaTeX',
+                displayMode: true,
+                text: cap[1]
             });
             src = src.substr(cap[0].length);
             continue;

@@ -30,6 +30,7 @@ wiki.prototype.getPageInfo = function(title, callback){
         var nsTitle = parsedTitle[1];
     } else{
         var nsTitle = "Main";
+        var title = false;
     }
     var query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
     this.conn.query(query, [nsTitle, parsedTitle[2]], function(err, rows){
@@ -39,7 +40,9 @@ wiki.prototype.getPageInfo = function(title, callback){
             error.name = "NO_PAGE_ERROR";
             callback(error);
         } else {
-            callback(null, rows[0])
+            var pageInfo = rows[0];
+            pageInfo.title = (title ? pageInfo.ns_title+':' : '') + pageInfo.page_title;
+            callback(null, pageInfo);
         }
     });
 };
@@ -112,7 +115,7 @@ wiki.prototype.getRawPage = function(title, userId, callback){
         thisClass.conn.query(query, [pageInfo.page_id, pageInfo.rev_id], function (err, rows) {
             if(err) callback(err);
             else {
-                var data = {title: title, rev_id: pageInfo.rev_id ,touched: pageInfo.touched, text: rows[0].text};
+                var data = {title: pageInfo.title, rev_id: pageInfo.rev_id ,touched: pageInfo.touched, text: rows[0].text};
                 if((pageInfo.page_PAC && pageInfo.page_PAC & 2) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 2)) callback(null, data);
                 else if(userId){
                     thisClass.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 2, function(err, ac){
@@ -152,7 +155,7 @@ wiki.prototype.getParsedPage = function(title, userId, callback){
         if(pageInfo.deleted){
             var error = new Error('Page is deleted.');
             error.name = "DELETED_PAGE";
-            callback(error);
+            callback(error, pageInfo);
         } else if((pageInfo.page_PAC && pageInfo.page_PAC & 4) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 4)){ //can read
             next(null, pageInfo);
         } else {
@@ -163,29 +166,29 @@ wiki.prototype.getParsedPage = function(title, userId, callback){
                     else{
                         var error = new Error('You have no privilege for this page.');
                         error.name = "NO_PRIVILEGE";
-                        callback(error);
+                        callback(error, pageInfo);
                     }
                 });
             } else{
                 var error = new Error('You have no privilege for this page.');
                 error.name = "NO_PRIVILEGE";
-                callback(error);
+                callback(error, pageInfo);
             }
         }
     }, function(pageInfo){ //read page
         if(pageInfo.redirect){
-            callback(null, {redirectFrom: title, redirectTo: pageInfo.redirect});
+            callback(null, {redirectFrom: pageInfo.title, redirectTo: pageInfo.redirect});
         } else if(pageInfo.cached){
             query = "SELECT content FROM caching WHERE page_id = ?";
             thisClass.conn.query(query, [pageInfo.page_id], function (err, rows) {
                 if(err) callback(err);
                 else if(rows.length == 0) callback(new Error('fatal error: cache data doen\'t exists for page_id='+pageInfo.page_id));
-                else callback(null, {title: title, touched: pageInfo.touched, parsedContent: rows[0].content});
+                else callback(null, {title: pageInfo.title, touched: pageInfo.touched, parsedContent: rows[0].content});
             });
         } else{
             thisClass.updatePageCache(pageInfo.page_id, pageInfo.rev_id, function(err, parsedContent){
                 if(err) callback(err);
-                else callback(null, {title: title, touched: pageInfo.touched, parsedContent: parsedContent})
+                else callback(null, {title: pageInfo.title, touched: pageInfo.touched, parsedContent: parsedContent})
             });
         }
     }], callback);
@@ -300,9 +303,18 @@ wiki.prototype.searchTitles = function(query, callback){
     var parseTitle = regexTitle.exec(query);
     var thisClass = this;
     var ns_title = parseTitle[1] || 'Main';
-    var query = 'SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%'+ns_title+'%" AND page_title LIKE "'+parseTitle[2]+'%" AND deleted = 0';
+    var query = 'SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%'+ns_title+'%" AND page_title LIKE "'+parseTitle[2]+'%" AND deleted = 0 LIMIT 7';
     this.conn.query(query, function(err, res, fields){
-        callback(err, res);
+        if(!err){
+            var result = res.map((item) => {
+                "use strict";
+                if(parseTitle[1]) var data = {title: item.ns_title + ':' + item.page_title};
+                else var data = {title: item.page_title};
+                data.url = '/wiki/view/'+data.title;
+                return data;
+            });
+        }
+        callback(err, result);
     });
 };
 

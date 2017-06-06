@@ -40,6 +40,7 @@ app.get(/\/view\/(.*)/, function(req, res, next){
             if(err.name == 'NO_PAGE_ERROR') {
                 res.redirect('/wiki/search/'+ encodeURI(title));
             } else if (err.name == "NO_PRIVILEGE"){
+                console.log(page);
                 res.render('noPrivilege', {wikiTitle: title, priType: 4 ,session:req.session});
             } else{
                 res.render('error', {error: err, session: req.session});
@@ -164,11 +165,11 @@ app.post(/\/api\/edit\/(.*)/, function(req, res){
 
 app.get('/api/titleSearch', function(req, res){
    wiki.searchTitles(req.query.q, function(err, titles){
-
        if(err){
            res.json({ok:0 ,error: err});
        }
        else{
+           console.log(titles);
            res.json({ok:1, result: titles});
        }
    });
