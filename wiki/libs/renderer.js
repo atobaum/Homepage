@@ -107,7 +107,7 @@ class Renderer{
     footnotes(footnotes){
         var result = '<hr><ul class="wiki_fns">';
         footnotes.forEach(function(fn, index){
-            result += `<li><a class="wiki_fn" id="fn_${index + 1}" href="#rfn_${index + 1}" title="${fn.text}">[${index + 1}]</a> ${fn.text}</li>`;
+            result += `<li><a class="wiki_fn" id="fn_${index + 1}" href="#rfn_${index + 1}">[${index + 1}]</a> ${fn.text}</li>`;
         });
         result += "</ul>";
         return result;

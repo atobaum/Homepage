@@ -62,6 +62,8 @@ class Parser{
             case('html'):
                 return tok.text;
                 break;
+            default:
+                return this.renderer.error({name:"Block Macro Error", text: 'Block macro '+tok.macro+' doesn\'t supported.'});
         }
     };
 

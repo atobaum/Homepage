@@ -26,7 +26,7 @@ wiki.prototype.parse = function(src){
         return this.parser.out(src);
     } catch(e){
         console.log(e);
-        throw e;
+        return e.message;
     }
 };
 

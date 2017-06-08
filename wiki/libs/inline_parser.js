@@ -16,10 +16,10 @@ var inlineTockens = {
     footnote: /^\(\((.+)\)\)/,
     fontsize: /./,
     fontcolor: /./,
-    text: /^.+?(?={{|\\|\$|''|__|\^\^|,,|\[\[|~~| {2,}|\(\(|\n|$)/,
+    text: /^.+?(?={{|\\|\$|''|__|\^\^|,,| {2}|\[\[|~~| {2,}|\(\(|\n|$)/,
     inlineLatex: /^\$([^\$]+?)\$/,
     blockLatex: /^\$\$([^\$]+?)\$\$/,
-    macro: /^{{(.*?)(?:\((.*?)\))?(?: (.*?))?}}/
+    macro: /^{{(.*?)(?:\((.*?)\))?(?: ([^\$\$]*?))?}}/
 };
 
 var katex = require("katex");
@@ -107,7 +107,7 @@ InlineParser.prototype.out = function(src) {
 
         //footnote
         if (cap = inlineTockens.footnote.exec(src)) {
-            this.additional.footnotes.push({text: cap[1]});
+            this.additional.footnotes.push({text: this.out(cap[1])});
             result += renderer.rfn({index: this.additional.footnotes.length, text: cap[1]});
             src = src.substr(cap[0].length);
             continue;
@@ -129,7 +129,11 @@ InlineParser.prototype.out = function(src) {
 
         //math
         if(cap = inlineTockens.inlineLatex.exec(src)){
-            result += katex.renderToString(cap[1]);
+            try {
+                result += katex.renderToString(cap[1]);
+            } catch(e){
+                result += this.renderer.error({name: "KaTeX parse error", text: "There's something wrong in LaTeX code: "+cap[1]});
+            }
             src = src.substr(cap[0].length);
             continue;
         }
@@ -190,7 +194,6 @@ InlineParser.prototype.macro = function(type, param, text){
         case 'br':
             return `<br />`;
         default:
-            console.log(this.renderer.error({name:"Inline Macro Error", text: 'Inline macro '+type+' doesn\'t supported.'}));
             return this.renderer.error({name:"Inline Macro Error", text: 'Inline macro '+type+' doesn\'t supported.'});
     }
 };

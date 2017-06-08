@@ -8,7 +8,7 @@ var blocks = {
     list: /^(\s+)([*-]) (.+)(\r?\n|$)/,
     // indent: /^:{1,}(.+)(\r?\n|$)/,
     hr: /^-{3,}\s*(\r?\n|$)/,
-    quote: /^> (.*?)(\r?\n|$)/,
+    quote: /^>(?:\((.*?)(?:\|(.*?))?\))? (.*?)(\r?\n|$)/,
     // textbox: /^/,
     // code: /^<code>(.+)<\/code>(\r?\n|$)/,
     table: /^(\|\|.*)(\r?\n|$)/,
@@ -83,7 +83,9 @@ Lexer.prototype.scan = function(src){
         if (cap = blocks.quote.exec(src)) {
             toks.push({
                 type: 'quote',
-                text: this.inlineParser.out(cap[1])
+                text: this.inlineParser.out(cap[3]),
+                ref: cap[1],
+                title: cap[2]
             });
             src = src.substr(cap[0].length);
             continue;
