@@ -3,9 +3,9 @@
  */
 "use strict";
 
-var Lexer = require('./lexer');
-var InlineParser = require('./inline_parser');
-var Renderer = require('./renderer');
+let Lexer = require('./lexer');
+let InlineParser = require('./inline_parser');
+let Renderer = require('./renderer');
 
 class Parser{
     constructor(){
@@ -33,9 +33,9 @@ class Parser{
             curOrdered = this.toks[0].ordered,
             curLevel = this.toks[0].level;
 
-        while(this.toks[0] && this.toks[0].type == 'list' && (this.toks[0].level == curLevel) && (this.toks[0].ordered == curOrdered)){
+        while(this.toks[0] && this.toks[0].type === 'list' && (this.toks[0].level === curLevel) && (this.toks[0].ordered === curOrdered)){
             let tok = this.toks.shift();
-            if(this.toks[0] && this.toks[0].type == 'list' && this.toks[0].level > curLevel)
+            if(this.toks[0] && this.toks[0].type === 'list' && this.toks[0].level > curLevel)
                 tok.child = this.parseList(this.toks);
             list.push(tok);
         }
@@ -43,7 +43,7 @@ class Parser{
     }
 
     parseTable(){
-        var tables = [];
+        let tables = [];
         while (this.toks[0] && this.toks[0].type === 'table'){
             tables.push(this.toks.shift());
         }
@@ -68,11 +68,14 @@ class Parser{
     };
 
     parseQuote(){
-        let text = this.toks.shift().text;
+        let tok = this.toks.shift();
+        let title = tok.title;
+        let text = tok.text;
+        let ref = tok.ref;
         while (this.toks[0] && this.toks[0].type === 'quote'){
             text += ' '+this.toks.shift().text;
         }
-        return text;
+        return {title: title, ref: ref, text:text};
     };
 
     out(src, title){
@@ -114,7 +117,7 @@ class Parser{
             }
         }
         content += (this.additional.footnotes.length !== 0 ? '<br>'+this.renderer.footnotes(this.additional.footnotes) : '');
-        content = (this.headings.length == 0 ? '' : this.renderer.toc(this.headings)) + content + (this.additional.cat.length != 0 ? this.renderer.cat(this.additional.cat) : '');
+        content = (this.headings.length === 0 ? '' : this.renderer.toc(this.headings)) + content + (this.additional.cat.length !== 0 ? this.renderer.cat(this.additional.cat) : '');
         return content;
     };
 
@@ -131,7 +134,7 @@ class Parser{
  * @returns {Array}
  */
 function parseHeadings(headings, level=[0]){
-    if(headings.length == 0)
+    if(headings.length === 0)
         return [];
     let list = [];
     while(headings[0] && (headings[0].level >= level.length)) {

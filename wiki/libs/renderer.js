@@ -2,12 +2,13 @@
  * Created by Le Reveur on 2017-04-24.
  */
 "use strict";
-var katex = require("katex");
+let katex = require("katex");
 
 class Renderer{
-    blockquote(text){
-        "use strict";
-        return `<blockquote class="ui raised segment"><p>${text}</p></blockquote>`
+    blockquote(tok){
+        let title = tok.title ? `<h4 class="header">${tok.title}</h4>` : '';
+        let ref = tok.ref ? `<p class="wiki_quote_ref">${tok.ref}</p>` : '';
+        return `<blockquote class="ui raised segment">${title}<p>${tok.text}</p>${ref}</blockquote>`
     };
 
     title(data){
@@ -77,12 +78,12 @@ class Renderer{
     };
 
     link(data){
-        var text = (data.text ? data.text : data.href);
+        let text = (data.text ? data.text : data.href);
         return '<a href="\/wiki\/view\/'+data.href+'" title="'+text+'">'+text+'</a>';
     };
 
     urlLink(data){
-        var text = (data.text ? data.text :data.href);
+        let text = (data.text ? data.text :data.href);
         return `<a class="wiki_ext_link" href="${data.href}" title="${text}">${text}<i class="external square icon"></i></a>`;
     };
 
@@ -105,16 +106,12 @@ class Renderer{
     };
 
     footnotes(footnotes){
-        var result = '<hr><ul class="wiki_fns">';
+        let result = '<hr><ul class="wiki_fns">';
         footnotes.forEach(function(fn, index){
             result += `<li><a class="wiki_fn" id="fn_${index + 1}" href="#rfn_${index + 1}">[${index + 1}]</a> ${fn.text}</li>`;
         });
         result += "</ul>";
         return result;
-    };
-
-    assemble(content, toc, footnotes){
-        return toc+content+footnotes;
     };
 
     paragraph(data){
@@ -130,12 +127,12 @@ class Renderer{
     }
 
     list(list, notFirst){
-        var ordered = list[0].ordered;
-        var result = !notFirst ? '<div class="wiki_list">' : '';
+        let ordered = list[0].ordered;
+        let result = !notFirst ? '<div class="wiki_list">' : '';
         result += `<${ordered ? 'o' : 'u'}l ${!notFirst ? 'class = "ui list"' : ''}>`;
 
-        for(var i = 0; i < list.length; i++){
-            var item = list[i];
+        for(let i = 0; i < list.length; i++){
+            let item = list[i];
             result += `<li>${item.text + (item.child ? this.list(item.child, 1) : '')}</li>`;
         }
         result += ordered ? '</ol>' : '</ul>';
@@ -165,14 +162,15 @@ class Renderer{
 
     cat(categories){
         "use strict";
-        var result = categories.map((item)=>{
-            return `<sapn><a href="/wiki/view/Category:${item}">${item}</a></sapn>`
-        }).join(' | ');
+        let result = '';
+        categories.forEach((item)=>{
+            result += `<a class="ui horizontal label" href="/wiki/view/Category:${item}">${item}</a>`
+        });
         return '<div class="wiki-cat ui segment">카테고리: '+result+'</div>';
     };
 
     syntax(tok){
-        var result = "<pre class='wiki-syntaxhl line-numbers"+(tok.param ? " language-"+tok.param : "")+"'><code>";
+        let result = "<pre class='wiki-syntaxhl line-numbers"+(tok.param ? " language-"+tok.param : "")+"'><code>";
         result += tok.text;
         result += "</code></pre>";
         return result;
@@ -183,9 +181,9 @@ class Renderer{
     };
 
     table(table){
-        var result = '<table class="ui celled collapsing table">';
-        for(var item of table){
-            if(item.additional == "h"){
+        let result = '<table class="ui celled collapsing table">';
+        for(let item of table){
+            if(item.additional === "h"){
                 result += '<thead><tr>';
                 item.row.forEach((cell)=>{result += `<th>${cell}</th>`});
                 result += '</tr></thead>';

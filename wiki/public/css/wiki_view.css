@@ -32,3 +32,14 @@ pre {
 .wiki_article_menu {
     float:right;
 }
+
+blockquote{
+    max-width: 70%;
+}
+.wiki_quote_ref{
+    text-align: right;
+}
+
+.wiki_quote_ref::before{
+    content: '- ';
+}
