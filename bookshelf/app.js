@@ -47,10 +47,10 @@ app.get('/book/:isbn13', function(req, res, next){
 });
 
 app.get('/reading/:id', function(req, res, next){
-    dbController.readingInfo(req.params.id, function(err, reading){
-        if(err){
+    dbController.readingInfo(req.params.id, req.session.userId, function (err, reading) {
+        if (err) {
             res.render('err', {error: err, session: req.session});
-        } else{
+        } else {
             reading.book.title = reading.book.title_ko;
             res.render('viewReading', {
                 reading: reading,
@@ -95,11 +95,16 @@ app.post('/book/:isbn13', function(req, res, next){
 
 //add reading
 app.post('/reading', function(req, res, next){
-    var reading = req.body;
-    var book = JSON.parse(reading.book);
+    let reading = req.body;
+    let book = JSON.parse(reading.book);
     reading.isbn13 = book.isbn13;
     delete reading.book;
     if(reading.date_finished.length === 0) delete reading.date_finished;
+    if(reading.comment.length === 0) delete reading.comment;
+    if(req.session.userId){
+        reading.user_id = req.session.userId;
+        reading.user = req.session.userNickname;
+    }
     dbController.isExistBook(book.isbn13, function(err){   //when ther exists a book.
             if(err){
                 res.render('error', {error:err,
@@ -260,16 +265,16 @@ app.get('/api/comment', function(req, res){
 
     switch (req.query.action){
         case 'get':
-            dbController.getSecretComment(req.query.id, req.query.password, function(err, comment){
-                if(err){
-                    if(err.name="WrongPasswordError") {
+            dbController.getSecretComment(req.query.id, req.session.userId, req.query.password, function (err, comment) {
+                if (err) {
+                    if (err.name = "WrongPasswordError") {
                         res.json({ok: 2}); //Worng Password
-                    } else{
+                    } else {
                         res.json({ok: 0, error: err});
                     }
                     return;
                 }
-                res.json({ok:1, result: comment});
+                res.json({ok: 1, result: comment});
             });
             break;
         default:

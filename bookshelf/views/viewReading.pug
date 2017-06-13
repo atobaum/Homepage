@@ -22,34 +22,34 @@ block content
         p 책(ISBN #{book_id})을 #[a(href="/bookshelf/add/book?isbn13="+book_id) 추가] 해주세요.
     - }
     form.ui.form.segment(method='post', action='/bookshelf/reading/edit', id="input_form")
-        input(type="hidden", name="id", id="form_id", value=id)
-        input(type="hidden", name="rating", id="form_rating", value=rating)
-        input(type="hidden", name="is_secret", id="form_secret", value=rating)
-        input(type="hidden", name="password", id="form_password", value=rating)
+        input(type="hidden", name="id", id="form_id", value=reading.id)
+        input(type="hidden", name="rating", id="form_rating", value=reading.rating)
+        input(type="hidden", name="is_secret", id="form_secret", value=reading.rating)
+        input(type="hidden", name="password", id="form_password", value=reading.rating)
         .fields.inline
             .field
                 label 읽은 날짜
-                input(type="date", name="date_started", id="form_date_started", value=date_started, readonly)
+                input(type="date", name="date_started", id="form_date_started", value=reading.date_started, readonly)
             .field
                 label ~
             .field
-                input(type="date", name="date_finished", id="form_date_finished", value=date_finished, readonly)
+                input(type="date", name="date_finished", id="form_date_finished", value=reading.date_finished, readonly)
 
         .field
             label 평점
             .rating#form_rating
-        .field
+        .field(style=(reading.hideComment ? "display: none" : ''))
             label 후기
-            textarea(name='comment', id='form_comment', readonly) #{comment}
+            textarea(name='comment', id='form_comment', readonly) #{reading.comment}
         #is_secret.inline.field(style="display:none")
             .ui.toggle.checkbox
                 input(type="checkbox", tabindex="0", readonly)
                 label 비밀
         .field
             label 읽은 사람
-            a(href="#", id="form_user") #{user}
+            a(href="#", id="form_user") #{reading.user}
 
-        -if(!session.nickname){
+        -if(!session.userId){
         .field.inline
             label 비밀번호
             input(type="text", id="password")
@@ -62,8 +62,7 @@ block content
             button#can_btn.ui.button.negative(type='reset') 취소
 
     script.
-        if (#{is_secret}) {
-            $('#form_comment').parent().hide();
+        if (#{reading.is_secret}) {
             $('#is_secret input').prop('checked', true);
         }
         $('.rating').starRating({
@@ -71,5 +70,5 @@ block content
             starSize: 25,
             disableAfterRate: false,
             readOnly: true,
-            initialRating: #{rating} / 2
+            initialRating: #{reading.rating} / 2
         });

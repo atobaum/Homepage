@@ -193,7 +193,7 @@ dbController.prototype.addBook = function(book, callback){
      coverURL
      }
      */
-    var thisClass = this;
+    let thisClass = this;
 
     async.waterfall([
         function(next){ //add publisher
@@ -218,7 +218,7 @@ dbController.prototype.addBook = function(book, callback){
         },
         function(publisherId, next){
             //inserting book info
-            var data = {
+            let data = {
                 isbn13: book.isbn13,
                 title_ko: book.title,
                 title_original: book.original_title,
@@ -272,71 +272,42 @@ dbController.prototype.editBook = function(isbn13, book, callback){
 };
 
 dbController.prototype.deleteBook = function(isbn13, callback){
-    var thisClass = this;
-    thisClass.conn.beginTransaction(function(err){
-        if(err) callback(err);
-        else{
-            thisClass.conn.query('DELETE FROM books where isbn13 = '+isbn13, function(err){
-                if(err){
-                    thisClass.conn.rollback(function(rollerr){
-                        if(rollerr) callback(rollerr);
-                        else callback(err);
-                    });
-                } else {
-                    thisClass.conn.query('DELETE FROM author_to_person WHERE book_id = '+isbn13, function(err){
-                        if(err){
-                            thisClass.conn.rollback(function(rollerr){
-                                if(rollerr) callback(rollerr);
-                                else callback(err);
-                            });
-                        } else {
-                            thisClass.conn.commit(function(err){
-                                if(err){
-                                    thisClass.conn.rollback(function(rollerr){
-                                        if(rollerr) callback(rollerr);
-                                        else callback(err);
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        }
-    });
+    this.conn.query('DELETE FROM books where isbn13 = '+isbn13, callback);
 };
 
-dbController.prototype.addRead = function(read, callback){
-    read.book_id = read.isbn13;
-    delete read.isbn13;
-    this.insertData('readings', read, function(err, res){
-        if(callback){
-            callback(err, res);
-        }
-    });
-};
-
-dbController.prototype.addReading = function(read, callback){
-    read.book_id = read.isbn13;
-    delete read.isbn13;
-    this.insertData('readings', read, function(err, res){
-        if(callback){
-            callback(err, res);
-        }
-    });
+dbController.prototype.addReading = function(reading, callback){
+    console.log(reading);
+    let data = {
+        date_started: reading.date_started,
+        date_finished: reading.date_finished,
+        book_id: reading.isbn13,
+        rating: reading.rating,
+        comment: reading.comment,
+        link: reading.link,
+        user_id: reading.user_id,
+        user: reading.user,
+        is_secret: reading.is_secret,
+        password: reading.password
+    };
+    this.conn.query('INSERT INTO readings SET ?', [data], callback);
 };
 
 dbController.prototype.editReading = function(reading, callback){
-    var id = reading.id;
-    delete reading.id;
-    var password = reading.password;
-    delete reading.password;
-    if(reading.date_finished.length === 0){
-        delete reading.date_finished;
-    }
+    let data = {
+        date_started: reading.date_started,
+        date_finished: (reading.date_finished.length ? reading.date_finished: null),
+        rating: reading.rating,
+        comment: reading.comment,
+        link: reading.link,
+        user: (reading.user.length ? reading.user: null),
+        is_secret: reading.is_secret,
+        password: reading.password
+    };
+    let id = reading.id;
+    let password = reading.password;
 
-    var query = 'UPDATE readings SET ? WHERE id = ? AND password=?';
-    this.conn.query(query, [reading, id, password], function(err, rows){
+    let query = 'UPDATE readings SET ? WHERE id = ?';
+    this.conn.query(query, [data, id, password], function(err, rows){
         if(err){
             callback(err);
         } else{
@@ -349,7 +320,7 @@ dbController.prototype.editReading = function(reading, callback){
 };
 
 dbController.prototype.deleteReading = function(reading, callback){
-    var thisClass = this;
+    let thisClass = this;
     this.conn.query('SELECT * FROM readings WHERE id = ?', [reading.id], function(err, rows){
         if(err){
             callback(err);
@@ -397,12 +368,12 @@ dbController.prototype.searchSeries = function(){
  # @param callback - A callback which is called when processing  has finished, or an error occurs. Results is an Object of the  book with publisher and authors. Invoked with (err, book).
  */
 dbController.prototype.bookInfo = function(isbn13, callback){
-    var thisClass = this;
-    var query = 'select books.title_ko, books.subtitle, publishers.name, books.published_date, books.pages, books.title_original, books.language, books.description, books.link,  books.cover_URL, books.isbn13, books.checked from books JOIN publishers ON publishers.id = books.publisher_id where books.isbn13 = ' + isbn13;
+    let thisClass = this;
+    let query = 'select books.title_ko, books.subtitle, publishers.name, books.published_date, books.pages, books.title_original, books.language, books.description, books.link,  books.cover_URL, books.isbn13, books.checked from books JOIN publishers ON publishers.id = books.publisher_id where books.isbn13 = ' + isbn13;
     thisClass.conn.query(query, function(err, rows, fields){
         if(!err){
             if(rows.length === 0){
-                var error = new Error("There's no such book.");
+                let error = new Error("There's no such book.");
                 error.name = "NoBookError";
                 callback(error);
                 return;
@@ -418,7 +389,6 @@ dbController.prototype.bookInfo = function(isbn13, callback){
                 callback(err, book);
             });
         } else{
-            console.log('Error while performing Query.'+err);
             callback(err);
         }
     });
@@ -435,9 +405,9 @@ dbController.prototype.searchBook = function(type, keyword, callback){
  * @param callback
  */
 dbController.prototype.searchReading = function(data, callback){
-    var thisClass = this;
-    var articlePerPage = 10;
-    if(data.type == 'recent'){
+    let thisClass = this;
+    let articlePerPage = 10;
+    if(data.type === 'recent'){
         var query = 'SELECT * FROM readings WHERE deleted = 0 ORDER BY date_started DESC LIMIT '+(data.page-1) * articlePerPage + ', '+articlePerPage;
     }
     async.parallel([
@@ -491,24 +461,25 @@ dbController.prototype.searchReading = function(data, callback){
 
 };
 
-dbController.prototype.readingInfo = function(id, callback){
-    var thisClass = this;
-    var query = 'SELECT * FROM readings WHERE id = '+id;
+dbController.prototype.readingInfo = function (bookId, userId, callback){
+    let thisClass = this;
+    let query = 'SELECT * FROM readings WHERE id = '+bookId;
     thisClass.conn.query(query, function(err, rows){
         if(err){
             callback(err);
         } else if(rows.length === 0){
-            callback(new Error('잘못된 id:' + id));
+            callback(new Error('잘못된 id:' + bookId));
         } else {
-            var reading = rows[0];
+            let reading = rows[0];
             if(reading.deleted == 1){
-                callback(new Error('지워진 기록'));
+                callback(new Error('DELETED_DATA'));
                 return;
             }
-            if(reading.is_secret){
+            if(reading.is_secret && reading.user_id !== userId){
                 delete reading.comment;
-                delete reading.password;
+                reading.hideComment = true;
             }
+            delete reading.password;
             thisClass.bookInfo(reading.book_id, function(err, book){
                 if(err && err.name == "NoBookError"){
                     callback(null, reading);
@@ -562,17 +533,22 @@ dbController.prototype.isExistBook = function(isbn, trueCallback, falseCallback)
     });
 };
 
-dbController.prototype.getSecretComment = function(reading_id, passwd, callback){
-    var query = "SELECT comment FROM readings WHERE id=" + reading_id + " AND password="+passwd;
+dbController.prototype.getSecretComment = function (readingId, userId, passwd, callback){
+    var query = "SELECT comment, user_id, password FROM readings WHERE id=" + readingId;
     this.conn.query(query, function(err, rows){
+        console.log(rows);
         if(err){
             callback(err);
-        } else if(rows.length === 0){
-            var error = new Error('Wrong password');
+        } else if(rows.length === 0) {
+            let error = new Error('Wrong reading id: '+readingId);
+            error.name="WrongReadingId";
+            callback(error);
+        }else if(rows[0].user_id === userId || rows[0].password == passwd){
+            callback(null, rows[0].comment);
+        } else{
+            let error = new Error('Wrong password');
             error.name="WrongPasswordError";
             callback(error);
-        } else{
-            callback(null, rows[0].comment);
         }
 
     });
