@@ -1,34 +1,34 @@
-var mysql = require('mysql');
-var async = require('async');
+"use strict";
+let mysql = require('mysql');
+let async = require('async');
 
 function formatAuthors(authors){
-    var author = '';
-    for(var i in authors){
-        var aut = authors[i];
-        switch(aut.type){
+    let strAuthor = '';
+    for(let author of authors){
+        switch(author.type){
             case "author":
-                author += aut.name + " 지음, ";
+                strAuthor += author.name + " 지음, ";
                 break;
             case "translator":
-                author += aut.name + " 번역, ";
+                strAuthor += author.name + " 번역, ";
                 break;
             case "supervisor":
-                author += aut.name + " 감수, ";
+                strAuthor += author.name + " 감수, ";
                 break;
             case "illustrator":
-                author += aut.name + " 그림, ";
+                strAuthor += author.name + " 그림, ";
                 break;
         }
     }
-    author =  author.substring(0, author.length-2) + '.';
-    return author;
+    strAuthor =  strAuthor.substring(0, strAuthor.length-2) + '.';
+    return strAuthor;
 }
 
 /**
  * @module db_controller
  * @todo write addPerson, addSeries, addTitle, searchCategory, searchSeries, searchTitle, searchRead
  */
-var dbController = function(config){
+let dbController = function(config){
     this.conn = mysql.createConnection({
         host: config.host,
         port: config.port,
@@ -42,24 +42,6 @@ var dbController = function(config){
     });
 };
 
-dbController.prototype.insertData = function (table, data, callback){
-    /*
-     data:
-     {
-     a:1,
-     b:2
-     }
-
-     insert into table (a, b) values (1, 2)
-     */
-    this.conn.query('INSERT INTO '+table+' SET ?', [data], function(err, res, fields){
-        if(callback){
-            callback(err, res);
-        }
-    });
-};
-
-
 dbController.prototype.addCaterory = function(name, callback){
     this.conn.query('INSERT INTO category (name) values (?)', name, function(err, res){
         callback(err);
@@ -72,12 +54,6 @@ dbController.prototype.editCategory = function(id, callback){
 
 dbController.prototype.deleteCategory = function(id, callback){
 
-};
-
-dbController.prototype.addPerson = function(person, callback){
-    this.insertData('people', person, function(err){
-        callback(err);
-    });
 };
 
 dbController.prototype.editPerson = function(id, person, callback){
@@ -101,60 +77,60 @@ dbController.prototype.deleteSeries = function(id, callback){
 };
 
 dbController.prototype.addAuthors = function(bookId, authors, callback){
-    var thisClass = this;
+    let thisClass = this;
     async.each(authors, function(author, callback){
         //refine author
-        if (typeof(author.type) == "string"){
-            if(author.type == "저자" || author.type == "author")
-                author.type = 1;
-            else if(author.type == "옮김" || author.type == "translator")
-                author.type = 2;
-            else if(author.type == "감수" || author.type == "supervisor")
-                author.type = 3;
-            else if(author.type == "그림" || author.type == "illustrator")
-                author.type = 4;
-            else if(author.type == "사진" || author.type == "photo")
-                author.type = 5;
-            else {
-                callback(new Error("지원하지 않는 저자 타입: "+author.type));
+        if (typeof(author.type) === "string"){
+            switch(author.type){
+                case '저자':
+                case 'author':
+                    author.type = 1;
+                    break;
+                case '옮김':
+                case 'translator':
+                    author.type = 2;
+                    break;
+                case '감수':
+                case 'supervisor':
+                    author.type = 3;
+                    break;
+                case '그림':
+                case 'illustrator':
+                    author.type = 4;
+                    break;
+                case '사진':
+                case 'photo':
+                    author.type = 5;
+                    break;
+                default:
+                    next(new Error("지원하지 않는 저자 타입: "+author.type));
+                    return;
             }
         }
 
-
-        thisClass.conn.query('SELECT * FROM people WHERE name_ko="'+author.name+'"', function(err, rows, fields){
-            if(err){
-                callback(err); //failed to search athor.
-                return;
-            }
-
-            if(rows.length >= 1){ //is there's a author
-                thisClass.insertData('author_to_person', {book_id: bookId, person_id: rows[0].id, type_id: author.type}, function(err){
-                    callback(err);  //failed to insert data into author_to_person
+        async.waterfall([
+            (next) => {
+                thisClass.conn.query('INSERT INTO people (name_ko) VALUES (?)', [author.name], (err, result) => {
+                    if(err.code === 'ER_DUP_ENTRY'){
+                        next(null, null);
+                    } else {next(err, (result ? result.insertId : null));}
                 });
-            } else { // if there's no person
-                thisClass.insertData('people', {name_ko: author.name}, function(err){
-                    if(err){
-                        callback(err);
-                        return;
-                    }
-
-                    thisClass.conn.query('SELECT * FROM people WHERE name_ko="'+author.name+'"', function(err, rows, fields){
-                        if(err){
-                            callback(err);
-                            return;
-                        }
-
-                        if(rows.length >= 1){ //is there's a author
-                            thisClass.insertData('author_to_person', {book_id: bookId, person_id: rows[0].id, type_id: author.type}, function(err){
-                                callback(err);
-                            });
-                        } else{ //no person.
-                            callback(new Error('No person after adding person.'));
-                        }
+            },
+            (person_id, next) => {
+                if(person_id) next(null, person_id);
+                else {
+                    thisClass.conn.query('SELECT * FROM people WHERE name_ko=?', [author.name], (err, rows) => {
+                        next(err, (rows ? rows[0].id : null));
                     });
+                }
+            },
+            (person_id, next) => {
+                let query = 'INSERT INTO author_to_person (book_id, person_id, type_id) VALUES (?, ?, ?)';
+                thisClass.conn.query(query, [bookId, person_id, author.type], (err) => {
+                    next(err);
                 });
             }
-        });
+        ], callback);
     }, function(err){ //callback for async.each
         if(callback){
             callback(err);
@@ -194,30 +170,27 @@ dbController.prototype.addBook = function(book, callback){
      }
      */
     let thisClass = this;
-
     async.waterfall([
-        function(next){ //add publisher
-            thisClass.conn.query('SELECT * from publishers where name="'+book.publisher+'"', function(err, rows, fields){
-                if(err){
-                    next(err);
-                } else{
-                    if (rows.length >= 1){
-                        next(err, rows[0].id); //rows[0].id is the publisherId;
-                    }else{ //If there's no such publisher
-                        thisClass.insertData('publishers', {name: book.publisher}, function(err, result){
-                            if(err){
-                                if(callback) callback(err);
-                                else console.log('Error while adding book.'+err);
-                            }else{ //publisher addded
-                                next(err, result.insertId); //result.insertID is the publisher id.
-                            }
-                        });
-                    }
-                }
+        (next) => {
+            thisClass.conn.beginTransaction((err) => {next(err);});
+        },
+        (next) => { //add publisher
+            thisClass.conn.query('INSERT INTO publishers SET name=?', [book.publisher], function(err, result){
+                if(err.code === 'ER_DUP_ENTRY'){
+                    next(null, null);
+                } else {next(err, (result ? result.insertId : null));}
             });
         },
-        function(publisherId, next){
-            //inserting book info
+        (publisher_id, next) => { //get publisher id
+            if(publisher_id) next(null, publisher_id);
+            else{
+                thisClass.conn.query('SELECT id FROM publishers WHERE name=?', [book.publisher], (err, rows) => {
+                    if(err) next(err);
+                    else next(null, rows[0].id);
+                });
+            }
+        },
+        (publisherId, next) => { //inserting book info
             let data = {
                 isbn13: book.isbn13,
                 title_ko: book.title,
@@ -228,42 +201,35 @@ dbController.prototype.addBook = function(book, callback){
                 published_date: book.published_date,
                 cover_URL: book.cover_URL
             };
-            thisClass.conn.beginTransaction(function(err){
-                if(err) {
-                    next(err);
-                    return;
-                }
-                thisClass.insertData('books', data, function(err, result){
-                    if(err) {
-                        thisClass.conn.rollback(function (rollerr) {
-                            if(rollerr) next(rollerr);
-                            else next(err);
-                        });
-                        return;
-                    }
-                    thisClass.addAuthors(book.isbn13, book.authors, function(err){
-                        if(err) {
-                            thisClass.conn.rollback(function (rollerr) {
-                                if(rollerr) next(rollerr);
-                                else next(err);
-                            });
-                        }
-                        thisClass.conn.commit(function (err) {
-                            if(err) {
-                                thisClass.conn.rollback(function (rollerr) {
-                                    if(rollerr) next(rollerr);
-                                    else next(err);
-                                });
-                            }else{
-                                callback();
-                            }
-                        });
+            thisClass.conn.query('INSERT INTO books SET ?', [data], function(err){
+                if(err.code === 'ER_DUP_ENTRY') {
+                    next(null, false);
+                } else next(err, true)
+            });
+        },
+        (newBook, next) => { //addAuthors
+            if(newBook)
+                thisClass.addAuthors(book.isbn13, book.authors, next);
+            else next(null);
+        }
+    ], function(err){
+        if(err) {
+            thisClass.conn.rollback(function (rollerr) {
+                if(rollerr) callback(rollerr);
+                else callback(err);
+            });
+        } else{
+            thisClass.conn.commit(function (comerr) {
+                if(comerr) {
+                    thisClass.conn.rollback(function (rollerr) {
+                        if(rollerr) callback(rollerr);
+                        else callback(comerr);
                     });
-                });
+                }else{
+                    callback();
+                }
             });
         }
-    ], function(err, result){
-        if(err) callback(err);
     });
 };
 
@@ -276,20 +242,30 @@ dbController.prototype.deleteBook = function(isbn13, callback){
 };
 
 dbController.prototype.addReading = function(reading, callback){
-    console.log(reading);
-    let data = {
-        date_started: reading.date_started,
-        date_finished: reading.date_finished,
-        book_id: reading.isbn13,
-        rating: reading.rating,
-        comment: reading.comment,
-        link: reading.link,
-        user_id: reading.user_id,
-        user: reading.user,
-        is_secret: reading.is_secret,
-        password: reading.password
-    };
-    this.conn.query('INSERT INTO readings SET ?', [data], callback);
+    let thisClass = this;
+    if(reading.date_finished.length === 0) delete reading.date_finished;
+    if(reading.comment.length === 0) delete reading.comment;
+    let book = reading.book;
+    async.series([
+        (next) => {
+            thisClass.addBook(book, next);
+        },
+        (next) => {
+            let data = {
+                date_started: reading.date_started,
+                date_finished: reading.date_finished,
+                book_id: reading.book.isbn13,
+                rating: reading.rating,
+                comment: reading.comment,
+                link: reading.link,
+                user_id: reading.user_id,
+                user: reading.user,
+                is_secret: reading.is_secret,
+                password: reading.password
+            };
+            thisClass.conn.query('INSERT INTO readings SET ?', [data], next);
+        }
+    ], callback);
 };
 
 dbController.prototype.editReading = function(reading, callback){
@@ -299,15 +275,11 @@ dbController.prototype.editReading = function(reading, callback){
         rating: reading.rating,
         comment: reading.comment,
         link: reading.link,
-        user: (reading.user.length ? reading.user: null),
-        is_secret: reading.is_secret,
-        password: reading.password
+        is_secret: reading.is_secret
     };
     let id = reading.id;
-    let password = reading.password;
-
-    let query = 'UPDATE readings SET ? WHERE id = ?';
-    this.conn.query(query, [data, id, password], function(err, rows){
+    let query = 'UPDATE readings SET ? WHERE id = ? AND (user_id=? OR password = ?)';
+    this.conn.query(query, [data, id, reading.user_id, reading.password], function(err, rows){
         if(err){
             callback(err);
         } else{
@@ -325,7 +297,7 @@ dbController.prototype.deleteReading = function(reading, callback){
         if(err){
             callback(err);
         } else if(rows[0].password != reading.password){
-            var error = new Error("Wrong Password");
+            let error = new Error("Wrong Password");
             error.name = "WrongPasswordError";
             callback(error);
         } else{
@@ -347,12 +319,11 @@ dbController.prototype.searchCategory = function(){
  * @param callback
  */
 dbController.prototype.searchPerson = function(type, keyword, callback){
-    this.conn.query('select * from people where '+type+' LIKE "%'+keyword+'%"', function(err, rows, fields){
+    this.conn.query('select * from people where '+type+' LIKE "'+keyword+'%"', function(err, rows){
         if(!err){
             if(callback)
                 callback(err, rows);
         } else{
-            console.log('Error while performing Query.'+err);
             callback(err);
         }
     });
@@ -366,11 +337,12 @@ dbController.prototype.searchSeries = function(){
  * @function bookInfo
  * @param isbn13
  # @param callback - A callback which is called when processing  has finished, or an error occurs. Results is an Object of the  book with publisher and authors. Invoked with (err, book).
+ * @param callback
  */
 dbController.prototype.bookInfo = function(isbn13, callback){
     let thisClass = this;
     let query = 'select books.title_ko, books.subtitle, publishers.name, books.published_date, books.pages, books.title_original, books.language, books.description, books.link,  books.cover_URL, books.isbn13, books.checked from books JOIN publishers ON publishers.id = books.publisher_id where books.isbn13 = ' + isbn13;
-    thisClass.conn.query(query, function(err, rows, fields){
+    thisClass.conn.query(query, function(err, rows){
         if(!err){
             if(rows.length === 0){
                 let error = new Error("There's no such book.");
@@ -407,24 +379,21 @@ dbController.prototype.searchBook = function(type, keyword, callback){
 dbController.prototype.searchReading = function(data, callback){
     let thisClass = this;
     let articlePerPage = 10;
+    let query = '';
     if(data.type === 'recent'){
-        var query = 'SELECT * FROM readings WHERE deleted = 0 ORDER BY date_started DESC LIMIT '+(data.page-1) * articlePerPage + ', '+articlePerPage;
+        query = 'SELECT * FROM readings WHERE deleted = 0 ORDER BY date_started DESC LIMIT '+(data.page-1) * articlePerPage + ', '+articlePerPage;
     }
     async.parallel([
-        function(next){
+        (next) => {
             thisClass.conn.query(query, function(err, rows){
-                if(err) {
+                if(err || rows.length === 0) {
                     next(err);
-                    return;
-                }
-                if(rows.length === 0){
-                    next(null, rows);
                     return;
                 }
                 async.map(rows, function(reading, callback){
                     thisClass.bookInfo(reading.book_id, function(err, book){
                         if(err) {
-                            if(err.name == "NoBookError"){
+                            if(err.name === "NoBookError"){
                                 callback(null, reading);
                             }
                             else {
@@ -436,29 +405,22 @@ dbController.prototype.searchReading = function(data, callback){
                             callback(err, reading);
                         }
                     });
-                }, function(err, result){
-                    next(err, result);
-                });
+                }, next);
             });
         },
-        function(next){
+        (next) => {
             thisClass.conn.query('SELECT count(*) FROM readings', function(err, rows){
                 if(err) {
                     next(err);
                     return;
                 }
-                var numOfReadings = parseInt( rows[0]['count(*)']);
+                let numOfReadings = parseInt( rows[0]['count(*)']);
                 next(null, Math.ceil(numOfReadings / articlePerPage));
             });
         }
-    ], function(err, results){
-        if(err){
-            callback(err);
-            return;
-        }
-        callback(null, {readings: results[0], maxPage: results[1]});
+    ], (err, results) => {
+        callback(err, (!err ? {readings: results[0], maxPage: results[1]} : null));
     });
-
 };
 
 dbController.prototype.readingInfo = function (bookId, userId, callback){
@@ -481,7 +443,7 @@ dbController.prototype.readingInfo = function (bookId, userId, callback){
             }
             delete reading.password;
             thisClass.bookInfo(reading.book_id, function(err, book){
-                if(err && err.name == "NoBookError"){
+                if(err && err.name === "NoBookError"){
                     callback(null, reading);
                 }else if(err){
                     callback(err);
@@ -500,9 +462,9 @@ dbController.prototype.readingInfo = function (bookId, userId, callback){
  * @param callback: Invoked with (err, book)
  */
 dbController.prototype.searchAuthorsForBook = function(book, callback){
-    var thisClass = this;
-    var query = 'SELECT people.id, people.name_ko as name, author_type.name_en as type FROM author_to_person JOIN people ON people.id = author_to_person.person_id JOIN author_type ON author_type.id = author_to_person.type_id WHERE book_id = '+book.isbn13;
-    thisClass.conn.query(query, function(err, rows, fields){
+    let thisClass = this;
+    let query = 'SELECT people.id, people.name_ko as name, author_type.name_en as type FROM author_to_person JOIN people ON people.id = author_to_person.person_id JOIN author_type ON author_type.id = author_to_person.type_id WHERE book_id = '+book.isbn13;
+    thisClass.conn.query(query, function(err, rows){
         if(err)
             callback(err);
         else{
@@ -512,31 +474,9 @@ dbController.prototype.searchAuthorsForBook = function(book, callback){
     });
 };
 
-/** Is there a book already?
- * @function isExistBook
- * @param isbn
- * @param trueCallback - Run this callback function when there is the book.
- * @param flaseCallback - Run this callback function when there isn't the book.
- */
-dbController.prototype.isExistBook = function(isbn, trueCallback, falseCallback){
-    // run trueCallback when there is a book and falseCallback if not.
-    var query = 'select count(*) from books where isbn13 = ' + isbn;
-    this.conn.query(query, function(err, rows, fields){
-        if(!err){
-            if(rows[0]['count(*)'] === 0)
-                falseCallback(err, isbn);
-            else
-                trueCallback(err, isbn);
-        } else{
-            trueCallback(err);
-        }
-    });
-};
-
 dbController.prototype.getSecretComment = function (readingId, userId, passwd, callback){
-    var query = "SELECT comment, user_id, password FROM readings WHERE id=" + readingId;
-    this.conn.query(query, function(err, rows){
-        console.log(rows);
+    let query = "SELECT comment, user_id, password FROM readings WHERE id=?";
+    this.conn.query(query, [readingId], (err, rows) => {
         if(err){
             callback(err);
         } else if(rows.length === 0) {
@@ -550,12 +490,11 @@ dbController.prototype.getSecretComment = function (readingId, userId, passwd, c
             error.name="WrongPasswordError";
             callback(error);
         }
-
     });
 };
 
 dbController.prototype.backup = function(dest, callback){
-    var mysqlDump = require('mysqldump');
+    let mysqlDump = require('mysqldump');
     mysqlDump({
         host: config.host,
         port: config.port,

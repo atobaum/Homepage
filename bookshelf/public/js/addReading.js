@@ -131,13 +131,6 @@ function check_form(){
     if($('#form_book').val().length === 0){
         message += '책을 선택하세요. ';
         result = false;
-    };
-
-    if(!result){
-        //$('.ui.message .header').text('어딘가 비어있는 폼.');
-        $('.ui.message p').text(message);
-        $('form .ui.message').addClass('error');
-        $('form .ui.message').show();
     }
 
     $('#form_rating').val($('.rating').starRating('getRating')*2);
@@ -145,6 +138,12 @@ function check_form(){
         $('form input[name="is_secret"]').val(1);
     else {
         $('form input[name="is_secret"]').val(0);
+    }
+
+    if(!result){
+        $('.ui.message p').text(message);
+        $('form .ui.message').addClass('error');
+        $('form .ui.message').show();
     }
 
     return result;
@@ -187,7 +186,7 @@ $(document).ready(function(){
         searchDelay: 1000,
         //source: content,
         onSelect: function(result, response){
-            if(result.isbn13.length == 0){
+            if(result.isbn13.length === 0){
 
             }
             selectBook(result);
@@ -233,7 +232,7 @@ $(document).ready(function(){
         onRemove: function(value){
             for(var i = 0; i < authors.length; i++){
                 var author = authors[i];
-                if(value == author.text){
+                if(value === author.text){
                     authors.splice(i, 1);
                     return;
                 }
@@ -241,7 +240,7 @@ $(document).ready(function(){
 
         }
     });
-    $('#manual_authors input.search').keydown(function(evt){
+    $('#manual_authors').find('input.search').keydown(function(evt){
         switch (evt.which){
             case 38: //up
                 var index = $('#manual_author_type').dropdown('get value');
