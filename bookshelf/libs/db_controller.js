@@ -111,7 +111,7 @@ dbController.prototype.addAuthors = function(bookId, authors, callback){
         async.waterfall([
             (next) => {
                 thisClass.conn.query('INSERT INTO people (name_ko) VALUES (?)', [author.name], (err, result) => {
-                    if(err.code === 'ER_DUP_ENTRY'){
+                    if(err && err.code === 'ER_DUP_ENTRY'){
                         next(null, null);
                     } else {next(err, (result ? result.insertId : null));}
                 });
@@ -176,7 +176,7 @@ dbController.prototype.addBook = function(book, callback){
         },
         (next) => { //add publisher
             thisClass.conn.query('INSERT INTO publishers SET name=?', [book.publisher], function(err, result){
-                if(err.code === 'ER_DUP_ENTRY'){
+                if(err && err.code === 'ER_DUP_ENTRY'){
                     next(null, null);
                 } else {next(err, (result ? result.insertId : null));}
             });
@@ -202,7 +202,7 @@ dbController.prototype.addBook = function(book, callback){
                 cover_URL: book.cover_URL
             };
             thisClass.conn.query('INSERT INTO books SET ?', [data], function(err){
-                if(err.code === 'ER_DUP_ENTRY') {
+                if(err && err.code === 'ER_DUP_ENTRY') {
                     next(null, false);
                 } else next(err, true)
             });
