@@ -78,10 +78,11 @@ class Parser{
         return {title: title, ref: ref, text:text};
     };
 
-    out(src, title){
+    out(src, ns, pageTitle){
+        if(ns==="Main") ns = null;
         let content = '';
         this.initAdditional();
-        [this.toks, this.headings] = this.lexer.scan(src);
+        [this.toks, this.headings] = this.lexer.scan(src, ns);
         this.headings = parseHeadings(this.headings);
         let headingInfo = iteratorList(this.headings);
         let tok;
@@ -116,8 +117,14 @@ class Parser{
                     break;
             }
         }
-        content += (this.additional.footnotes.length !== 0 ? '<br>'+this.renderer.footnotes(this.additional.footnotes) : '');
-        content = (this.headings.length === 0 ? '' : this.renderer.toc(this.headings)) + content + (this.additional.cat.length !== 0 ? this.renderer.cat(this.additional.cat) : '');
+        if(this.headings.length !== 0)
+            content = this.renderer.toc(this.headings) + content;
+        if(pageTitle)
+            content = this.renderer.title(ns, pageTitle) + content;
+        if(this.additional.footnotes.length !== 0 )
+            content += '<br>'+this.renderer.footnotes(this.additional.footnotes);
+        if(this.additional.cat.length !== 0)
+            content += this.renderer.cat(this.additional.cat);
         return content;
     };
 

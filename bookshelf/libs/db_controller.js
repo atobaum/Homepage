@@ -102,8 +102,12 @@ dbController.prototype.addAuthors = function(bookId, authors, callback){
                 case 'photo':
                     author.type = 5;
                     break;
+                case '엮음':
+                case 'editor':
+                    author.type = 6;
+                    break;
                 default:
-                    next(new Error("지원하지 않는 저자 타입: "+author.type));
+                    callback(new Error("지원하지 않는 저자 타입: "+author.type));
                     return;
             }
         }

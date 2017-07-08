@@ -12,8 +12,6 @@ block content
             a.item(href='/wiki/history/' + wiki.title) 역사
             a.item(href='/wiki/xref/' + wiki.title) 역링크
             a.item(href='/wiki/delete/' + wiki.title) 삭제
-        h1.wiki_title= wiki.title
-
         .wiki_content.language-javascript !{wiki.parsedContent}
 
     script.

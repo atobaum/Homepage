@@ -78,8 +78,17 @@ class Renderer{
     };
 
     link(data){
+        console.log(data);
+        let regexTitle = /^(?:(.*?):)?(.+?)$/;
+        let parsedHref = regexTitle.exec(data.href);
+        let href = parsedHref[2];
+        if(parsedHref[1]){//Namespace exists
+            href = parsedHref[1] + ':' + href;
+        } else if(parsedHref[1] === undefined && data.ns) {
+            href = data.ns + ':' + href;
+        }
         let text = (data.text ? data.text : data.href);
-        return '<a href="\/wiki\/view\/'+data.href+'" title="'+text+'">'+text+'</a>';
+        return '<a href="\/wiki\/view\/'+href+'" title="'+text+'">'+text+'</a>';
     };
 
     urlLink(data){
@@ -195,6 +204,10 @@ class Renderer{
         }
         return result + '</table>';
     };
+
+    title(ns, pageTitle){
+        return `<h1 class="wiki_title">${(ns ? ns + ':' : '')+pageTitle}</h1>`;
+    }
 }
 
 module.exports = Renderer;

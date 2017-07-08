@@ -1,11 +1,11 @@
-var express = require('express');
+let express = require('express');
 //var path = require('path');
 //var favicon = require('serve-favicon');
 //var logger = require('morgan');
 //var cookieParser = require('cookie-parser');
 //var bodyParser = require('body-parser');
 
-var config = require('./config.js');
+let config = require('./config.js');
 app = express();
 
 // view engine setup
@@ -20,7 +20,7 @@ app.set('view engine', 'pug');
 //app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));
 
-var wiki = require('./libs/wiki');
+let wiki = require('./libs/wiki');
 wiki = new wiki(config);
 
 
@@ -33,13 +33,13 @@ app.get(/\/search\/(.*)/, function(req, res){
 });
 
 app.get(/\/view\/(.*)/, function(req, res, next){
-    var title = decodeURI(req.params[0]);
-    var userId = req.session ? req.session.userId : null;
+    let title = decodeURI(req.params[0]);
+    let userId = req.session ? req.session.userId : null;
     wiki.getParsedPage(title, userId, function(err, page){
         if(err){
-            if(err.name == 'NO_PAGE_ERROR') {
+            if(err.name === 'NO_PAGE_ERROR') {
                 res.redirect('/wiki/search/'+ encodeURI(title));
-            } else if (err.name == "NO_PRIVILEGE"){
+            } else if (err.name === "NO_PRIVILEGE"){
                 console.log(page);
                 res.render('noPrivilege', {wikiTitle: title, priType: 4 ,session:req.session});
             } else{
@@ -52,21 +52,20 @@ app.get(/\/view\/(.*)/, function(req, res, next){
 });
 
 app.get(/\/edit\/(.*)/, function(req, res, next){
-    var title = decodeURI(req.params[0]);
-    var userId = req.session ? req.session.userId : null;
+    let title = decodeURI(req.params[0]);
+    let userId = req.session ? req.session.userId : null;
     wiki.getRawPage(title, userId, function(err, page){
         if(err){
-            if(err.name == 'NO_PAGE_ERROR') {
+            if(err.name === 'NO_PAGE_ERROR') {
                 page = {
                     title: title,
                     rawContent: ''
                 };
                 res.render('editPage', {wiki: page, session: req.session});
-            } else if (err.name == "NO_PRIVILEGE"){
+            } else if (err.name === "NO_PRIVILEGE"){
                 res.render('noPrivilege', {wikiTitle: title, priType: 4 ,session:req.session});
             } else{
                 res.render('error', {error: err, session: req.session});
-                return;
             }
         } else{
             res.render('editPage', {wiki: page, session: req.session});
@@ -96,14 +95,14 @@ app.get(/\/delete\/(.*)/, function(req, res, next){
 });
 
 app.post(/\/edit\/(.*)/, function(req, res, next){
-    var title = decodeURI(req.params[0]);
-    var data = req.body;
+    let title = decodeURI(req.params[0]);
+    let data = req.body;
     data.title = title;
     userId = req.session ? req.session.userId : null;
     data.userText = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     wiki.editPage(data, userId, function(err){
         if(err){
-            if (err.name == "NO_PRIVILEGE"){
+            if (err.name === "NO_PRIVILEGE"){
                 res.render('noPrivilege', {wikiTitle: title, priType: 2 ,session:req.session});
             } else res.render('error', {error: err, session: req.session});
         }else{
@@ -113,15 +112,16 @@ app.post(/\/edit\/(.*)/, function(req, res, next){
 });
 
 app.post('/api/parse', function(req, res){
-    res.json(wiki.parse(req.body.text));
+    console.log(req.body);
+    res.json(wiki.parse(req.body.text, req.body.title));
 });
 
 app.get(/\/api\/parse\/(.*)/, function(req, res){
-    var title = decodeURI(req.params[0]);
-    var userId = req.session ? req.session.userId : null;
+    let title = decodeURI(req.params[0]);
+    let userId = req.session ? req.session.userId : null;
     wiki.getParsedPage(title, userId, function(err, page){
         if(err){
-            if(err.name == 'NO_PAGE_ERROR') {
+            if(err.name === 'NO_PAGE_ERROR') {
                 res.json({ok:2, error: err});
             } else{
                 res.json({ok:0, error: err});
@@ -133,11 +133,11 @@ app.get(/\/api\/parse\/(.*)/, function(req, res){
 });
 
 app.get(/\/api\/rawtext\/(.*)/, function(req, res){
-    var title = decodeURI(req.params[0]);
-    var userId = req.session ? req.session.userId : null;
+    let title = decodeURI(req.params[0]);
+    let userId = req.session ? req.session.userId : null;
     wiki.getRawPage(title, userId, function(err, page){
         if(err){
-            if(err.name == 'NO_PAGE_ERROR') {
+            if(err.name === 'NO_PAGE_ERROR') {
                 res.json({ok:2, error: err});
             } else{
                 res.json({ok:0, error: err});
@@ -149,11 +149,11 @@ app.get(/\/api\/rawtext\/(.*)/, function(req, res){
 });
 
 app.post(/\/api\/edit\/(.*)/, function(req, res){
-    var title = decodeURI(req.params[0]);
-    var data = req.body;
+    let title = decodeURI(req.params[0]);
+    let data = req.body;
     data.title = title;
     data.userText = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    var userId = req.session ? req.session.userId : null;
+    let userId = req.session ? req.session.userId : null;
     wiki.editPage(data, userId, function(err){
         if(err){
             res.json({ok:0, error: err});
@@ -177,7 +177,7 @@ app.get('/api/titleSearch', function(req, res){
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
+  let err = new Error('Not Found');
   err.status = 404;
   next(err);
 });

@@ -30,7 +30,7 @@ function InlineParser(parser){
     this.additional = parser.additional;
 }
 
-InlineParser.prototype.out = function(src) {
+InlineParser.prototype.out = function(src, ns) {
     var result='';
     var cap;
     var renderer = this.renderer;
@@ -86,7 +86,7 @@ InlineParser.prototype.out = function(src) {
 
         //link
         if (cap = inlineTockens.link.exec(src)) {
-            result += renderer.link({text: cap[3], href: cap[1]});
+            result += renderer.link({text: cap[3], href: cap[1], ns: ns});
             src = src.substr(cap[0].length);
             continue;
         }

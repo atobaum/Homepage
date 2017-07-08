@@ -24,14 +24,14 @@ function Lexer(parser){
     this.inlineParser = parser.inlineParser;
 }
 
-Lexer.prototype.scan = function(src){
+Lexer.prototype.scan = function(src, ns){
     let toks = [];
     let cap;
     let headings = [];
     while (src) {
         //heading
         if (cap = blocks.heading.exec(src)) {
-            headings.push({level: cap[1].length - 1, text: this.inlineParser.out(cap[2])}); //[level, text]
+            headings.push({level: cap[1].length - 1, text: this.inlineParser.out(cap[2], ns)}); //[level, text]
             toks.push({type: 'heading'});
             src = src.substr(cap[0].length);
             continue;
@@ -52,7 +52,7 @@ Lexer.prototype.scan = function(src){
                 type: 'list',
                 ordered: cap[2] == '-',
                 level: cap[1].length,
-                text: this.inlineParser.out(cap[3])
+                text: this.inlineParser.out(cap[3], ns)
             });
             src = src.substr(cap[0].length);
             continue;
@@ -83,7 +83,7 @@ Lexer.prototype.scan = function(src){
         if (cap = blocks.quote.exec(src)) {
             toks.push({
                 type: 'quote',
-                text: this.inlineParser.out(cap[3]),
+                text: this.inlineParser.out(cap[3], ns),
                 ref: cap[1],
                 title: cap[2]
             });
@@ -103,7 +103,7 @@ Lexer.prototype.scan = function(src){
             toks.push({
                 type: 'table',
                 additional: list.pop(),
-                row: list.map((text)=>{return this.inlineParser.out(text)})
+                row: list.map((text)=>{return this.inlineParser.out(text, ns)})
             });
 
             src = src.substr(cap[0].length);
@@ -166,7 +166,7 @@ Lexer.prototype.scan = function(src){
         if (cap = blocks.paragraph.exec(src)) {
             toks.push({
                 type: 'paragraph',
-                text: this.inlineParser.out(cap[1])
+                text: this.inlineParser.out(cap[1], ns)
             });
             src = src.substr(cap[0].length);
             continue;

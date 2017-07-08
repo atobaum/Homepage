@@ -5,382 +5,490 @@
 var mysql = require('mysql');
 var async = require('async');
 var regexTitle = /^(?:(.*?):)?(.+?)$/;
-function wiki(config){
-    this.parser = require('./parser');
-    this.parser = new this.parser();
-    this.conn = mysql.createConnection({
-        host: config.db.host,
-        port: config.db.port,
-        user: config.db.user,
-        password: config.db.password,
-        database: config.db.database,
-        dateStrings: 'date'
-    }, function(err){
-        console.error('Error occured while making connection with MySql server: ');
-        console.error(err);
-    });
-};
+class wiki {
+    constructor(config) {
+        this.parser = require('./parser');
+        this.parser = new this.parser();
+        this.config = config;
+        this.conn = mysql.createConnection({
+            host: config.db.host,
+            port: config.db.port,
+            user: config.db.user,
+            password: config.db.password,
+            database: config.db.database,
+            dateStrings: 'date',
+            connectTimeout: 5000
+        }, function (err) {
+            console.error('Error occured while making connection with MySql server: ');
+            console.error(err);
+        });
 
-wiki.prototype.parse = function(src){
-    try {
-        return this.parser.out(src);
-    } catch(e){
-        console.log(e);
-        return e.message;
+        this.connPool = mysql.createPool({
+            connectionLimit : 5,
+            host: config.db.host,
+            port: config.db.port,
+            user: config.db.user,
+            password: config.db.password,
+            database: config.db.database,
+            dateStrings: 'date',
+            connectTimeout: 5000
+        }, function (err) {
+            console.error('Error occured while making connection with MySql server: ');
+            console.error(err);
+        });
     }
-};
 
-wiki.prototype.getPageInfo = function(title, callback){
-    var parsedTitle = regexTitle.exec(title);
-    let nsTitle;
-    if (parsedTitle[1]){
-        nsTitle = parsedTitle[1];
-    } else{
-        nsTitle = "Main";
-        title = false;
+    parseTitle(title){
+        let regexTitle = /^(?:(.*?):)?(.+?)$/;
+        let parsedTitle = regexTitle.exec(title);
+        return [(parsedTitle[1] ? parsedTitle[1] : 'Main'), parsedTitle[2]];
     }
-    let query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
-    this.conn.query(query, [nsTitle, parsedTitle[2]], function(err, rows){
-        if(err) callback(err);
-        else if(rows.length == 0){
-            let error = new Error('There\'s no such page.');
-            error.name = "NO_PAGE_ERROR";
-            callback(error);
-        } else {
-            let pageInfo = rows[0];
-            pageInfo.title = (title ? pageInfo.ns_title+':' : '') + pageInfo.page_title;
-            callback(null, pageInfo);
+
+    parse(src, title) {
+        let parsedTitle = this.parseTitle(title);
+        console.log(src, parsedTitle);
+        try {
+            return this.parser.out(src, parsedTitle[0], parsedTitle[1]);
+        } catch (e) {
+            console.log(e);
+            return e.message;
         }
-    });
-};
+    }
 
-/**
- * @function
- * @param{number} nsId
- * @param{number} pageId
- * @param{number} userId
- * @param{number} type - create(8), read(4), update(2), delete(1)
- * @param callback(err, result)
- * @property result - true if you can access.
- */
-wiki.prototype.checkAC = function(nsId, pageId, userId, type, callback){
-    let query = "SELECT AC FROM ACL WHERE user_id = ? and (ns_id = ? OR page_id = ?)";
-    this.conn.query(query, [userId, nsId, pageId], function(err, rows){
-        if(err) callback(err);
-        else if(rows.length === 0) callback(null, false);
-        else{
-            for(let i = 0; i < rows.length; i++){
-                if(rows[i].AC & type){
-                    callback(null, true);
-                    return;
+    // getPageInfo(title, callback) {
+    //     let parsedTitle = this.parseTitle(title);
+    //     let query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
+    //     this.conn.query(query, [parsedTitle[0], parsedTitle[1]], function (err, rows) {
+    //         if (err) callback(err);
+    //         else if (rows.length === 0) {
+    //             let error = new Error('There\'s no such page.');
+    //             error.name = "NO_PAGE_ERROR";
+    //             callback(error);
+    //         } else {
+    //             let pageInfo = rows[0];
+    //             pageInfo.title = (pageInfo.ns_title === "Main" ? '' : pageInfo.ns_title + ':') + pageInfo.page_title;
+    //             callback(null, pageInfo);
+    //         }
+    //     });
+    // }
+    getPageInfo(title, callback) {
+        let parsedTitle = this.parseTitle(title);
+        let query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
+        let thisClass = this;
+        this.connPool.getConnection((err, conn)=>{
+            conn.query(query, [parsedTitle[0], parsedTitle[1]], function (err, rows) {
+                if (err) callback(err);
+                else if (rows.length === 0) {
+                    let error = new Error('There\'s no such page.');
+                    error.name = "NO_PAGE_ERROR";
+                    callback(error);
+                } else {
+                    let pageInfo = rows[0];
+                    pageInfo.title = (pageInfo.ns_title === "Main" ? '' : pageInfo.ns_title + ':') + pageInfo.page_title;
+                    callback(null, pageInfo);
                 }
-            }
-            callback(null, false);
-        }
-    });
-};
+                conn.end();
+            });
+        });
+    }
 
-/**
- *
- * @param title
- * @param userId
- * @param callback(err, page)
- * @property page.title
- * @property page.touched
- * @property page.text
- */
-wiki.prototype.getRawPage = function(title, userId, callback){
-    let thisClass = this;
-    async.waterfall([function(next){
-        thisClass.getPageInfo(title, next);
-    }, function(pageInfo, next){
-        if(pageInfo.deleted){
-            let error = new Error('Page is deleted.');
-            error.name = "DELETED_PAGE";
-            callback(error);
-        } else if((pageInfo.page_PAC && pageInfo.page_PAC & 4) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 4)){ //can read
-            next(null, pageInfo);
-        } else {
-            if(userId){
-                thisClass.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4, function(err, ac){
-                    if(err) next(err);
-                    else if(ac) next(null, pageInfo);
-                    else{
-                        let error = new Error('You have no privilege for this page.');
-                        error.name = "NO_PRIVILEGE";
-                        callback(error);
-                    }
+    /**
+     *
+     * @param work(conn, callback) callback(err, result)
+     * @param afterwork(err, result)
+     */
+    transaction(work, afterwork, isTransaction) {
+        let conn = mysql.createConnection({
+            host: config.host,
+            port: config.port,
+            user: config.user,
+            password: config.password,
+            database: config.database,
+            dateStrings: 'date'
+        });
+
+        async.waterfall([
+            (next) => {
+                conn.connect((err) => {
+                    next(err);
                 });
-            } else{
-                let error = new Error('You have no privilege for this page.');
-                error.name = "NO_PRIVILEGE";
-                callback(error);
+            },
+            (next) => {
+                if(isTransaction)
+                    conn.beginTransaction((err) => {
+                        next(err);
+                    });
+                else next(null);
+            },
+            (next) => {
+                work(conn, (err, result) => {
+                    next(err, result);
+                });
+            },
+            (result, next) => {
+                conn.commit((err) => {
+                    next(err, result)
+                });
             }
-        }
-    }, function(pageInfo){ //read page
-        let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
-        thisClass.conn.query(query, [pageInfo.page_id, pageInfo.rev_id], function (err, rows) {
-            if(err) callback(err);
-            else {
-                let data = {title: pageInfo.title, rev_id: pageInfo.rev_id ,touched: pageInfo.touched, text: rows[0].text};
-                if((pageInfo.page_PAC && pageInfo.page_PAC & 2) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 2)) callback(null, data);
-                else if(userId){
-                    thisClass.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 2, function(err, ac){
-                        if(err) {next(err); return;}
-                        else if(!ac) data.readOnly=true;
-                        callback(null, data);
+        ], (err, result) => {
+            if (err) {
+                if(isTransaction){
+                    conn.rollback(() => {
+                        conn.destroy();
                     });
                 } else{
-                    data.readOnly = true;
-                    callback(null, data);
+                    conn.destroy();
                 }
+                afterwork(err);
+            } else afterwork(null, result);
+        });
+    }
+
+    /**
+     * @function
+     * @param{number} nsId
+     * @param{number} pageId
+     * @param{number} userId
+     * @param{number} type - create(8), read(4), update(2), delete(1)
+     * @param callback(err, result)
+     * @property result - true if you can access.
+     */
+    checkAC(nsId, pageId, userId, type, callback) {
+        let query = "SELECT AC FROM ACL WHERE user_id = ? and (ns_id = ? OR page_id = ?)";
+        this.conn.query(query, [userId, nsId, pageId], function (err, rows) {
+            if (err) callback(err);
+            else if (rows.length === 0) callback(null, false);
+            else {
+                for (let i = 0; i < rows.length; i++) {
+                    if (rows[i].AC & type) {
+                        callback(null, true);
+                        return;
+                    }
+                }
+                callback(null, false);
             }
         });
-    }], callback);
-};
+    };
 
-wiki.prototype.updatePageCache = function(page_id, rev_id, callback){
-    let thisClass = this;
-    let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
-    thisClass.conn.query(query, [page_id, rev_id], function (err, rows) {
-        let content;
-        if(err) callback(err);
-        else {
-            query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
-            try {
-                content = thisClass.parser.out(rows[0].text);
-            }catch(e){
-                console.log(e);
-                throw e;
+    /**
+     *
+     * @param title
+     * @param userId
+     * @param callback(err, page)
+     * @property page.title
+     * @property page.touched
+     * @property page.text
+     */
+    getRawPage(title, userId, callback) {
+        let thisClass = this;
+        async.waterfall([function (next) {
+            thisClass.getPageInfo(title, next);
+        }, function (pageInfo, next) {
+            if (pageInfo.deleted) {
+                let error = new Error('Page is deleted.');
+                error.name = "DELETED_PAGE";
+                callback(error);
+            } else if ((pageInfo.page_PAC && pageInfo.page_PAC & 4) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 4)) { //can read
+                next(null, pageInfo);
+            } else {
+                if (userId) {
+                    thisClass.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4, function (err, ac) {
+                        if (err) next(err);
+                        else if (ac) next(null, pageInfo);
+                        else {
+                            let error = new Error('You have no privilege for this page.');
+                            error.name = "NO_PRIVILEGE";
+                            callback(error);
+                        }
+                    });
+                } else {
+                    let error = new Error('You have no privilege for this page.');
+                    error.name = "NO_PRIVILEGE";
+                    callback(error);
+                }
             }
-            thisClass.conn.query(query, [page_id, content, content], function(err){
-                callback(err, content);
+        }, function (pageInfo) { //read page
+            let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
+            thisClass.conn.query(query, [pageInfo.page_id, pageInfo.rev_id], function (err, rows) {
+                if (err) callback(err);
+                else {
+                    let data = {
+                        title: pageInfo.title,
+                        rev_id: pageInfo.rev_id,
+                        touched: pageInfo.touched,
+                        text: rows[0].text
+                    };
+                    if ((pageInfo.page_PAC && pageInfo.page_PAC & 2) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 2)) callback(null, data);
+                    else if (userId) {
+                        thisClass.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 2, function (err, ac) {
+                            if (err) {
+                                next(err);
+                                return;
+                            }
+                            else if (!ac) data.readOnly = true;
+                            callback(null, data);
+                        });
+                    } else {
+                        data.readOnly = true;
+                        callback(null, data);
+                    }
+                }
             });
-        }
-    });
-};
+        }], callback);
+    }
 
-wiki.prototype.getParsedPage = function(title, userId, callback){
-    let thisClass = this;
-    async.waterfall([function(next){
-        thisClass.getPageInfo(title, next);
-    }, function(pageInfo, next){
-        if(pageInfo.deleted){
-            let error = new Error('Page is deleted.');
-            error.name = "DELETED_PAGE";
-            callback(error, pageInfo);
-        } else if((pageInfo.page_PAC && pageInfo.page_PAC & 4) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 4)){ //can read
-            next(null, pageInfo);
-        } else {
-            if(userId){
-                thisClass.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4, function(err, ac){
-                    if(err) next(err);
-                    else if(ac) next(null, pageInfo);
-                    else{
-                        let error = new Error('You have no privilege for this page.');
-                        error.name = "NO_PRIVILEGE";
-                        callback(error, pageInfo);
+    updatePageCache(page_id, rev_id, title, callback) {
+        let thisClass = this;
+        let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
+        thisClass.conn.query(query, [page_id, rev_id], function (err, rows) {
+            let content;
+            if (err) callback(err);
+            else {
+                query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
+                try {
+                    let parsedTitle = thisClass.parseTitle(title);
+                    content = thisClass.parser.out(rows[0].text, parsedTitle[0], parsedTitle[1]);
+                } catch (e) {
+                    console.log(e);
+                    throw e;
+                }
+                thisClass.conn.query(query, [page_id, content, content], function (err) {
+                    callback(err, content);
+                });
+            }
+        });
+    }
+
+    getParsedPage(title, userId, callback) {
+        let thisClass = this;
+        async.waterfall([function (next) {
+            thisClass.getPageInfo(title, next);
+        }, function (pageInfo, next) {
+            if (pageInfo.deleted) {
+                let error = new Error('Page is deleted.');
+                error.name = "DELETED_PAGE";
+                callback(error, pageInfo);
+            } else if ((pageInfo.page_PAC && pageInfo.page_PAC & 4) || (!pageInfo.page_PAC && pageInfo.ns_PAC & 4)) { //can read
+                next(null, pageInfo);
+            } else {
+                if (userId) {
+                    thisClass.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4, function (err, ac) {
+                        if (err) next(err);
+                        else if (ac) next(null, pageInfo);
+                        else {
+                            let error = new Error('You have no privilege for this page.');
+                            error.name = "NO_PRIVILEGE";
+                            callback(error, pageInfo);
+                        }
+                    });
+                } else {
+                    let error = new Error('You have no privilege for this page.');
+                    error.name = "NO_PRIVILEGE";
+                    callback(error, pageInfo);
+                }
+            }
+        }, function (pageInfo) { //read page
+            if (pageInfo.redirect) {
+                callback(null, {redirectFrom: pageInfo.title, redirectTo: pageInfo.redirect});
+            } else if (pageInfo.cached) {
+                let query = "SELECT content FROM caching WHERE page_id = ?";
+                thisClass.conn.query(query, [pageInfo.page_id], function (err, rows) {
+                    if (err) callback(err);
+                    else if (rows.length === 0) callback(new Error('fatal error: cache data doen\'t exists for page_id=' + pageInfo.page_id));
+                    else callback(null, {
+                            title: pageInfo.title,
+                            touched: pageInfo.touched,
+                            parsedContent: rows[0].content
+                        });
+                });
+            } else {
+                thisClass.updatePageCache(pageInfo.page_id, pageInfo.rev_id, pageInfo.title, function (err, parsedContent) {
+                    if (err) callback(err);
+                    else callback(null, {
+                        title: pageInfo.title,
+                        touched: pageInfo.touched,
+                        parsedContent: parsedContent
+                    })
+                });
+            }
+        }], callback);
+    }
+
+    /**
+     * @function editPage - Edit page or Create page if not exists.
+     * @param{Object} page
+     * @param{String} page.title - Page title, include namespace.
+     * @param{String} page.userText - User text. Username or ip.
+     * @param{String} page.text - wiki text.
+     * @param{number} userId
+     * @param callback(err)
+     */
+    editPage(page, userId, callback) {
+        let ns_title, page_title;
+        [, ns_title = "Main", page_title] = regexTitle.exec(page.title);
+        let thisClass = this;
+        this.conn.beginTransaction(function (err) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            var data = {
+                page_title: page_title
+            };
+
+            async.waterfall([function (next) { //get ns_id
+                thisClass.conn.query("SELECT * FROM namespace WHERE ns_title = ?", [ns_title], function (err, rows) {
+                    if (err) next(err);
+                    else if (rows.length === 0) {
+                        let error = new Error("namespace doesn't exist: " + ns_title);
+                        error.name = "NO_NAMESPACE";
+                        next(error);
+                    } else {
+                        data.ns_id = rows[0].ns_id;
+                        next(null, rows[0].ns_PAC);
                     }
                 });
-            } else{
-                let error = new Error('You have no privilege for this page.');
-                error.name = "NO_PRIVILEGE";
-                callback(error, pageInfo);
-            }
-        }
-    }, function(pageInfo){ //read page
-        if(pageInfo.redirect){
-            callback(null, {redirectFrom: pageInfo.title, redirectTo: pageInfo.redirect});
-        } else if(pageInfo.cached){
-            let query = "SELECT content FROM caching WHERE page_id = ?";
-            thisClass.conn.query(query, [pageInfo.page_id], function (err, rows) {
-                if(err) callback(err);
-                else if(rows.length === 0) callback(new Error('fatal error: cache data doen\'t exists for page_id='+pageInfo.page_id));
-                else callback(null, {title: pageInfo.title, touched: pageInfo.touched, parsedContent: rows[0].content});
-            });
-        } else{
-            thisClass.updatePageCache(pageInfo.page_id, pageInfo.rev_id, function(err, parsedContent){
-                if(err) callback(err);
-                else callback(null, {title: pageInfo.title, touched: pageInfo.touched, parsedContent: parsedContent})
-            });
-        }
-    }], callback);
-};
-
-/**
- * @function editPage - Edit page or Create page if not exists.
- * @param{Object} page
- * @param{String} page.title - Page title, include namespace.
- * @param{String} page.userText - User text. Username or ip.
- * @param{String} page.text - wiki text.
- * @param{number} userId
- * @param callback(err)
- */
-wiki.prototype.editPage = function(page, userId, callback){
-    let ns_title, page_title;
-    [ ,ns_title = "Main", page_title] = regexTitle.exec(page.title);
-    let thisClass = this;
-    this.conn.beginTransaction(function(err) {
-        if (err) {
-            callback(err);
-            return;
-        }
-        var data = {
-            page_title: page_title
-        };
-
-        async.waterfall([function(next) { //get ns_id
-            thisClass.conn.query("SELECT * FROM namespace WHERE ns_title = ?", [ns_title], function(err, rows){
-                if(err) next(err);
-                else if(rows.length === 0){
-                    let error = new Error("namespace doesn't exist: "+ns_title);
-                    error.name = "NO_NAMESPACE";
-                    next(error);
-                } else {
-                    data.ns_id = rows[0].ns_id;
-                    next(null, rows[0].ns_PAC);
-                }
-            });
-        }, function(ns_PAC, next){ //insert page
-            let query = "INSERT INTO page (ns_id, page_title, user_ID, user_text) VALUES (?, ?, ?, ?)";
-            thisClass.conn.query(query, [data.ns_id, data.page_title, userId, page.userText], function (err) {
-                if(err && err.code == "ER_DUP_ENTRY"){
-                    next(null, ns_PAC, false);
-                } else if(err) next(err);
-                else{
-                    next(null, ns_PAC, true);
-                }
-            });
-        }, function(ns_PAC, created, next){ //get page_id
-            thisClass.conn.query('SELECT page_id, rev_id, rev_counter, page_PAC FROM page WHERE ns_id=? and page_title=?', [data.ns_id, data.page_title], function(err, rows){
-                if(err){
-                    next(err);
-                    return;
-                }
-                data.page_id = rows[0].page_id;
-                data.rev_id = rows[0].rev_counter + 1;
-                data.parent_id = rows[0].rev_id;
-                next(null, ns_PAC, rows[0].page_PAC, created);
-            });
-        }, function(ns_PAC, page_PAC, created, next){ //check access control
-            if(created){ //create page
-                if(ns_PAC & 8){
+            }, function (ns_PAC, next) { //insert page
+                let query = "INSERT INTO page (ns_id, page_title, user_ID, user_text) VALUES (?, ?, ?, ?)";
+                thisClass.conn.query(query, [data.ns_id, data.page_title, userId, page.userText], function (err) {
+                    if (err && err.code == "ER_DUP_ENTRY") {
+                        next(null, ns_PAC, false);
+                    } else if (err) next(err);
+                    else {
+                        next(null, ns_PAC, true);
+                    }
+                });
+            }, function (ns_PAC, created, next) { //get page_id
+                thisClass.conn.query('SELECT page_id, rev_id, rev_counter, page_PAC FROM page WHERE ns_id=? and page_title=?', [data.ns_id, data.page_title], function (err, rows) {
+                    if (err) {
+                        next(err);
+                        return;
+                    }
+                    data.page_id = rows[0].page_id;
+                    data.rev_id = rows[0].rev_counter + 1;
+                    data.parent_id = rows[0].rev_id;
+                    next(null, ns_PAC, rows[0].page_PAC, created);
+                });
+            }, function (ns_PAC, page_PAC, created, next) { //check access control
+                if (created) { //create page
+                    if (ns_PAC & 8) {
+                        next(null, true);
+                        return;
+                    } else {
+                        thisClass.checkAC(data.ns_id, null, userId, 8, next);
+                    }
+                } else if ((page_PAC && page_PAC & 2) || (!page_PAC && ns_PAC & 2)) { //edit page
                     next(null, true);
-                    return;
-                } else{
-                    thisClass.checkAC(data.ns_id, null, userId, 8, next);
+                } else {
+                    thisClass.checkAC(data.ns_id, data.page_id, userId, 2, next);
                 }
-            } else if((page_PAC && page_PAC & 2) || (!page_PAC && ns_PAC & 2)) { //edit page
-                next(null, true);
-            } else{
-                thisClass.checkAC(data.ns_id, data.page_id, userId, 2, next);
-            }
-        }, function(acResult, next){
-            if(acResult) next(null);
-            else{
-                var error = new Error('You have no privilege for this page.');
-                error.name = "NO_PRIVILEGE";
-                next(error);
-            }
-        }, function(next){ //add revision
-            let revision = {
-                page_id: data.page_id,
-                rev_id: data.rev_id,
-                user_id: userId,
-                user_text: page.userText,
-                text: page.text,
-                parent_id: data.parent_id,
-                minor: page.minor,
-                comment: page.comment
-            };
-            thisClass.conn.query("INSERT INTO revision SET ?", [revision], function(err, rows){
-                next(err);
-            });
-        }], function(err){
-            if(err){
-                thisClass.conn.rollback(function(roll_err){
-                    if(roll_err) callback(roll_err);
-                    else callback(err);
+            }, function (acResult, next) {
+                if (acResult) next(null);
+                else {
+                    var error = new Error('You have no privilege for this page.');
+                    error.name = "NO_PRIVILEGE";
+                    next(error);
+                }
+            }, function (next) { //add revision
+                let revision = {
+                    page_id: data.page_id,
+                    rev_id: data.rev_id,
+                    user_id: userId,
+                    user_text: page.userText,
+                    text: page.text,
+                    parent_id: data.parent_id,
+                    minor: page.minor,
+                    comment: page.comment
+                };
+                thisClass.conn.query("INSERT INTO revision SET ?", [revision], function (err, rows) {
+                    next(err);
                 });
-            } else{
-                thisClass.conn.commit(function(com_err){
-                    if(com_err) callback(com_err);
-                    else callback(null);
-                });
-            }
+            }], function (err) {
+                if (err) {
+                    thisClass.conn.rollback(function (roll_err) {
+                        if (roll_err) callback(roll_err);
+                        else callback(err);
+                    });
+                } else {
+                    thisClass.conn.commit(function (com_err) {
+                        if (com_err) callback(com_err);
+                        else callback(null);
+                    });
+                }
 
+            });
         });
-    });
-};
+    }
 
-wiki.prototype.searchTitles = function(title, callback){
-    let parseTitle = regexTitle.exec(title);
-    let ns_title = parseTitle[1] || 'Main';
-    let query = 'SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%'+ns_title+'%" AND page_title LIKE "'+parseTitle[2]+'%" AND deleted = 0 LIMIT 7';
-    this.conn.query(query, function(err, res, fields){
-        if(!err){
-            var result = res.map((item) => {
-                "use strict";
-                let data;
-                if(parseTitle[1]) data = {title: item.ns_title + ':' + item.page_title};
-                else data = {title: item.page_title};
-                data.url = '/wiki/view/'+data.title;
-                return data;
-            });
-        }
-        callback(err, result);
-    });
-};
+    searchTitles(title, callback) {
+        let parsedTitle = this.parseTitle(title);
+        let query = 'SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%' + parsedTitle[0] + '%" AND page_title LIKE "' + parsedTitle[1] + '%" AND deleted = 0 LIMIT 7';
+        this.conn.query(query, function (err, res, fields) {
+            if (!err) {
+                let result = res.map((item) => {
+                    return {
+                        title: (item.ns_title === 'Main' ? '' : item.ns_title+':') + item.page_title,
+                        url: '/wiki/view/' + data.title
+                    };
+                });
 
-wiki.prototype.deletePage = function(title, userId, callback){
+                callback(null, result);
+            } else {
+                callback(err);
+            }
+        });
+    }
 
-};
+    deletePage(title, userId, callback) {
 
-wiki.prototype.backup = function(dest, callback){
-    var mysqlDump = require('mysqldump');
-    mysqlDump({
-        host: config.host,
-        port: config.port,
-        user: config.user,
-        password: config.password,
-        database: config.database,
-        dest: dest
-    },function(err){
-        callback(err);
-    })
-};
+    }
 
-wiki.prototype.login = function(username, password, callback){
-    this.conn.query("SELECT user_id, nickname, password = PASSWORD(?) as correct FROM user WHERE username = ?", [password, username], function (err, rows) {
-        if(err) callback(err);
-        else if(rows.length === 0) callback(null, 2);
-        else callback(null, rows[0].correct, rows[0]);
-     });
-};
+    backup(dest, callback) {
+        let mysqlDump = require('mysqldump');
+        mysqlDump({
+            host: config.host,
+            port: config.port,
+            user: config.user,
+            password: config.password,
+            database: config.database,
+            dest: dest
+        }, function (err) {
+            callback(err);
+        })
+    }
 
-wiki.prototype.userInfo = function(){
+    login(username, password, callback) {
+        this.conn.query("SELECT user_id, nickname, password = PASSWORD(?) as correct FROM user WHERE username = ?", [password, username], function (err, rows) {
+            if (err) callback(err);
+            else if (rows.length === 0) callback(null, 2);
+            else callback(null, rows[0].correct, rows[0]);
+        });
+    }
 
-};
+    userInfo() {
 
-wiki.prototype.createUser = function(user, callback){
-    this.conn.query("INSERT INTO user (username, nickname, password, email) VALUES (?, ?, PASSWORD(?), ?)", [user.username, user.nickname, user.password, user.email], callback);
-};
+    }
 
-wiki.prototype.updateUser = function(){
+    createUser(user, callback) {
+        this.conn.query("INSERT INTO user (username, nickname, password, email) VALUES (?, ?, PASSWORD(?), ?)", [user.username, user.nickname, user.password, user.email], callback);
+    }
 
-};
+    updateUser() {
 
-wiki.prototype.checkUsername = function(username, callback){
-    this.conn.query("SELECT user_id FROM user WHERE username=?", [username], function(err, rows){
-       callback(err, rows.length !== 0);
-    });
-};
+    }
 
-wiki.prototype.checkNickname = function(nickname, callback){
-    this.conn.query("SELECT user_id FROM user WHERE nickname=?", [nickname], function(err, rows){
-        callback(err, rows.length !== 0);
-    });
-};
+    checkUsername(username, callback) {
+        this.conn.query("SELECT user_id FROM user WHERE username=?", [username], function (err, rows) {
+            callback(err, rows.length !== 0);
+        });
+    }
+
+    checkNickname(nickname, callback) {
+        this.conn.query("SELECT user_id FROM user WHERE nickname=?", [nickname], function (err, rows) {
+            callback(err, rows.length !== 0);
+        });
+    }
+}
 
 module.exports = wiki;
 

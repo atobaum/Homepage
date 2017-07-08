@@ -13,6 +13,7 @@ block content
             small !{editType}
         form.ui.form#edit_form(method="POST" action="/wiki/edit/"+encodeURI(wiki.title) onsubmit="return check_edit_form();")
             input(type="hidden" name="minor")
+            input(type="hidden" name="title" value=wiki.title)
             .ui.top.attached.tabular.menu
                 a.item.active(data-tab="edit") 편집
                 a.item(data-tab="preview") 미리보기
@@ -47,10 +48,13 @@ block content
                 $('.ui.dimmer').dimmer('show');
                 $.post({
                     url: '/wiki/api/parse',
-                    data: {text: $('.tab textarea').val()},
+                    data: {text: $('.tab textarea').val(), title: $('#edit_form input[name="title"]').val()},
                     success: function (res) {
                         $('.preview').html(res);
                         $('pre code').each((i, elem) => {Prism.highlightElement(elem)});
+                    },
+                    error: function (xhr, status, error) {
+                        console.log(xhr.responseText);
                     }
                 })
             });

@@ -7,26 +7,25 @@ if(!process.env.NODE_ENV){
 //process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'development' ) ? 'development' : 'production';
 //process.env.NODE_ENV = "development";
 global.env = process.env.NODE_ENV;
-var express = require('express');
+let express = require('express');
 //var path = require('path');
-var favicon = require('serve-favicon');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var subdomain = require('express-subdomain');
-var session = require('express-session');
-var mysql = require('mysql');
+let favicon = require('serve-favicon');
+let cookieParser = require('cookie-parser');
+let bodyParser = require('body-parser');
+let subdomain = require('express-subdomain');
+let mysql = require('mysql');
 
-var bookshelf = require('../bookshelf/app');
-var wiki = require('../wiki/app');
+let bookshelf = require('../bookshelf/app');
+let wiki = require('../wiki/app');
 
-var app = express();
+let app = express();
 // view engine setup
 app.set('views', __dirname+'/views');
 app.set('view engine', 'pug');
 
 app.use(favicon(__dirname + '/../public/' + 'favicon.ico'));
 app.use(express.static(__dirname+'/../public'));
-if(process.env.NODE_ENV == 'development') {
+if(process.env.NODE_ENV === 'development') {
     let logger = require('morgan');
     app.use(logger('dev'));
 }
@@ -36,9 +35,9 @@ app.use(cookieParser());
 
 
 //session setting
-var session = require('express-session');
-var MySQLStore = require('express-mysql-session')(session);
-var sessionStore = new MySQLStore({}, wiki.conn);
+let session = require('express-session');
+let MySQLStore = require('express-mysql-session')(session);
+let sessionStore = new MySQLStore({}, wiki.conn);
 app.use(session({
     secret: 'fdkjl%31nc124*|c',
     resave: false,
@@ -96,5 +95,4 @@ app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.render('error');
 });
-
 module.exports = app;
