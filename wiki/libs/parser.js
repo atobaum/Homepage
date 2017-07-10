@@ -150,7 +150,6 @@ function parseHeadings(headings, level=[0]){
         }else{
             level[level.length-1]++;
             let tok = headings.shift();
-            //console.log(tok);
             tok.level = level.slice();
             list.push(tok);
         }

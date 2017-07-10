@@ -37,7 +37,16 @@ app.use(cookieParser());
 //session setting
 let session = require('express-session');
 let MySQLStore = require('express-mysql-session')(session);
-let sessionStore = new MySQLStore({}, wiki.conn);
+let config = require('./config.js');
+let sessionStore = new MySQLStore({
+    host: config.wiki.db.host,
+    port: config.wiki.db.port,
+    user: config.wiki.db.user,
+    password: config.wiki.db.password,
+    database: config.wiki.db.database,
+    dateStrings: 'date'
+});
+
 app.use(session({
     secret: 'fdkjl%31nc124*|c',
     resave: false,
@@ -62,16 +71,20 @@ app.get('/auth/logout', function(req, res){
 });
 
 app.get('/api/auth/login', function(req, res){
-    wiki.login(req.query.id, req.query.password, function(err, result, user){
-        if(result == 1){
-            var sess = req.session;
-            sess.userId = user.user_id;
-            sess.userNickname = user.nickname;
-            if(req.query.autoLogin == "true")
-                sess.cookie.maxAge = 1000*60*60*24*7; //7 days
-        }
-        res.json({ok:result, error: err});
-    });
+    wiki.login(req.query.id, req.query.password)
+        .then(([result, user]) => {
+            if(result == 1){
+                let sess = req.session;
+                sess.userId = user.user_id;
+                sess.userNickname = user.nickname;
+                if(req.query.autoLogin == "true")
+                    sess.cookie.maxAge = 1000*60*60*24*7; //7 days
+            }
+            res.json({ok:result});
+        })
+        .catch(e => {
+            res.json({ok: 0, error: err});
+        });
 });
 
 // subdomain
@@ -80,7 +93,7 @@ app.use(subdomain('wiki', wiki));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-    var err = new Error('Not Found');
+    let err = new Error('Not Found');
     err.status = 404;
     next(err);
 });

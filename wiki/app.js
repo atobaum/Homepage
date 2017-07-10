@@ -193,14 +193,11 @@ app.use(function(err, req, res, next) {
   res.render('error', {session: req.session});
 });
 
-app.login = function(uname, passwd, callback){
-    wiki.login(uname, passwd, callback);
-};
+app.login = (uname, pass)=> wiki.login(uname, pass);
 app.userInfo = wiki.userInfo;
 app.createUser = wiki.createUser;
 app.updateUser = wiki.updateUser;
 app.checkUsername = wiki.checkUsername;
 app.checkNickname = wiki.checkNickname;
-app.conn = wiki.conn;
 
 module.exports = app;
