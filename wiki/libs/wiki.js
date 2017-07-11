@@ -71,25 +71,37 @@ class Wiki {
         try {
             return this.parser.out(src, parsedTitle[0], parsedTitle[1]);
         } catch (e) {
-            console.log(e);
             return e.message;
         }
     }
 
+    /**
+     *
+     * @param title
+     * @returns page{Promise} - A promise object that gives the page. If namespace doesn't exist, page.noPage = 1. If namespace exists but page is not, page.noPage = 2. Otherwise, page.noPage = undefined.
+     */
     getPageInfo(title) {
         let parsedTitle = Wiki.parseTitle(title);
         return this.makeWork(async (conn)=>{
             let query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
             let rows = await conn.query(query, [parsedTitle[0], parsedTitle[1]]).catch(e => {throw e});
+            let result;
             if(rows.length === 0){
-                let error = new Error('There\'s no such page.');
-                error.name = "NO_PAGE_ERROR";
-                throw error;
+                query = "SELECT * FROM namespace WHERE ns_title = ?";
+                rows = await conn.query(query, [parsedTitle[0]]).catch(e => {
+                    throw e
+                });
+                if (rows.length === 0) result = {ns_title: parsedTitle[0], page_title: parsedTitle[1], noPage: 1};
+                else {
+                    result = rows[0];
+                    result.page_title = parsedTitle[1];
+                    result.noPage = 2;
+                }
             } else {
-                let row = rows[0];
-                row.title = (row.ns_title === "Main" ? '' : row.ns_title + ':') + row.page_title;
-                return row;
+                result = rows[0];
             }
+            result.title = (result.ns_title === "Main" ? '' : result.ns_title + ':') + result.page_title;
+            return result;
         })();
     }
 
@@ -149,14 +161,17 @@ class Wiki {
             let error = new Error('Page is deleted.');
             error.name = "DELETED_PAGE";
             throw error;
+        }
+        if (pageInfo.noPage) {//no page
+            return pageInfo;
         } else if (!(pageInfo.page_PAC && pageInfo.page_PAC & 4) && !(!pageInfo.page_PAC && pageInfo.ns_PAC & 4)) { //can read
             if (userId) {
                 let ac = await checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4).catch(e => {
                     throw e
                 });
-                if (!ac) return {noPrivilege: true, title: pageInfo.title};
+                if (!ac) return {noPrivilege: true, title: title};
             } else {
-                return {noPrivilege: true, title: pageInfo.title};
+                return {noPrivilege: true, title: title};
             }
         }
 
@@ -169,23 +184,25 @@ class Wiki {
         })().catch(e => {
             throw e;
         });
-        let data = {
-            title: pageInfo.title,
-            rev_id: pageInfo.rev_id,
-            touched: pageInfo.touched,
-            text: row.text
-        };
+        pageInfo.text = row.text;
         if (!(pageInfo.page_PAC && pageInfo.page_PAC & 2) && !(!pageInfo.page_PAC && pageInfo.ns_PAC & 2)) {
             if (userId) {
                 let ac = await this.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 2).catch(e => {
                     throw e;
                 });
-                if (!ac) data.readOnly = true;
+                if (!ac) pageInfo.readOnly = true;
             } else {
-                data.readOnly = true;
+                pageInfo.readOnly = true;
             }
         }
-        return data;
+
+        delete pageInfo.ns_id;
+        delete pageInfo.page_id;
+        delete pageInfo.ns_PAC;
+        delete pageInfo.page_PAC;
+        delete pageInfo.cached;
+        delete pageInfo.rev_counter;
+        return pageInfo;
     }
 
     async getParsedPage(title, userId) {
@@ -194,6 +211,9 @@ class Wiki {
             let error = new Error('Page is deleted.');
             error.name = "DELETED_PAGE";
             throw error;
+        }
+        if (pageInfo.noPage) {//no page
+            return pageInfo;
         } else if (!(pageInfo.page_PAC && pageInfo.page_PAC & 4) && !(!pageInfo.page_PAC && pageInfo.ns_PAC & 4)) { //can read
             if (userId) {
                 let ac = await checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4).catch(e => {
@@ -242,46 +262,36 @@ class Wiki {
      * @param{number} userId
      */
     editPage(page, userId) {
-        let parsedTitle = Wiki.parseTitle(page.title);
         let thisClass = this;
-        let data = {
-            page_title: parsedTitle[1]
-        };
         return this.makeTransaction(async conn => {
-            //get ns_id
-            let rows = await conn.query("SELECT * FROM namespace WHERE ns_title = ?", [parsedTitle[0]]).catch(e=>{throw e;});
-            if(rows.length === 0){
-                let error = new Error("namespace doesn't exist: " + parsedTitle[0]);
-                error.name = "NO_NAMESPACE";
-                throw error;
-            }
-            data.ns_id = rows[0].ns_id;
-            let ns_PAC = rows[0].ns_PAC;
-            //make page
-            let isNewPage = false;
-            let query = "INSERT INTO page (ns_id, page_title, user_ID, user_text) VALUES (?, ?, ?, ?)";
-            await conn.query(query, [data.ns_id, data.page_title, userId, page.userText]).catch(err => {
-                if (err.code === "ER_DUP_ENTRY") {
-                    isNewPage = false;
-                } else throw err;
-            });
-
-            //get page_id
-            query = 'SELECT page_id, rev_id, rev_counter, page_PAC FROM page WHERE ns_id=? and page_title=?';
-            rows = await conn.query(query, [data.ns_id, data.page_title]).catch(e => {throw e;});
-            data.page_id = rows[0].page_id;
-            data.rev_id = rows[0].rev_counter + 1;
-            data.parent_id = rows[0].rev_id;
-            let page_PAC = rows[0].page_PAC;
-            //check access control
-            if (isNewPage) {
-                if ((ns_PAC & 8) || await thisClass.checkAC(data.ns_id, null, userId, 8)) {
-                } else{
+            let data = await this.getPageInfo(page.title);
+            if (data.noPage === 1) {//no namespace
+                return data;
+            } else if (data.noPage === 2) { //check access control and make page if page doesn't exists but not namespace.
+                if ((data.ns_PAC & 8) || await thisClass.checkAC(data.ns_id, null, userId, 8)) {
+                    let query = "INSERT INTO page (ns_id, page_title, user_ID, user_text) VALUES (?, ?, ?, ?)";
+                    await conn.query(query, [data.ns_id, data.page_title, userId, page.userText]).catch(err => {
+                        throw err;
+                    });
+                } else {
                     let error = new Error('You have no privilege for this page.');
                     error.name = "NO_PRIVILEGE";
                     throw error;
                 }
-            } else if (!((page_PAC && page_PAC & 2) || (!page_PAC && ns_PAC & 2))) {
+            }
+
+            //get page_id
+            let query = 'SELECT page_id, rev_id, rev_counter, page_PAC FROM page WHERE ns_id=? and page_title=?';
+            let rows = await conn.query(query, [data.ns_id, data.page_title]).catch(e => {
+                throw e;
+            });
+            data.page_id = rows[0].page_id;
+            data.rev_id = rows[0].rev_counter + 1;
+            data.parent_id = rows[0].rev_id;
+            let page_PAC = rows[0].page_PAC;
+
+            //check access control
+            if (!((page_PAC && page_PAC & 2) || (!page_PAC && data.ns_PAC & 2))) {
                 let ac = await thisClass.checkAC(data.ns_id, data.page_id, userId, 2);
                 if (!ac) {
                     let error = new Error('You have no privilege for this page.');

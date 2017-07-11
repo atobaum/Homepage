@@ -38,37 +38,42 @@ app.get(/\/view\/(.*)/, function (req, res) {
     let userId = req.session ? req.session.userId : null;
     wiki.getParsedPage(title, userId)
         .then(page => {
-            console.log(6, page);
-            if (page.noPrivilege) {
+            if (page.noPage) {
+                res.redirect('/wiki/search/' + encodeURI(title));
+            } else if (page.noPrivilege) {
                 res.render('noPrivilege', {wikiTitle: title, priType: 4, session: req.session});
             } else {
                 res.render('viewPage', {wiki: page, session: req.session});
             }
         })
         .catch(e => {
-            if (e.name === 'NO_PAGE_ERROR') {
-                res.redirect('/wiki/search/' + encodeURI(title));
-            } else {
-                res.render('error', {error: e, session: req.session});
-            }
+            res.render('error', {error: e, session: req.session});
         });
 });
 
 app.get(/\/edit\/(.*)/, function (req, res) {
     let title = decodeURI(req.params[0]);
     let userId = req.session ? req.session.userId : null;
+    let newPage = req.query.newPage;
     wiki.getRawPage(title, userId)
         .then(page => {
-            if (page.noPrivilege) {
-                res.render('noPrivilege', {wikiTitle: page.title, priType: 4, session: req.session});
-            } else if (page.noPage) {
-                let page = {
-                    title: title,
-                    rawContent: ''
+            if (page.noPage === 1) { //no namespace
+                res.render('error', {
+                    error: {message: "You tried edit a page whose namespace is not exists."},
+                    session: req.session
+                });
+            } else if (page.noPage === 2) {
+                let data = {
+                    title: page.title,
+                    newPage: true,
                 };
-                res.render('editPage', {wiki: page, session: req.session});
+                res.render('editPage', {wiki: data, session: req.session});
+            } else if (page.noPrivilege) {
+                res.render('noPrivilege', {wikiTitle: page.title, priType: 4, session: req.session});
             } else {
+                console.log(page);
                 res.render('editPage', {wiki: page, session: req.session});
+                console.log(page);
             }
         })
         .catch(e => {

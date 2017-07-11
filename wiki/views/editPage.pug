@@ -9,7 +9,7 @@ block content
     .ui
         h1
             a(href="/wiki/view/"+wiki.title)= wiki.title
-            - var editType = wiki.rev_id ? " (R"+wiki.rev_id+" 수정)" : " (새 문서 만들기)";
+            - var editType = wiki.newPage ? " (새 문서 만들기)" : " (R"+wiki.rev_id+" 수정)";
             small !{editType}
         form.ui.form#edit_form(method="POST" action="/wiki/edit/"+encodeURI(wiki.title) onsubmit="return check_edit_form();")
             input(type="hidden" name="minor")
