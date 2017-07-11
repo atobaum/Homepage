@@ -21,6 +21,10 @@ class Wiki {
         });
     }
 
+    addMacro(macro) {
+
+    }
+
     makeTransaction(work) {
         return async (...args) => {
             let conn = await this.connPool.getConnection().catch(e => {throw e});
@@ -63,7 +67,25 @@ class Wiki {
     static parseTitle(title){
         let regexTitle = /^(?:(.*?):)?(.+?)$/;
         let parsedTitle = regexTitle.exec(title);
-        return [(parsedTitle[1] ? parsedTitle[1] : 'Main'), parsedTitle[2]];
+        let ns;
+        switch (parsedTitle[1]) {
+            case undefined:
+            case '':
+                ns = 'Main';
+                break;
+            case '개인':
+                ns = 'Private';
+                break;
+            case '분류':
+                ns = 'Category';
+                break;
+            case '위키':
+                ns = 'Wiki';
+                break;
+            default:
+                ns = parsedTitle[1];
+        }
+        return [ns, parsedTitle[2]];
     }
 
     parse(src, title) {
@@ -353,6 +375,20 @@ class Wiki {
             let [user] = await conn.query("SELECT user_id, nickname, password = PASSWORD(?) as correct FROM user WHERE username = ?", [password, username]).catch(e => {throw e});
             return [(user ? user.correct : 2), user];
         })();
+    }
+
+    updateCategory(page_id, categories) {
+
+    }
+
+    existPages(titles) {
+        let thisClass = this;
+        return this.makeWork2(async conn => {
+            for (let i = 0; i < titles.length; i++) {
+                let parsedTitle = Wiki.parseTitle(titles[i]);
+                titles[i] = (await conn.query('SELECT page_id from fullpage where ns_title = ? and page_title = ?', parsedTitle)).length !== 0;
+            }
+        })
     }
 
     userInfo() {
