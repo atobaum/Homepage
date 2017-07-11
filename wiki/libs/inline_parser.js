@@ -1,7 +1,7 @@
 /**
  * Created by Le Reveur on 2017-05-03.
  */
-var inlineTockens = {
+let inlineTockens = {
     escape: /^\\([>\$\\\`'\^_~\(\)*{}\[\]#t])/,
     italic: /^''(?!')(?=\S)([\s\S]*?\S)''/,
     bold: /^'''(?!')(?=\S)([\s\S]*?\S)'''/,
@@ -22,7 +22,7 @@ var inlineTockens = {
     macro: /^{{(.*?)(?:\((.*?)\))?(?: ([^\$\$]*?))?}}/
 };
 
-var katex = require("katex");
+let katex = require("katex");
 
 function InlineParser(parser){
     this.parser = parser;
@@ -31,9 +31,9 @@ function InlineParser(parser){
 }
 
 InlineParser.prototype.out = function(src, ns) {
-    var result='';
-    var cap;
-    var renderer = this.renderer;
+    let result = '';
+    let cap;
+    let renderer = this.renderer;
     while (src) {
         //italicbold
         if (cap = inlineTockens.italicbold.exec(src)) {
@@ -87,6 +87,7 @@ InlineParser.prototype.out = function(src, ns) {
         //link
         if (cap = inlineTockens.link.exec(src)) {
             result += renderer.link({text: cap[3], href: cap[1], ns: ns});
+            this.parser.addLink();
             src = src.substr(cap[0].length);
             continue;
         }

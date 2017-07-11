@@ -26,6 +26,7 @@ function Lexer(parser){
 
 Lexer.prototype.scan = function(src, ns){
     let toks = [];
+    let links = [];
     let cap;
     let headings = [];
     while (src) {

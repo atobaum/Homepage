@@ -78,7 +78,6 @@ class Renderer{
     };
 
     link(data){
-        console.log(data);
         let regexTitle = /^(?:(.*?):)?(.+?)$/;
         let parsedHref = regexTitle.exec(data.href);
         let href = parsedHref[2];
@@ -207,6 +206,29 @@ class Renderer{
 
     title(ns, pageTitle){
         return `<h1 class="wiki_title">${(ns ? ns + ':' : '')+pageTitle}</h1>`;
+    };
+
+    pageList(catTitle, pageList) {
+        return pageList.map((item, index) => {
+            if (item.length === 0) return '';
+            let result = '<h2>"' + catTitle + '"에 속하는 ';
+            switch (index) {
+                case 0:
+                    result += ' 하위 분류';
+                    break;
+                case 1:
+                    result += ' 문서';
+                    break;
+                case 2:
+                    result += ' 파일';
+                    break;
+                default:
+                    throw new Error('ERROR in pageList of renderer: Invalid category type = ' + index);
+            }
+            result += ' 목록</h2><hr /><ul>';
+            result += item.reduce((sum, title) => sum + '<li><a href="\/wiki\/view\/' + title + '" title="' + title + '">' + title + '</a></li>', '') + '</ul>';
+            return result;
+        }).join('');
     }
 }
 

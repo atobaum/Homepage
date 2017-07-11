@@ -8,13 +8,14 @@ let InlineParser = require('./inline_parser');
 let Renderer = require('./renderer');
 
 class Parser{
-    constructor(){
+    constructor(wiki) {
         this.additional = {};
         this.initAdditional();
         this.renderer = new Renderer();
         this.inlineParser = new InlineParser(this);
         this.lexer = new Lexer(this);
         this.headings;
+        this.wiki = wiki;
     }
 
     initAdditional(){
@@ -78,7 +79,7 @@ class Parser{
         return {title: title, ref: ref, text:text};
     };
 
-    out(src, ns, pageTitle){
+    async out(src, ns, pageTitle) {
         if(ns==="Main") ns = null;
         let content = '';
         this.initAdditional();
@@ -121,11 +122,19 @@ class Parser{
             content = this.renderer.toc(this.headings) + content;
         if(pageTitle)
             content = this.renderer.title(ns, pageTitle) + content;
+        if (ns === "Category") {
+            content += await this.wiki.getPageList(pageTitle).then(async (pageList) => {
+                return this.renderer.pageList(pageTitle, pageList)
+            }).catch(async e => {
+                return this.renderer.error({text: e.message})
+            });
+        }
         if(this.additional.footnotes.length !== 0 )
             content += '<br>'+this.renderer.footnotes(this.additional.footnotes);
-        if(this.additional.cat.length !== 0)
+        if (this.additional.cat.length !== 0) {
             content += this.renderer.cat(this.additional.cat);
-        return content;
+        }
+        return [content, this.additional.cat];
     };
 
     addCat(title){

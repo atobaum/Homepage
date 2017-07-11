@@ -7,7 +7,7 @@ let async = require('async');
 class Wiki {
     constructor(config) {
         this.parser = require('./parser');
-        this.parser = new this.parser();
+        this.parser = new this.parser(this);
         this.config = config;
         this.connPool = promise_mysql.createPool({
             connectionLimit : 5,
@@ -88,13 +88,9 @@ class Wiki {
         return [ns, parsedTitle[2]];
     }
 
-    parse(src, title) {
+    async parse(src, title) {
         let parsedTitle = Wiki.parseTitle(title);
-        try {
-            return this.parser.out(src, parsedTitle[0], parsedTitle[1]);
-        } catch (e) {
-            return e.message;
-        }
+        return (await this.parser.out(src, parsedTitle[0], parsedTitle[1]).catch(e => e.message))[0];
     }
 
     /**
@@ -151,17 +147,18 @@ class Wiki {
         })()
     };
 
-    udatePageCache(page_id, rev_id, title) {
+    updatePageCache(ns_title, page_id, rev_id, title) {
         return this.makeWork(async (conn) => {
             let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
-            let [row] = await conn.query(query, [page_id, rev_id]).catch(e => {
+            let rows = await conn.query(query, [page_id, rev_id]).catch(e => {
                 throw e
             });
-            if (row === undefined) throw new Error('Wrong Page Id: ' + page_id + ', Rev Id: ' + rev_id);
+            if (rows.length === 0) throw new Error('Wrong Page Id: ' + page_id + ', Rev Id: ' + rev_id);
 
             let parsedTitle = Wiki.parseTitle(title);
-            let content = this.parser.out(row.text, parsedTitle[0], parsedTitle[1]);
+            let [content, category] = await this.parser.out(rows[0].text, parsedTitle[0], parsedTitle[1]).catch(e => e);
             query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
+            await this.updateCategory(conn, page_id, category, ns_title === 'Category' ? 0 : 1);
             await conn.query(query, [page_id, content, content]).catch(e => {
                 throw e
             });
@@ -263,9 +260,9 @@ class Wiki {
                 throw e;
             });
         } else {
-            parsedPage = await this.udatePageCache(pageInfo.page_id, pageInfo.rev_id, pageInfo.title)
+            parsedPage = await this.updatePageCache(pageInfo.ns_title, pageInfo.page_id, pageInfo.rev_id, pageInfo.title)
                 .catch(e => {
-                    throw e;
+                    throw e
                 });
         }
         return {
@@ -377,8 +374,64 @@ class Wiki {
         })();
     }
 
-    updateCategory(page_id, categories) {
+    /**
+     *
+     * @param conn
+     * @param page_id
+     * @param categories
+     * @param type{number} - 0: subcategory, 1: page, 2:file
+     * @returns {*}
+     */
+    updateCategory(conn, page_id, categories, type = 1) {
+        return this.makeTransaction(async conn => {
+            let query = "DELETE FROM categorylink WHERE \`to\` = ?";
+            await conn.query(query, [page_id]).catch(e => {
+                throw e
+            });
+            if (categories.length === 0) return;
 
+            query = "SELECT page_id, cat_title FROM category WHERE " +
+                categories.map(title => 'cat_title = ' + conn.escape(title)).join(' OR ');
+            let rows = await conn.query(query).catch(e => {
+                throw e
+            });
+            if (rows.length === 0) return categories;
+            query = "INSERT INTO categorylink (\`from\`, \`to\`, \`type\`) VALUES ?";
+            await conn.query(query, [rows.map(row => [row.page_id, page_id, type])]).catch(e => {
+                throw e
+            });
+
+            let lowercaseCat = categories.map(title => title.toLowerCase());
+            rows.forEach(row => {
+                let i = lowercaseCat.indexOf(row.cat_title.toLowerCase());
+                if (i >= 0) {
+                    categories.splice(i, 1);
+                    lowercaseCat.splice(i, 1);
+                }
+            });
+            return categories;
+        })();
+    }
+
+    getPageList(catTitle) {
+        return this.makeWork2(async conn => {
+            let query = 'SELECT page_id, cat_title, num_page, num_subcat, num_file FROM category WHERE cat_title = ?';
+            let [cat] = await conn.query(query, [catTitle]).catch(e => {
+                throw e;
+            });
+            if (!cat) throw new Error('Wrong category title: ' + catTitle);
+
+            query = 'SELECT categorylink.type as type, fullpage.ns_title as ns_title, fullpage.page_title as page_title FROM categorylink, fullpage WHERE categorylink.from = ? AND fullpage.page_id = categorylink.to';
+            let rows = await conn.query(query, [cat.page_id]).catch(e => {
+                throw e
+            });
+            let result = [[], [], []]; //result[0] is for subcategory, result[1] for page, result[2] for file
+            rows.forEach(item => {
+                if (item.type > 2 && item.type < 0) throw new Error('Invalid categorylink.type = ' + item.type);
+                result[item.type].push((item.ns_title === 'Main' ? '' : item.ns_title + ':') + item.page_title);
+            });
+            return result;
+        });
     }
 
     existPages(titles) {
@@ -416,6 +469,8 @@ class Wiki {
             return rows.length !== 0
         })
     }
+
+
 }
 
 module.exports = Wiki;

@@ -59,7 +59,7 @@ app.get(/\/edit\/(.*)/, function (req, res) {
         .then(page => {
             if (page.noPage === 1) { //no namespace
                 res.render('error', {
-                    error: {message: "You tried edit a page whose namespace is not exists."},
+                    error: {message: "You tried edit a page whose namespace is not exists:" + page.ns_title},
                     session: req.session
                 });
             } else if (page.noPage === 2) {
@@ -71,9 +71,7 @@ app.get(/\/edit\/(.*)/, function (req, res) {
             } else if (page.noPrivilege) {
                 res.render('noPrivilege', {wikiTitle: page.title, priType: 4, session: req.session});
             } else {
-                console.log(page);
                 res.render('editPage', {wiki: page, session: req.session});
-                console.log(page);
             }
         })
         .catch(e => {
@@ -118,9 +116,11 @@ app.post(/\/edit\/(.*)/, function (req, res) {
     });
 });
 
-app.post('/api/parse', function(req, res){
-    console.log(req.body);
-    res.json(wiki.parse(req.body.text, req.body.title));
+app.post('/api/parse', async (req, res) => {
+    let parsedPage = await wiki.parse(req.body.text, req.body.title).catch(e => {
+        res.json({e})
+    });
+    res.json(parsedPage);
 });
 
 app.get(/\/api\/parse\/(.*)/, function(req, res){
@@ -165,8 +165,7 @@ app.post(/\/api\/edit\/(.*)/, function(req, res){
         .then(() => {
             res.json({ok: 1})
         }).catch(e => {
-        console.log(e);
-        res.json({ok: 0, error: err})
+        res.json({ok: 0, error: e})
     });
 });
 

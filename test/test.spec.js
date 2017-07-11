@@ -41,23 +41,32 @@ describe('Wiki', function () {
         });
     });
 
-    describe('Edit page', () => {
-        it('Edit public page', (done) => {
-            let text = Math.random().toString();
-            let minor = Math.random() > 0.5;
-            let user = Math.random().toString().substr(8);
-            let page = {
-                title: 'Test:edit test',
-                userText: user,
-                text: text,
-                minor: minor,
-                comment: 'test' + text
-            };
-            wiki.editPage(page, null).then(() => {
-                wiki.getRawPage('Test:edit test').then(data => {
-                    done(assert.equal(text, data.text));
+    // describe('Edit page', () => {
+    //     it('Edit public page', (done) => {
+    //         let text = Math.random().toString();
+    //         let minor = Math.random() > 0.5;
+    //         let user = Math.random().toString().substr(8);
+    //         let page = {
+    //             title: 'Test:edit test',
+    //             userText: user,
+    //             text: text,
+    //             minor: minor,
+    //             comment: 'test' + text
+    //         };
+    //         wiki.editPage(page, null).then(() => {
+    //             wiki.getRawPage('Test:edit test').then(data => {
+    //                 done(assert.equal(text, data.text));
+    //             }).catch(done);
+    //         }).catch(done);
+    //     });
+    // });
+
+    describe('Category', () => {
+        it('get category list', (done) => {
+            wiki.getPageList('test category')
+                .then(data => {
+                    done(assert.deepEqual([['Test:edit test', 'Test:view test'], [], []], data));
                 }).catch(done);
-            }).catch(done);
-        });
+        })
     })
 });
