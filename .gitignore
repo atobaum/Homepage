@@ -73,5 +73,6 @@ jspm_packages
 
 ### test files ###
 test.*
-
+*.spec.js~
 .idea
+!/test/test.spec.js
