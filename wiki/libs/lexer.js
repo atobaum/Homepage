@@ -4,13 +4,12 @@
 "use strict";
 var InlineParser = require('./inline_parser');
 var blocks = {
-    heading: /^(={2,6}) (.+) ={2,6}(\r?\n|$)/,
+    heading: /^(={2,6}) (.+) ={2,6}\s*(\r?\n|$)/,
     list: /^(\s+)([*-]) (.+)(\r?\n|$)/,
     // indent: /^:{1,}(.+)(\r?\n|$)/,
     hr: /^-{3,}\s*(\r?\n|$)/,
     quote: /^>(?:\((.*?)(?:\|(.*?))?\))? (.*?)(\r?\n|$)/,
     // textbox: /^/,
-    // code: /^<code>(.+)<\/code>(\r?\n|$)/,
     table: /^(\|\|.*)(\r?\n|$)/,
     emptyline: /^(?:\s*)\r?\n/,
     paragraph: /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/,

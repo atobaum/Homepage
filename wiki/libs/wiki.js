@@ -3,7 +3,6 @@
  */
 "use strict";
 let promise_mysql = require('promise-mysql');
-let async = require('async');
 class Wiki {
     constructor(config) {
         this.parser = require('./parser');
@@ -131,8 +130,10 @@ class Wiki {
      * @param{number} type - create(8), read(4), update(2), delete(1)
      * @property result - true if you can access.
      */
-    checkAC(nsId, pageId, userId, type) {
-        return this.makeWork(async conn => {
+    checkAC(nsId, pageId, userId, type, nsPAC, pagePAC) {
+        if((pagePAC && pagePAC & type) || (!pagePAC && nsPAC & type)) return Promise.resolve(true);
+        else if(!userId) return Promise.resolve(false);
+        else return this.makeWork2(async conn => {
             let query = "SELECT AC FROM ACL WHERE user_id = ? and (ns_id = ? OR page_id = ?)";
             let rows = await conn.query(query, [userId, nsId, pageId]).catch(e => {throw e});
             if (rows.length === 0) return false;
@@ -144,7 +145,7 @@ class Wiki {
                 }
                 return false;
             }
-        })()
+        });
     };
 
     updatePageCache(ns_title, page_id, rev_id, title) {
@@ -204,16 +205,7 @@ class Wiki {
             throw e;
         });
         pageInfo.text = row.text;
-        if (!(pageInfo.page_PAC && pageInfo.page_PAC & 2) && !(!pageInfo.page_PAC && pageInfo.ns_PAC & 2)) {
-            if (userId) {
-                let ac = await this.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 2).catch(e => {
-                    throw e;
-                });
-                if (!ac) pageInfo.readOnly = true;
-            } else {
-                pageInfo.readOnly = true;
-            }
-        }
+        pageInfo.readOnly = !(await this.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 2, pageInfo.ns_PAC, pageInfo.page_PAC).catch(e => {throw e;}));
 
         delete pageInfo.ns_id;
         delete pageInfo.page_id;
@@ -287,7 +279,7 @@ class Wiki {
             if (data.noPage === 1) {//no namespace
                 return data;
             } else if (data.noPage === 2) { //check access control and make page if page doesn't exists but not namespace.
-                if ((data.ns_PAC & 8) || await thisClass.checkAC(data.ns_id, null, userId, 8)) {
+                if (await thisClass.checkAC(data.ns_id, null, userId, 8, data.ns_PAC, null)) {
                     let query = "INSERT INTO page (ns_id, page_title, user_ID, user_text) VALUES (?, ?, ?, ?)";
                     await conn.query(query, [data.ns_id, data.page_title, userId, page.userText]).catch(err => {
                         throw err;
@@ -310,13 +302,10 @@ class Wiki {
             let page_PAC = rows[0].page_PAC;
 
             //check access control
-            if (!((page_PAC && page_PAC & 2) || (!page_PAC && data.ns_PAC & 2))) {
-                let ac = await thisClass.checkAC(data.ns_id, data.page_id, userId, 2);
-                if (!ac) {
-                    let error = new Error('You have no privilege for this page.');
-                    error.name = "NO_PRIVILEGE";
-                    throw error;
-                }
+            if (!(await thisClass.checkAC(data.ns_id, data.page_id, userId, 2, data.ns_PAC, page_PAC))) {
+                let error = new Error('You have no privilege for this page.');
+                error.name = "NO_PRIVILEGE";
+                throw error;
             }
 
             //add revision
