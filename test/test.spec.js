@@ -23,14 +23,14 @@ describe('Wiki', function () {
                 })
                 .catch(done);
         });
-        it('Parsed page', function (done) {
-            wiki.getParsedPage('Test:view test')
-                .then((page) => {
-                    done(assert.equal(`<h1 class="wiki_title">Test:view test</h1><div class="ui segment compact wiki_toc"><ol class="ui list"><li><a href="#h1" id="rh1">title</a></li></ol></div><h2 class="ui dividing header" id="h_1"><a href="#rh_1">1</a> title</h1>
-<p>abc</p>`, page.parsedContent));
-                })
-                .catch(done);
-        });
+//         it('Parsed page', function (done) {
+//             wiki.getParsedPage('Test:view test')
+//                 .then((page) => {
+//                     done(assert.equal(`<h1 class="wiki_title">Test:view test</h1><div class="ui segment compact wiki_toc"><ol class="ui list"><li><a href="#h1" id="rh1">title</a></li></ol></div><h2 class="ui dividing header" id="h_1"><a href="#rh_1">1</a> title</h2>
+// <p>abc</p>`, page.parsedContent));
+//                 })
+//                 .catch(done);
+//         });
 
         it('Raw page', function (done) {
             wiki.getRawPage('Test:view test')
@@ -62,11 +62,33 @@ describe('Wiki', function () {
     // });
 
     describe('Category', () => {
-        it('get category list', (done) => {
-            wiki.getPageList('test category')
-                .then(data => {
-                    done(assert.deepEqual([['Test:edit test', 'Test:view test'], [], []], data));
-                }).catch(done);
+        // it('get category list', (done) => {
+        //     wiki.getPageList('test category')
+        //         .then(data => {
+        //             done(assert.deepEqual([['Test:edit test', 'Test:view test'], [], []], data));
+        //         }).catch(done);
+        // })
+    });
+
+    describe('User', ()=>{
+        it('admin positive', (done)=>{
+            wiki.checkAdmin(5)
+                .then(admin=>done(assert.equal(admin, true)))
+                .catch(done);
+        });
+
+        it('admin negative', (done)=>{
+            wiki.checkAdmin(8)
+                .then(admin => done(assert.equal(admin, false)))
+                .catch(done);
         })
+    });
+
+    describe('Caching', ()=>{
+        // it('clear cache', (done)=>{
+        //     wiki.clearCache()
+        //         .then(result => done(assert.equal(result, 1)))
+        //         .catch(done);
+        // });
     })
 });
