@@ -1,0 +1,1 @@
+$(function(){"use strict";$("#btn_clear_cache").click(function(){$.get("/wiki/api/admin?action=clear_cache",function(c,r){c.ok?alert("Cache cleared."):alert("Error occurred: "+c.error)})})});

@@ -92,6 +92,10 @@ app.get(/\/xref\/(.*)/, function (req, res) {
     });
 });
 
+app.get('/admin', (req, res)=>{
+    res.render('admin', {session: req.session});
+});
+
 
 //for backend
 app.get(/\/delete\/(.*)/, function (req, res) {
@@ -177,6 +181,23 @@ app.get('/api/titleSearch', (req, res) => {
         .catch(e => {
             res.json({ok: 0, error: e});
         });
+});
+
+app.get('/api/admin', async (req, res)=>{
+    try {
+        let userId = req.session ? req.session.userId : null;
+        let admin = await wiki.checkAdmin(userId);
+        if (!admin) {res.json({ok: 0, error: new Error('No Privilege')}); return;}
+
+        switch (req.query.action.toLowerCase()) {
+            case 'clear_cache':
+                await wiki.clearCache();
+                res.json({ok: 1});
+                break;
+            default:
+                res.json({ok:0, error: new Error('Unsupported Action: '+req.query.action)});
+        }
+    }catch(e) {res.json({ok:0, error: e});}
 });
 
 // catch 404 and forward to error handler

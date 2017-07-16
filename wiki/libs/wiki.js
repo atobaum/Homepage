@@ -459,7 +459,23 @@ class Wiki {
         })
     }
 
+    clearCache(){
+        return this.makeWork2(async conn=>{
+            await conn.query('DELETE FROM caching').catch(e=>{throw e});
+            return 1;
+        });
+    }
 
+    checkAdmin(userId){
+        return this.makeWork2(async conn=> {
+            let users = await conn.query('SELECT admin FROM user WHERE user_id = ?', [userId]).catch(e => {
+                throw e
+            });
+            if (users.length === 0) throw new Error("Wrong User Id");
+            else if(users[0].admin == 1) return true;
+            else return false;
+        });
+    }
 }
 
 module.exports = Wiki;
