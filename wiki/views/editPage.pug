@@ -51,7 +51,7 @@ block content
                     data: {text: $('.tab textarea').val(), title: $('#edit_form input[name="title"]').val()},
                     success: function (res) {
                         $('.preview').html(res);
-                        $('pre code').each((i, elem) => {Prism.highlightElement(elem)});
+                        $('.wiki-syntaxhl code').each((i, elem) => {Prism.highlightElement(elem)});
                     },
                     error: function (xhr, status, error) {
                         console.log(xhr.responseText);

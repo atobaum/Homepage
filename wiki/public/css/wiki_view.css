@@ -43,3 +43,23 @@ blockquote{
 .wiki_quote_ref::before{
     content: '- ';
 }
+
+.wiki_toc li {
+    list-style: none;
+}
+
+ol {
+    padding-left: 20px;
+}
+
+ul {
+    padding-left: 20px;
+}
+
+.wiki_toc ol{
+    padding-left: 10px;
+}
+
+.wiki_nonexisting_page {
+    color: #9e1317;
+}

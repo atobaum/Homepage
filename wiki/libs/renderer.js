@@ -5,6 +5,15 @@
 let katex = require("katex");
 
 class Renderer{
+    constructor() {
+        this._ns = null;
+    }
+
+    set ns(ns) {
+        if (ns === "Main") this._ns = null;
+        else this._ns = ns;
+    }
+
     blockquote(tok){
         let title = tok.title ? `<h4 class="header">${tok.title}</h4>` : '';
         let ref = tok.ref ? `<p class="wiki_quote_ref">${tok.ref}</p>` : '';
@@ -32,17 +41,18 @@ class Renderer{
     };
 
     heading(data) {
-        let formatedLevel = data.level.join('_');
+        let indexList = data.indexList;
+        let formatedLevel = indexList.join('_');
         return '<h'
-            + (data.level.length+1)
+            + (indexList.length)
             + ' class="ui dividing header" id="'
             + "h_"+ formatedLevel
             + '">'
-            + `<a href="#rh_${formatedLevel}">${data.level.join('.')}</a> `
-            + data.text
+            + `<a href="#rh_${formatedLevel}">${indexList.join('.')}</a> `
+            + data.content.text
             + '</h'
-            + data.level.length
-            + '>\n';
+            + indexList.length
+            + '>';
     };
 
     italicbold(data){
@@ -77,17 +87,19 @@ class Renderer{
         return '<br />'
     };
 
-    link(data){
-        let regexTitle = /^(?:(.*?):)?(.+?)$/;
+    link(data, env) {
+        let regexTitle = /^(?:(.*?):)?(.+?)(?:#(.*))?$/;
         let parsedHref = regexTitle.exec(data.href);
         let href = parsedHref[2];
         if(parsedHref[1]){//Namespace exists
             href = parsedHref[1] + ':' + href;
-        } else if(parsedHref[1] === undefined && data.ns) {
-            href = data.ns + ':' + href;
+        } else if (parsedHref[1] === undefined && this._ns) {
+            href = this._ns + ':' + href;
         }
         let text = (data.text ? data.text : data.href);
-        return '<a href="\/wiki\/view\/'+href+'" title="'+text+'">'+text+'</a>';
+        let isExist = env.existingPages.indexOf(href.toLowerCase()) >= 0;
+        if (parsedHref[3]) href += '#' + parsedHref[3];
+        return `<a ${isExist ? '' : 'class="wiki_nonexisting_page"'} href="\/wiki\/view\/${href}" title="${text}">${text}</a>`;
     };
 
     urlLink(data){
@@ -104,19 +116,23 @@ class Renderer{
     };
 
     KaTeX(tok){
-        return katex.renderToString(tok.text, {displayMode: tok.displayMode});
+        try {
+            return katex.renderToString(tok.text, {displayMode: tok.displayMode});
+        } catch (e) {
+            return this.error({name: 'KaTeX Error', text: e.message});
+        }
     };
 
 
     //footnote reference
     rfn(data){
-        return `<sup><a class="wiki_rfn" id="rfn_${data.index}" href="#fn_${data.index}" title="${data.text}">[${data.index}]</a></sup>`
+        return `<sup id="rfn_${data.index}"><a href="#fn_${data.index}">[${data.index}]</a></supi>`;
     };
 
     footnotes(footnotes){
         let result = '<hr><ul class="wiki_fns">';
         footnotes.forEach(function(fn, index){
-            result += `<li><a class="wiki_fn" id="fn_${index + 1}" href="#rfn_${index + 1}">[${index + 1}]</a> ${fn.text}</li>`;
+            result += `<li><a class="wiki_fn" id="fn_${index}" href="#rfn_${index}">[${index}]</a> ${fn.text}</li>`;
         });
         result += "</ul>";
         return result;
@@ -150,19 +166,12 @@ class Renderer{
 
     toc(toks, first = true) {
         let result = first ? '<div class="ui segment compact wiki_toc">' : '';
-        result += `<ol class="${first ? 'ui list' : ''}">`;
-        let curLevel = toks[0].level.length;
-        while(toks[0] && (toks[0].level.length >= curLevel)) {
-            if (toks[0].level.length > curLevel){
-                result = result.slice(0, result.length - 5);
-                result += this.toc(toks, false) + '</li>';
-            }else{
-                let item = toks.shift();
-                let formattedLevel = item.level.join('_');
-                result += `<li><a href="#h${formattedLevel}" id="rh${formattedLevel}">${item.text}</a>${item.child ? this.toc(item.child, 1) : ''}</li>`
-            }
-        }
-
+        result += `<ol class="${first ? '' : ''}">`;
+        toks.forEach(item => {
+            result += '<li id="rh_' + item.indexList.join('_') + '">' + item.indexList.join('.') + ' <a  href="#h_' + item.indexList.join('_') + '">' + item.content.plainText + '</a>';
+            if (item.child.length !== 0) result += this.toc(item.child, false);
+            result += '</li>';
+        });
         result += '</ol>';
         result += (first ? '</div>' : '');
         return result;
@@ -191,7 +200,7 @@ class Renderer{
     table(table){
         let result = '<table class="ui celled collapsing table">';
         for(let item of table){
-            if(item.additional === "h"){
+            if (item.option === "h") {
                 result += '<thead><tr>';
                 item.row.forEach((cell)=>{result += `<th>${cell}</th>`});
                 result += '</tr></thead>';

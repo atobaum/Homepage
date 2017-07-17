@@ -89,6 +89,8 @@ class Wiki {
 
     async parse(src, title) {
         let parsedTitle = Wiki.parseTitle(title);
+        let result = (await this.parser.out(src, parsedTitle[0], parsedTitle[1]).catch(e => e.message));
+        return result[0];
         return (await this.parser.out(src, parsedTitle[0], parsedTitle[1]).catch(e => e.message))[0];
     }
 
@@ -134,37 +136,37 @@ class Wiki {
         if((pagePAC && pagePAC & type) || (!pagePAC && nsPAC & type)) return Promise.resolve(true);
         else if(!userId) return Promise.resolve(false);
         else return this.makeWork2(async conn => {
-            let query = "SELECT AC FROM ACL WHERE user_id = ? and (ns_id = ? OR page_id = ?)";
-            let rows = await conn.query(query, [userId, nsId, pageId]).catch(e => {throw e});
-            if (rows.length === 0) return false;
-            else {
-                for (let i = 0; i < rows.length; i++) {
-                    if (rows[i].AC & type) {
-                        return true;
+                let query = "SELECT AC FROM ACL WHERE user_id = ? and (ns_id = ? OR page_id = ?)";
+                let rows = await conn.query(query, [userId, nsId, pageId]).catch(e => {throw e});
+                if (rows.length === 0) return false;
+                else {
+                    for (let i = 0; i < rows.length; i++) {
+                        if (rows[i].AC & type) {
+                            return true;
+                        }
                     }
+                    return false;
                 }
-                return false;
-            }
-        });
+            });
     };
 
-    updatePageCache(ns_title, page_id, rev_id, title) {
-        return this.makeWork(async (conn) => {
+    updatePageCache(pageInfo) {
+        return this.makeWork2(async (conn) => {
             let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
-            let rows = await conn.query(query, [page_id, rev_id]).catch(e => {
+            let rows = await conn.query(query, [pageInfo.page_id, pageInfo.rev_id]).catch(e => {
                 throw e
             });
-            if (rows.length === 0) throw new Error('Wrong Page Id: ' + page_id + ', Rev Id: ' + rev_id);
+            if (rows.length === 0) throw new Error('Wrong Page Id: ' + pageInfo.page_id + ', Rev Id: ' + pageInfo.rev_id);
 
-            let parsedTitle = Wiki.parseTitle(title);
-            let [content, category] = await this.parser.out(rows[0].text, parsedTitle[0], parsedTitle[1]).catch(e => e);
+            let [content, additional] = await this.parser.out(rows[0].text, pageInfo.ns_title, pageInfo.page_title).catch(e => e);
+            await this.updateCategory(conn, pageInfo.page_id, additional.category, pageInfo.ns_title === 'Category' ? 0 : 1);
             query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
-            await this.updateCategory(conn, page_id, category, ns_title === 'Category' ? 0 : 1);
-            await conn.query(query, [page_id, content, content]).catch(e => {
-                throw e
-            });
+            if(pageInfo.cached === 0)
+                await conn.query(query, [pageInfo.page_id, content, content]).catch(e => {
+                    throw e
+                });
             return content;
-        })();
+        });
     }
 
     /**
@@ -184,15 +186,8 @@ class Wiki {
         }
         if (pageInfo.noPage) {//no page
             return pageInfo;
-        } else if (!(pageInfo.page_PAC && pageInfo.page_PAC & 4) && !(!pageInfo.page_PAC && pageInfo.ns_PAC & 4)) { //can read
-            if (userId) {
-                let ac = await checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4).catch(e => {
-                    throw e
-                });
-                if (!ac) return {noPrivilege: true, title: title};
-            } else {
-                return {noPrivilege: true, title: title};
-            }
+        } else if (!(await this.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4, pageInfo.ns_PAC, pageInfo.page_PAC).catch(e => {throw e}))) { //can read
+            return {noPrivilege: true, title: title};
         }
 
         //read page
@@ -225,38 +220,28 @@ class Wiki {
         }
         if (pageInfo.noPage) {//no page
             return pageInfo;
-        } else if (!(pageInfo.page_PAC && pageInfo.page_PAC & 4) && !(!pageInfo.page_PAC && pageInfo.ns_PAC & 4)) { //can read
-            if (userId) {
-                let ac = await checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4).catch(e => {
-                    throw e
-                });
-                if (!ac) return {noPrivilege: true, title: pageInfo.title};
-            } else {
-                return {noPrivilege: true, title: pageInfo.title};
-            }
+        } else if (!(await this.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4, pageInfo.ns_PAC, pageInfo.page_PAC).catch(e => {throw e}))) { //can read
+            return {noPrivilege: true, title: title};
         }
 
         //read page
         let parsedPage = null;
         if (pageInfo.redirect) {
             return {redirectFrom: pageInfo.title, redirectTo: pageInfo.redirect};
-        } else if (pageInfo.cached) {
-            parsedPage = await this.makeWork(async (conn) => {
+        } else if (pageInfo.cached === 1) {
+            parsedPage = await this.makeWork2(async (conn) => {
                 let query = "SELECT content FROM caching WHERE page_id = ?";
                 let [parsedPage] = await conn.query(query, [pageInfo.page_id]).catch(e => {
                     throw e;
                 });
                 if (parsedPage === undefined) throw new Error('fatal error: cache data doen\'t exists for page_id=' + pageInfo.page_id);
                 return parsedPage.content;
-            })().catch(e => {
-                throw e;
-            });
+            }).catch(e => {throw e;});
         } else {
-            parsedPage = await this.updatePageCache(pageInfo.ns_title, pageInfo.page_id, pageInfo.rev_id, pageInfo.title)
-                .catch(e => {
-                    throw e
-                });
+            parsedPage = await this.updatePageCache(pageInfo)
+                .catch(e => {throw e});
         }
+
         return {
             title: pageInfo.title,
             touched: pageInfo.touched,
@@ -430,6 +415,22 @@ class Wiki {
                 let parsedTitle = Wiki.parseTitle(titles[i]);
                 titles[i] = (await conn.query('SELECT page_id from fullpage where ns_title = ? and page_title = ?', parsedTitle)).length !== 0;
             }
+        })
+    }
+
+    existingPages(titles, ns = 'Main') {
+        let thisClass = this;
+        if (titles.length === 0) return Promise.resolve([]);
+        return this.makeWork2(async conn => {
+            let query = 'SELECT ns_title, page_title from fullpage WHERE ';
+            query += titles.map(item => {
+                let parsedTitle = Wiki.parseTitle(item);
+                return '(ns_title = ' + conn.escape(parsedTitle[0]) + ' AND page_title = ' + conn.escape(parsedTitle[1]) + ')'
+            }).join(' OR ');
+            let rows = conn.query(query).catch(e => {
+                throw e
+            });
+            return rows.map(item => ((item.ns_title === 'Main' ? '' : item.ns_title + ':') + item.page_title).toLowerCase());
         })
     }
 
