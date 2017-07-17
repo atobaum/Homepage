@@ -106,7 +106,7 @@ class Parser {
         });
         env.existingPages = await this.wiki.existingPages(info.link, ns);
         let content = this.parse(toks, env);
-
+        console.log(content);
         env.heading = env.heading.root;
         if (env.heading.child.length !== 0)
             content = this.renderer.toc(env.heading.child) + content;
@@ -124,6 +124,7 @@ class Parser {
         if (env.category.length !== 0) {
             content += this.renderer.cat(env.category, env);
         }
+
 
         return [content, env];
     };
@@ -149,7 +150,9 @@ class Parser {
                     content += this.renderer.blockquote(this.parseQuote(toks, env));
                     break;
                 default:
-                    content += this.renderer.paragraph({text: this.inlineParse(toks, env)[0]});
+                    let temp = this.inlineParse(toks, env)[0];
+                    if(temp.length > 0)
+                        content += this.renderer.paragraph({text: temp});
             }
         }
         return content;
