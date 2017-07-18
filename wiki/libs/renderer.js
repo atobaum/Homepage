@@ -20,10 +20,6 @@ class Renderer{
         return `<blockquote class="ui raised segment">${title}<p>${tok.text}</p>${ref}</blockquote>`
     };
 
-    title(data){
-        return `<h1 class="ui block header">${data.text}</h1>`;
-    };
-
     escapeHTML(str){
         "use strict";
         return str.replace(/[&<"']/g, function(m) {
@@ -126,7 +122,7 @@ class Renderer{
 
     //footnote reference
     rfn(data){
-        return `<sup id="rfn_${data.index}"><a href="#fn_${data.index}">[${data.index}]</a></supi>`;
+        return `<sup id="rfn_${data.index}"><a href="#fn_${data.index}">[${data.index}]</a></sup>`;
     };
 
     footnotes(footnotes){
@@ -213,8 +209,8 @@ class Renderer{
         return result + '</table>';
     };
 
-    title(ns, pageTitle){
-        return `<h1 class="wiki_title">${(ns ? ns + ':' : '')+pageTitle}</h1>`;
+    title(pageTitle){
+        return `<h1 class="wiki_title">${(this._ns ? this._ns + ':' : '')+pageTitle}</h1>`;
     };
 
     pageList(catTitle, pageList) {
