@@ -1,0 +1,1 @@
+$(function(){$(".wiki-syntaxhl code").each(function(c,i){Prism.highlightElement(i)}),$("#btn_etc").click(function(){$("#modal_etc").modal("show")})});

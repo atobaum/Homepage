@@ -4,6 +4,7 @@ block head2
     title #{wiki.title} - Wiki
     link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css")
     link(rel="stylesheet" href='/css/wiki/wiki_view.css')
+    script(src="/js/wiki/wiki_view.js")
 
 block content
     .ui
@@ -11,10 +12,12 @@ block content
             a.item(href='/wiki/edit/' + wiki.title) 수정
             a.item(href='/wiki/history/' + wiki.title) 역사
             a.item(href='/wiki/xref/' + wiki.title) 역링크
-            a.item(href='/wiki/delete/' + wiki.title) 삭제
+            a.item#btn_etc 기타
         .wiki_content.language-javascript !{wiki.parsedContent}
-
-    script.
-        $(()=>{
-            $('.wiki-syntaxhl code').each((i, elem) => {Prism.highlightElement(elem)});
-        });
+    .ui.modal#modal_etc
+        i.close.icon
+        .header 기타 설정
+        .content
+            button.ui.button Clear Cache
+            button.ui.button Change Title
+            button.ui.button Change Access Control
