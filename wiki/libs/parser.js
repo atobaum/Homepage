@@ -106,12 +106,11 @@ class Parser {
         });
         env.existingPages = await this.wiki.existingPages(info.link, ns);
         let content = this.parse(toks, env);
-        console.log(content);
         env.heading = env.heading.root;
         if (env.heading.child.length !== 0)
             content = this.renderer.toc(env.heading.child) + content;
         if (pageTitle)
-            content = this.renderer.title(ns, pageTitle) + content;
+            content = this.renderer.title(pageTitle) + content;
         if (ns === "Category") {
             content += await this.wiki.getPageList(pageTitle).then(async (pageList) => {
                 return this.renderer.pageList(pageTitle, pageList)
