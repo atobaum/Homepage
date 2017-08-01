@@ -101,7 +101,7 @@ class InlineLexer {
 
             //footnote
             if (cap = inlineTockens.footnote.exec(src)) {
-                toks.push({type: 'footnote', toks: InlineLexer.scan(cap[1])});
+                toks.push({type: 'footnote', toks: InlineLexer.scan(cap[1], pages)});
                 src = src.substr(cap[0].length);
                 continue;
             }

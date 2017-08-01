@@ -124,7 +124,6 @@ class Parser {
             content += this.renderer.cat(env.category, env);
         }
 
-
         return [content, env];
     };
 
@@ -150,6 +149,7 @@ class Parser {
                     break;
                 default:
                     let temp = this.inlineParse(toks, env)[0];
+                    console.log(temp);
                     if(temp.length > 0)
                         content += this.renderer.paragraph({text: temp});
             }
@@ -184,7 +184,7 @@ class Parser {
                         break;
                     case 'footnote':
                         toks.shift();
-                        [tok.text, tok.plainText] = this.inlineParse(tok.toks);
+                        [tok.text, tok.plainText] = this.inlineParse(tok.toks, env);
                         tok.index = env.footnote.length;
                         env.footnote.push(tok);
                         content += this.renderer.rfn(tok);
