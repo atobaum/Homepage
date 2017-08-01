@@ -25,7 +25,7 @@ class Parser {
             let tok = toks.shift();
             tok.text = this.inlineParse(tok.toks, env)[0];
             if (toks[0] && toks[0].type === 'list' && toks[0].level > curLevel)
-                tok.child = this.parseList(toks);
+                tok.child = this.parseList(toks, env);
             list.push(tok);
         }
         return list;
