@@ -89,8 +89,6 @@ class Wiki {
 
     async parse(src, title) {
         let parsedTitle = Wiki.parseTitle(title);
-        let result = (await this.parser.out(src, parsedTitle[0], parsedTitle[1]).catch(e => e.message));
-        return result[0];
         return (await this.parser.out(src, parsedTitle[0], parsedTitle[1]).catch(e => e.message))[0];
     }
 
@@ -130,6 +128,8 @@ class Wiki {
      * @param{number} pageId
      * @param{number} userId
      * @param{number} type - create(8), read(4), update(2), delete(1)
+     * @param nsPAC
+     * @param pagePAC
      * @property result - true if you can access.
      */
     checkAC(nsId, pageId, userId, type, nsPAC, pagePAC) {
