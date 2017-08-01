@@ -89,8 +89,6 @@ class Wiki {
 
     async parse(src, title) {
         let parsedTitle = Wiki.parseTitle(title);
-        let result = (await this.parser.out(src, parsedTitle[0], parsedTitle[1]).catch(e => e.message));
-        return result[0];
         return (await this.parser.out(src, parsedTitle[0], parsedTitle[1]).catch(e => e.message))[0];
     }
 
@@ -130,6 +128,8 @@ class Wiki {
      * @param{number} pageId
      * @param{number} userId
      * @param{number} type - create(8), read(4), update(2), delete(1)
+     * @param nsPAC
+     * @param pagePAC
      * @property result - true if you can access.
      */
     checkAC(nsId, pageId, userId, type, nsPAC, pagePAC) {
@@ -152,13 +152,22 @@ class Wiki {
 
     updatePageCache(pageInfo) {
         return this.makeWork2(async (conn) => {
+            if (pageInfo.ns_title === 'Category')
+                await conn.query('INSERT INTO category (page_id, cat_title) VALUES (?, ?) ON DUPLICATE KEY UPDATE cat_title = ?', [pageInfo.page_id, pageInfo.page_title, pageInfo.page_title]).catch(e => {
+                    throw e;
+                });
+
             let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
             let rows = await conn.query(query, [pageInfo.page_id, pageInfo.rev_id]).catch(e => {
-                throw e
+                throw e;
             });
             if (rows.length === 0) throw new Error('Wrong Page Id: ' + pageInfo.page_id + ', Rev Id: ' + pageInfo.rev_id);
+            let row = rows[0];
 
-            let [content, additional] = await this.parser.out(rows[0].text, pageInfo.ns_title, pageInfo.page_title).catch(e => e);
+            let [content, additional] = await this.parser.out(row.text, pageInfo.ns_title, pageInfo.page_title).catch(e => e);
+
+            if (additional.category.length === 0)
+                additional.category.push('미분류');
             await this.updateCategory(conn, pageInfo.page_id, additional.category, pageInfo.ns_title === 'Category' ? 0 : 1);
             query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
             if(pageInfo.cached === 0)
