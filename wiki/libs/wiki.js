@@ -89,7 +89,9 @@ class Wiki {
 
     async parse(src, title) {
         let parsedTitle = Wiki.parseTitle(title);
-        return (await this.parser.out(src, parsedTitle[0], parsedTitle[1]).catch(e => e.message))[0];
+        // console.log(await this.parser.out(src, parsedTitle[0], parsedTitle[1]).catch(e => e));
+        // return 1;
+        return (await this.parser.out(src, parsedTitle[0], parsedTitle[1]).catch(e => [e]))[0];
     }
 
     /**
