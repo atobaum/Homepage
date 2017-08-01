@@ -77,6 +77,7 @@ app.get('/api/auth/login', function(req, res){
                 let sess = req.session;
                 sess.userId = user.user_id;
                 sess.userNickname = user.nickname;
+                sess.userAdmin = user.admin;
                 if(req.query.autoLogin == "true")
                     sess.cookie.maxAge = 1000*60*60*24*7; //7 days
             }

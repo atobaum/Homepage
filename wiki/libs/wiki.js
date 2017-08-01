@@ -93,6 +93,36 @@ class Wiki {
     }
 
     /**
+     * @function
+     * @param{number} nsId
+     * @param{number} pageId
+     * @param{number} userId
+     * @param{number} type - create(8), read(4), update(2), delete(1)
+     * @param nsPAC
+     * @param pagePAC
+     * @property result - true if you can access.
+     */
+    checkAC(nsId, pageId, userId, type, nsPAC, pagePAC) {
+        if ((pagePAC && pagePAC & type) || (!pagePAC && nsPAC & type)) return Promise.resolve(true);
+        else if (!userId) return Promise.resolve(false);
+        else return this.makeWork2(async conn => {
+                let query = "SELECT AC FROM ACL WHERE user_id = ? and (ns_id = ? OR page_id = ?)";
+                let rows = await conn.query(query, [userId, nsId, pageId]).catch(e => {
+                    throw e
+                });
+                if (rows.length === 0) return false;
+                else {
+                    for (let i = 0; i < rows.length; i++) {
+                        if (rows[i].AC & type) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            });
+    };
+
+    /**
      *
      * @param title
      * @returns page{Promise} - A promise object that gives the page. If namespace doesn't exist, page.noPage = 1. If namespace exists but page is not, page.noPage = 2. Otherwise, page.noPage = undefined.
@@ -123,32 +153,35 @@ class Wiki {
     }
 
     /**
-     * @function
-     * @param{number} nsId
-     * @param{number} pageId
-     * @param{number} userId
-     * @param{number} type - create(8), read(4), update(2), delete(1)
-     * @param nsPAC
-     * @param pagePAC
-     * @property result - true if you can access.
+     *
+     * @param conn
+     * @param title
+     * @returns page{Promise} - A promise object that gives the page. If namespace doesn't exist, page.noPage = 1. If namespace exists but page is not, page.noPage = 2. Otherwise, page.noPage = undefined.
      */
-    checkAC(nsId, pageId, userId, type, nsPAC, pagePAC) {
-        if((pagePAC && pagePAC & type) || (!pagePAC && nsPAC & type)) return Promise.resolve(true);
-        else if(!userId) return Promise.resolve(false);
-        else return this.makeWork2(async conn => {
-                let query = "SELECT AC FROM ACL WHERE user_id = ? and (ns_id = ? OR page_id = ?)";
-                let rows = await conn.query(query, [userId, nsId, pageId]).catch(e => {throw e});
-                if (rows.length === 0) return false;
-                else {
-                    for (let i = 0; i < rows.length; i++) {
-                        if (rows[i].AC & type) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
+    async getPageInfoConn(conn, title) {
+        let parsedTitle = Wiki.parseTitle(title);
+        let query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
+        let rows = await conn.query(query, [parsedTitle[0], parsedTitle[1]]).catch(e => {
+            throw e
+        });
+        let result;
+        if (rows.length === 0) {
+            query = "SELECT * FROM namespace WHERE ns_title = ?";
+            rows = await conn.query(query, [parsedTitle[0]]).catch(e => {
+                throw e
             });
-    };
+            if (rows.length === 0) result = {ns_title: parsedTitle[0], page_title: parsedTitle[1], noPage: 1};
+            else {
+                result = rows[0];
+                result.page_title = parsedTitle[1];
+                result.noPage = 2;
+            }
+        } else {
+            result = rows[0];
+        }
+        result.title = (result.ns_title === "Main" ? '' : result.ns_title + ':') + result.page_title;
+        return result;
+    }
 
     updatePageCache(pageInfo) {
         return this.makeWork2(async (conn) => {
@@ -169,8 +202,8 @@ class Wiki {
             if (additional.category.length === 0)
                 additional.category.push('미분류');
             await this.updateCategory(conn, pageInfo.page_id, additional.category, pageInfo.ns_title === 'Category' ? 0 : 1);
-            query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
             if(pageInfo.cached === 0)
+                query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
                 await conn.query(query, [pageInfo.page_id, content, content]).catch(e => {
                     throw e
                 });
@@ -220,7 +253,7 @@ class Wiki {
         return pageInfo;
     }
 
-    async getParsedPage(title, userId) {
+    async getParsedPage(title, userId, updateCache) {
         let pageInfo = await this.getPageInfo(title);
         if (pageInfo.deleted) {
             let error = new Error('Page is deleted.');
@@ -237,7 +270,7 @@ class Wiki {
         let parsedPage = null;
         if (pageInfo.redirect) {
             return {redirectFrom: pageInfo.title, redirectTo: pageInfo.redirect};
-        } else if (pageInfo.cached === 1) {
+        } else if (pageInfo.cached === 1 && !updateCache) {
             parsedPage = await this.makeWork2(async (conn) => {
                 let query = "SELECT content FROM caching WHERE page_id = ?";
                 let [parsedPage] = await conn.query(query, [pageInfo.page_id]).catch(e => {
@@ -352,7 +385,9 @@ class Wiki {
 
     login(username, password) {
         return this.makeWork(async (conn) => {
-            let [user] = await conn.query("SELECT user_id, nickname, password = PASSWORD(?) as correct FROM user WHERE username = ?", [password, username]).catch(e => {throw e});
+            let [user] = await conn.query("SELECT user_id, nickname, admin, password = PASSWORD(?) as correct FROM user WHERE username = ?", [password, username]).catch(e => {
+                throw e
+            });
             return [(user ? user.correct : 2), user];
         })();
     }
@@ -469,14 +504,34 @@ class Wiki {
         })
     }
 
-    clearCache(){
+    clearCache(pageTitle) {
         return this.makeWork2(async conn=>{
-            await conn.query('DELETE FROM caching').catch(e=>{throw e});
+            let pageInfo = await this.getPageInfoConn(conn, pageTitle).catch(e => {
+                throw e;
+            });
+
+            await conn.query('DELETE FROM caching WHERE page_id = ?', [pageInfo.page_id]).catch(e => {
+                throw e
+            });
             return 1;
         });
     }
 
+    changeTitle(oldTitle, newTitle) {
+        return this.makeWork2(async conn => {
+            let pageInfo = await this.getPageInfoConn(conn, oldTitle).catch(e => {
+                throw e;
+            });
+            let result = await conn.query('UPDATE page SET page_title=? WHERE page_id = ?', [newTitle, pageInfo.page_id]).catch(e => {
+                throw e
+            });
+            if (result.affectedRows === 1) return pageInfo.ns_title + ':' + newTitle;
+            else return null;
+        });
+    }
+
     checkAdmin(userId){
+        if (!userId) return Promise.resolve(false);
         return this.makeWork2(async conn=> {
             let users = await conn.query('SELECT admin FROM user WHERE user_id = ?', [userId]).catch(e => {
                 throw e

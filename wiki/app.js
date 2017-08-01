@@ -36,7 +36,7 @@ app.get(/\/search\/(.*)/, function(req, res){
 app.get(/\/view\/(.*)/, function (req, res) {
     let title = decodeURI(req.params[0]);
     let userId = req.session ? req.session.userId : null;
-    wiki.getParsedPage(title, userId)
+    wiki.getParsedPage(title, userId, req.query.updateCache !== undefined)
         .then(page => {
             if (page.noPage) {
                 res.redirect('/wiki/search/' + encodeURI(title));
@@ -186,18 +186,33 @@ app.get('/api/titleSearch', (req, res) => {
 app.get('/api/admin', async (req, res)=>{
     try {
         let userId = req.session ? req.session.userId : null;
-        let admin = await wiki.checkAdmin(userId);
-        if (!admin) {res.json({ok: 0, error: new Error('No Privilege')}); return;}
+        if (!userId) return ({ok: 0, error: new Error('Please Login first.')});
 
+        // let admin = await wiki.checkAdmin(userId);
+        let admin = req.session.userAdmin;
+        if (!admin) {res.json({ok: 0, error: new Error('No Privilege')}); return;}
         switch (req.query.action.toLowerCase()) {
-            case 'clear_cache':
-                await wiki.clearCache();
+            case 'clearcache':
+                await wiki.clearCache(req.query.title).catch(e => {
+                    throw e;
+                });
                 res.json({ok: 1});
+                break;
+            case 'changetitle':
+                let title = await wiki.changeTitle(req.query.title, req.query.newTitle).catch(e => {
+                    throw e;
+                });
+
+                if (title) res.json({ok: 1, title: title});
+                else res.json({ok: 0, error: new Error('Fail to remane page')});
                 break;
             default:
                 res.json({ok:0, error: new Error('Unsupported Action: '+req.query.action)});
         }
-    }catch(e) {res.json({ok:0, error: e});}
+    } catch (e) {
+        console.log(e);
+        res.json({ok: 0, error: e});
+    }
 });
 
 // catch 404 and forward to error handler
