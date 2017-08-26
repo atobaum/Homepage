@@ -12,7 +12,7 @@ block content
             - var editType = wiki.newPage ? " (새 문서 만들기)" : " (R"+wiki.rev_id+" 수정)";
             small !{editType}
         form.ui.form#edit_form(method="POST" action="/wiki/edit/"+encodeURI(wiki.title) onsubmit="return check_edit_form();")
-            input(type="hidden" name="minor")
+            input(type="hidden" name="major")
             input(type="hidden" name="title" value=wiki.title)
             .ui.top.attached.tabular.menu
                 a.item.active(data-tab="edit") 편집
@@ -30,14 +30,14 @@ block content
                 .ui.field.small.input.ten.wide
                     input(type="text" name="comment" placeholder="Comment...")
                 .ui.checkbox.field.two.wide
-                    input#btn_minor_edit(type="checkbox")
-                    label(for='btn_minor_edit') minor
+                    input#btn_major_edit(type="checkbox")
+                    label(for='btn_major_edit') Major
                 button.right.ui.primary.button(type='submit') 제출
             - }
 
     script.
         function check_edit_form(){
-            $('#edit_form input[name="minor"]').val(($('#btn_minor_edit').parent().checkbox('is checked') ? 1 : 0));
+            $('#edit_form input[name="major"]').val(($('#btn_major_edit').parent().checkbox('is checked') ? 1 : 0));
             return true;
         }
         $(function(){

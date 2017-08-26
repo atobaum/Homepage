@@ -206,9 +206,9 @@ class Wiki {
             await this.updateCategory(conn, pageInfo.page_id, additional.category, pageInfo.ns_title === 'Category' ? 0 : 1);
             if(pageInfo.cached === 0)
                 query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
-                await conn.query(query, [pageInfo.page_id, content, content]).catch(e => {
-                    throw e
-                });
+            await conn.query(query, [pageInfo.page_id, content, content]).catch(e => {
+                throw e
+            });
             return content;
         });
     }
@@ -345,10 +345,27 @@ class Wiki {
                 user_text: page.userText,
                 text: page.text,
                 parent_id: data.parent_id,
-                minor: page.minor,
+                minor: parseInt(page.major) ^ 1,
                 comment: page.comment
             };
-            return await conn.query("INSERT INTO revision SET ?", [revision]);
+
+            if (revision.rev_id !== 1) {
+                await conn.query('UPDATE revision SET ? WHERE page_id = ? AND rev_id = ?', [{
+                    user_id: userId,
+                    user_text: page.userText,
+                    text: page.text,
+                    comment: page.comment
+                },
+                    data.page_id,
+                    data.rev_id - 1,
+                ]).catch(e => {
+                    throw e;
+                });
+
+                if (revision.minor === 0)
+                    return await conn.query("INSERT INTO revision SET ?", [revision]);
+            } else
+                return await conn.query("INSERT INTO revision SET ?", [revision]);
         })();
     }
 
@@ -539,7 +556,7 @@ class Wiki {
                 throw e
             });
             if (users.length === 0) throw new Error("Wrong User Id");
-            else if(users[0].admin == 1) return true;
+            else if (users[0].admin === 1) return true;
             else return false;
         });
     }
