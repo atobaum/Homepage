@@ -9,7 +9,7 @@ let inlineTockens = {
     underline: /^__(.+)__/,
     sup: /^\^\^(.+?)\^\^/,
     sub: /^,,(.+),,/,
-    urlLink: /^\[\[(https?:\/\/[^\|]+?)(\|([^\|]+?))?\]\]/,
+    urlLink: /^\[\[(?:(.+?):\s)?(https?:\/\/[^\|]+?)(?:\|([^\|]+?))?\]\]/,
     link: /^\[\[([^\|]+?)(\|([^\|]+?))?\]\]/,
     del: /^~~(?=\S)([\s\S]*?\S)~~/,
     newline: /^ {2,}$/,
@@ -71,7 +71,7 @@ class InlineLexer {
 
             //urlLink
             if (cap = inlineTockens.urlLink.exec(src)) {
-                toks.push({type: 'urlLink', text: cap[3], href: cap[1]});
+                toks.push({type: 'urlLink', type2: cap[1], text: cap[3], href: cap[2]});
                 src = src.substr(cap[0].length);
                 continue;
             }

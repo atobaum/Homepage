@@ -99,12 +99,19 @@ class Renderer{
     };
 
     urlLink(data){
+        console.log(data);
         let text = (data.text ? data.text :data.href);
-        return `<a class="wiki_ext_link" href="${data.href}" title="${text}">${text}<i class="external square icon"></i></a>`;
-    };
-
-    image(data){
-        return '<img src="'+data.src+'" />';
+        let result = '';
+        switch (data.type2) {
+            case 'img':
+            case '이미지':
+                result = `</p><img class="wiki_img" src="${data.href}" alt="${text}"><p>`;
+                break;
+            default:
+                result = `<a class="wiki_ext_link" href="${data.href}" title="${text}">${text}<i class="external square icon"></i></a>`;
+        }
+        console.log(result);
+        return result;
     };
 
     text(data){
