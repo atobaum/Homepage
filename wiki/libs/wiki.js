@@ -349,7 +349,7 @@ class Wiki {
                 comment: page.comment
             };
 
-            if (revision.rev_id !== 1) {
+            if (!(revision.rev_id === 1 || revision.rev_id === 2)) {
                 await conn.query('UPDATE revision SET ? WHERE page_id = ? AND rev_id = ?', [{
                     user_id: userId,
                     user_text: page.userText,
