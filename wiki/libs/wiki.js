@@ -3,6 +3,10 @@
  */
 "use strict";
 let promise_mysql = require('promise-mysql');
+class EnvManager {
+
+}
+
 class Wiki {
     constructor(config) {
         this.parser = require('./parser');

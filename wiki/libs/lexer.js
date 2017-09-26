@@ -3,6 +3,8 @@
  */
 "use strict";
 let InlineLexer = require('./inline_lexer');
+let Components = require('./Components');
+
 let blocks = {
     heading: /^(={2,6}) (.+) ={2,6}\s*(\r?\n|$)/,
     list: /^(\s+)([*-]) (.+)(\r?\n|$)/,
@@ -37,6 +39,7 @@ class Lexer {
                 toks.push({
                     type: 'emptyline'
                 });
+                // toks.push(new Components.Newline());
                 src = src.substr(cap[0].length);
                 continue;
             }
@@ -143,9 +146,10 @@ class Lexer {
 
             //hr
             if (cap = blocks.hr.exec(src)) {
-                toks.push({
-                    type: 'hr'
-                });
+                // toks.push({
+                //     type: 'hr'
+                // });
+                toks.push(new Components.Hr());
                 src = src.substr(cap[0].length);
                 continue;
             }
@@ -154,7 +158,7 @@ class Lexer {
             if (cap = blocks.macro.exec(src)) {
                 toks.push({
                     type: 'macro',
-                    macro: cap[1],
+                    macro: cap[1] || '',
                     param: cap[2] ? cap[2].split(',') : null,
                     text: cap[3].trim()
                 });
