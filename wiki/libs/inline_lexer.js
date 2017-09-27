@@ -1,6 +1,8 @@
 /**
  * Created by Le Reveur on 2017-05-03.
  */
+let Components = require('./Components');
+
 let inlineTockens = {
     escape: /^\\([>\$\\\`'\^_~\(\)*{}\[\]#t])/,
     italic: /^''(?!')(?=\S)([\s\S]*?\S)''/,
@@ -36,42 +38,56 @@ class InlineLexer {
 
             //italic
             if (cap = inlineTockens.italic.exec(src)) {
-                toks.push({type: 'italic', text: cap[1]});
+                // toks.push({type: 'italic', text: cap[1]});
+                toks.push(new Components.Italic(cap[1]));
                 src = src.substr(cap[0].length);
                 continue;
             }
 
             //bold
             if (cap = inlineTockens.bold.exec(src)) {
-                toks.push({type: 'bold', text: cap[1]});
+                // toks.push({type: 'bold', text: cap[1]});
+                toks.push(new Components.Bold(cap[1]));
                 src = src.substr(cap[0].length);
                 continue;
             }
 
             //underline
             if (cap = inlineTockens.underline.exec(src)) {
-                toks.push({type: 'underline', text: cap[1]});
+                // toks.push({type: 'underline', text: cap[1]});
+                toks.push(new Components.Underline(cap[1]));
                 src = src.substr(cap[0].length);
                 continue;
             }
 
             //sup
             if (cap = inlineTockens.sup.exec(src)) {
-                toks.push({type: 'sup', text: cap[1]});
+                // toks.push({type: 'sup', text: cap[1]});
+                toks.push(new Components.Sup(cap[1]));
                 src = src.substr(cap[0].length);
                 continue;
             }
 
             //sub
             if (cap = inlineTockens.sub.exec(src)) {
-                toks.push({type: 'sub', text: cap[1]});
+                // toks.push({type: 'sub', text: cap[1]});
+                toks.push(new Components.Sub(cap[1]));
+                src = src.substr(cap[0].length);
+                continue;
+            }
+
+            //del
+            if (cap = inlineTockens.del.exec(src)) {
+                // toks.push({type: 'del', text: cap[1]});
+                toks.push(new Components.Del(cap[1]));
                 src = src.substr(cap[0].length);
                 continue;
             }
 
             //urlLink
             if (cap = inlineTockens.urlLink.exec(src)) {
-                toks.push({type: 'urlLink', type2: cap[1], text: cap[3], href: cap[2]});
+                // toks.push({type: 'urlLink', type2: cap[1], text: cap[3], href: cap[2]});
+                toks.push(new Components.ExtLink(cap[1], cap[3], cap[2]));
                 src = src.substr(cap[0].length);
                 continue;
             }
@@ -85,16 +101,12 @@ class InlineLexer {
                 continue;
             }
 
-            //del
-            if (cap = inlineTockens.del.exec(src)) {
-                toks.push({type: 'del', text: cap[1]});
-                src = src.substr(cap[0].length);
-                continue;
-            }
+
 
             //newline
             if (cap = inlineTockens.newline.exec(src)) {
-                toks.push({type: 'newline'});
+                // toks.push({type: 'newline'});
+                toks.push(new Components.Newline());
                 src = src.substr(cap[0].length);
                 continue;
             }

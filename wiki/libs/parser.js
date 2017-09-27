@@ -149,7 +149,6 @@ class Parser {
                     break;
                 default:
                     let temp = this.inlineParse(toks, env)[0];
-                    console.log(temp);
                     if(temp.length > 0)
                         content += this.renderer.paragraph({text: temp});
             }
@@ -163,12 +162,14 @@ class Parser {
         let plainText = '';
         outerloop:
             while (tok = toks[0]) {
+                if (tok.render) {
+                    toks.shift();
+                    content += tok.render();
+                    plainText += tok.plainText;
+                    continue;
+                }
                 switch (tok.type) {
                     case 'macro':
-                        content += this.macro(toks.shift(), env);
-                        break;
-                    case 'LaTeX':
-                        toks.shift();
                         content += this.renderer.KaTeX(tok);
                         plainText += tok.text;
                         break;

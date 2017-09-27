@@ -55,33 +55,33 @@ class Renderer{
         return '<b><i>'+data.text+'</i></b>';
     };
 
-    italic(data){
-        return '<i>'+data.text+'</i>';
-    };
-
-    bold(data){
-        return '<b>'+data.text+'</b>';
-    };
-
-    underline(data){
-        return '<u>'+data.text+'</u>';
-    };
-
-    sup(data){
-        return '<sup>'+data.text+'</sup>';
-    };
-
-    sub(data){
-        return '<sub>'+data.text+'</sub>';
-    };
-
-    del(data){
-        return '<del>'+data.text+'</del>';
-    };
-
-    newline(){
-        return '<br />'
-    };
+    // italic(data){
+    //     return '<i>'+data.text+'</i>';
+    // };
+    //
+    // bold(data){
+    //     return '<b>'+data.text+'</b>';
+    // };
+    //
+    // underline(data){
+    //     return '<u>'+data.text+'</u>';
+    // };
+    //
+    // sup(data){
+    //     return '<sup>'+data.text+'</sup>';
+    // };
+    //
+    // sub(data){
+    //     return '<sub>'+data.text+'</sub>';
+    // };
+    //
+    // del(data){
+    //     return '<del>'+data.text+'</del>';
+    // };
+    //
+    // newline(){
+    //     return '<br />'
+    // };
 
     link(data, env) {
         let regexTitle = /^(?:(.*?):)?(.+?)(?:#(.*))?$/;
@@ -98,21 +98,21 @@ class Renderer{
         return `<a ${isExist ? '' : 'class="wiki_nonexisting_page"'} href="\/wiki\/view\/${href}" title="${text}">${text}</a>`;
     };
 
-    urlLink(data){
-        console.log(data);
-        let text = (data.text ? data.text :data.href);
-        let result = '';
-        switch (data.type2) {
-            case 'img':
-            case '이미지':
-                result = `</p><img class="wiki_img" src="${data.href}" alt="${text}"><p>`;
-                break;
-            default:
-                result = `<a class="wiki_ext_link" href="${data.href}" title="${text}">${text}<i class="external square icon"></i></a>`;
-        }
-        console.log(result);
-        return result;
-    };
+    // urlLink(data){
+    //     console.log(data);
+    //     let text = (data.text ? data.text :data.href);
+    //     let result = '';
+    //     switch (data.type2) {
+    //         case 'img':
+    //         case '이미지':
+    //             result = `</p><img class="wiki_img" src="${data.href}" alt="${text}"><p>`;
+    //             break;
+    //         default:
+    //             result = `<a class="wiki_ext_link" href="${data.href}" title="${text}">${text}<i class="external square icon"></i></a>`;
+    //     }
+    //     console.log(result);
+    //     return result;
+    // };
 
     text(data){
         return data.text;
@@ -145,13 +145,13 @@ class Renderer{
         return '<p>'+data.text+'</p>';
     };
 
-    emptyline(data){
-        return '<br />';
-    };
-
-    hr(){
-        return '<hr />';
-    }
+    // emptyline(data){
+    //     return '<br />';
+    // };
+    //
+    // hr(){
+    //     return '<hr />';
+    // }
 
     list(list, notFirst){
         let ordered = list[0].ordered;
