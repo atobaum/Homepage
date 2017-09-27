@@ -200,21 +200,21 @@ class Renderer{
         return `<div class="ui negative message"><div class="header">${tok.name}</div><p>${tok.text}</p></div>`
     };
 
-    table(table){
-        let result = '<table class="ui celled collapsing table">';
-        for(let item of table){
-            if (item.option === "h") {
-                result += '<thead><tr>';
-                item.row.forEach((cell)=>{result += `<th>${cell}</th>`});
-                result += '</tr></thead>';
-            } else{
-                result += '</tr>';
-                item.row.forEach((cell)=>{result += `<td>${cell}</td>`});
-                result += '</tr>';
-            }
-        }
-        return result + '</table>';
-    };
+    // table(table){
+    //     let result = '<table class="ui celled collapsing table">';
+    //     for(let item of table){
+    //         if (item.option === "h") {
+    //             result += '<thead><tr>';
+    //             item.row.forEach((cell)=>{result += `<th>${cell}</th>`});
+    //             result += '</tr></thead>';
+    //         } else{
+    //             result += '</tr>';
+    //             item.row.forEach((cell)=>{result += `<td>${cell}</td>`});
+    //             result += '</tr>';
+    //         }
+    //     }
+    //     return result + '</table>';
+    // };
 
     title(pageTitle){
         return `<h1 class="wiki_title">${(this._ns ? this._ns + ':' : '')+pageTitle}</h1>`;

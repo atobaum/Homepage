@@ -12,7 +12,7 @@ let blocks = {
     hr: /^-{3,}\s*(\r?\n|$)/,
     quote: /^>(?:\((.*?)(?:\|(.*?))?\))? (.*?)(\r?\n|$)/,
     // textbox: /^/,
-    table: /^(\|\|.*)(\r?\n|$)/,
+    table: /^(?:\|\|.*\r?\n|$)+/,
     emptyline: /^(\s*\r?\n)+/,
     paragraph: /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/,
     macro: /^{{(\S*?)(?:\((\S*?)\))?\s+([\s\S]*?)}}/,
@@ -97,19 +97,15 @@ class Lexer {
 
             //table
             if (cap = blocks.table.exec(src)) {
-                let list = cap[1].split('||').slice(1).map(function (item) {
-                    return item.trim();
-                });
-                let option = list.pop();
-                list = list.map(item => {
-                    return InlineLexer.scan(item, pages);
-                });
+                // let list = cap[1].split('||').slice(1).map(function (item) {
+                //     return item.trim();
+                // });
+                // let option = list.pop();
+                // list = list.map(item => {
+                //     return InlineLexer.scan(item, pages);
+                // });
 
-                toks.push({
-                    type: 'table',
-                    toks: list,
-                    option: option
-                });
+                toks.push(new Components.Table(cap[0]));
                 src = src.substr(cap[0].length);
                 continue;
             }

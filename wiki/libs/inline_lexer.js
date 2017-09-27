@@ -101,8 +101,6 @@ class InlineLexer {
                 continue;
             }
 
-
-
             //newline
             if (cap = inlineTockens.newline.exec(src)) {
                 // toks.push({type: 'newline'});
@@ -169,7 +167,7 @@ class InlineLexer {
             }
             //else: text
             if (cap = inlineTockens.text.exec(src)) {
-                toks.push({type: 'text', text: cap[0]});
+                toks.push(new Components.Text(cap[0]));
                 src = src.substr(cap[0].length);
                 continue;
             }
@@ -182,7 +180,8 @@ class InlineLexer {
             break;
         }
 
-        return toks;
+        console.log(toks);
+        return new Components.Token(toks);
     }
 }
 

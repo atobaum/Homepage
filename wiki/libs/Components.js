@@ -2,27 +2,29 @@
  * Created by Le Reveur on 2017-09-26.
  */
 'use strict';
-
-class Token {
+let InlineLexer = require('./inline_lexer');
+let Token = class {
     constructor(toks) {
         this.toks = toks;
     }
 
     render() {
-        return "Error: render() should be overridden.";
+        return this.renderContent();
     }
 
     renderContent() {
         if (this.toks.length === 0)
             return "Error: content of a Token is empty.";
         else
-            return toks.reduce((a, b) => a + b.render());
+            return this.toks.reduce((a, b) => a + b.render(), '');
     }
 
     get plainText() {
         return ' ';
     }
-}
+};
+
+module.exports.Token = Token;
 
 class MacroManager {
     constructor() {
@@ -56,6 +58,39 @@ class Macro extends Token {
     }
 }
 
+class TRow extends Token {
+    constructor(row) {
+        let option = row.pop();
+        super(row.map(cell => InlineLexer.scan(cell)));
+        this.option = option;
+    }
+
+    render() {
+        let result = '';
+        if (this.option === 'h') {
+            result += '<thead><tr>';
+            result += this.toks.reduce((str, cell) => str + `<th>${cell.render()}</th>`, '');
+            result += '</thead></tr>';
+        } else {
+            result += '<tr>';
+            result += this.toks.reduce((str, cell) => str + `<td>${cell.render()}</th>`, '');
+            result += '<tr>';
+        }
+        return result;
+    }
+}
+
+module.exports.Table = class Table extends Token {
+    constructor(text) {
+        super(text.split(/\r?\n/).map(row => {
+            return new TRow(row.split('||').slice(1).map(cell => cell.trim()));
+        }));
+    }
+
+    render() {
+        return `<table class="ui celled collapsing table">${this.renderContent()}</table>`;
+    }
+};
 class SimpleTag extends Token {
     constructor(tag, param, text) {
         super(null);
@@ -257,5 +292,9 @@ module.exports.Text = class Text extends Token {
 
     render() {
         return this.text;
+    }
+
+    get plainText() {
+        return this.text
     }
 };

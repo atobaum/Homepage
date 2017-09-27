@@ -31,18 +31,18 @@ class Parser {
         return list;
     }
 
-    parseTable(toks, env) {
-        let tables = [];
-        let tok;
-        while (toks[0] && toks[0].type === 'table') {
-            tok = toks.shift();
-            tok.row = tok.toks.map(item => {
-                return this.inlineParse(item, env)[0];
-            });
-            tables.push(tok);
-        }
-        return tables;
-    }
+    // parseTable(toks, env) {
+    //     let tables = [];
+    //     let tok;
+    //     while (toks[0] && toks[0].type === 'table') {
+    //         tok = toks.shift();
+    //         tok.row = tok.toks.map(item => {
+    //             return this.inlineParse(item, env)[0];
+    //         });
+    //         tables.push(tok);
+    //     }
+    //     return tables;
+    // }
 
     macro(tok, env) {
         switch (tok.macro.toLowerCase()) {
@@ -141,8 +141,8 @@ class Parser {
                 case 'list':
                     content += this.renderer.list(this.parseList(toks, env));
                     break;
-                case 'table':
-                    content += this.renderer.table(this.parseTable(toks, env));
+                    // case 'table':
+                    //     content += this.renderer.table(this.parseTable(toks, env));
                     break;
                 case 'quote':
                     content += this.renderer.blockquote(this.parseQuote(toks, env));
