@@ -23,8 +23,8 @@ let app = express();
 app.set('views', __dirname+'/views');
 app.set('view engine', 'pug');
 
-app.use(favicon(__dirname + '/../public/' + 'favicon.ico'));
-app.use(express.static(__dirname+'/../public'));
+app.use(favicon(__dirname + '/../views/' + 'favicon.ico'));
+app.use(express.static(__dirname + '/../views'));
 if(process.env.NODE_ENV === 'development') {
     let logger = require('morgan');
     app.use(logger('dev'));
@@ -37,13 +37,13 @@ app.use(cookieParser());
 //session setting
 let session = require('express-session');
 let MySQLStore = require('express-mysql-session')(session);
-let config = require('./config.js');
+let config = require('../dist/config');
 let sessionStore = new MySQLStore({
-    host: config.wiki.db.host,
-    port: config.wiki.db.port,
-    user: config.wiki.db.user,
-    password: config.wiki.db.password,
-    database: config.wiki.db.database,
+    host: config.db.host,
+    port: config.db.port,
+    user: config.db.user,
+    password: config.db.password,
+    database: config.db.database,
     dateStrings: 'date'
 });
 

@@ -286,7 +286,7 @@
 
   $.fn[ pluginName ] = function ( options ) {
 
-    // if options is a public method
+      // if options is a views method
     if( !$.isPlainObject(options) ){
       if( publicMethods.hasOwnProperty(options) ){
         return publicMethods[options].apply(this, Array.prototype.slice.call(arguments, 1));

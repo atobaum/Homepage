@@ -42,7 +42,7 @@ describe('Wiki', function () {
     });
 
     describe('Edit page', () => {
-        it('Edit public page', (done) => {
+        it('Edit views page', (done) => {
             let text = Math.random().toString();
             let minor = Math.random() > 0.5;
             let user = Math.random().toString().substr(8);

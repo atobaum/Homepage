@@ -76,3 +76,4 @@ test.*
 *.spec.js~
 .idea
 !/test/test.spec.js
+/src/config.ts
