@@ -1,21 +1,25 @@
-var gulp = require('gulp');
-var uglify = require('gulp-uglify');
-var cleanCSS = require('gulp-clean-css');
-var nodemon = require('gulp-nodemon');
-var browserSync =  require('browser-sync');
+"use strict";
+let gulp = require('gulp');
+let uglify = require('gulp-uglify');
+let cleanCSS = require('gulp-clean-css');
+let nodemon = require('gulp-nodemon');
+let browserSync = require('browser-sync');
+let ts = require('gulp-typescript');
+let tsProject = ts.createProject('tsconfig.json');
 
-var dir = {
+let dir = {
 	main: './main',
 	bookshelf: './bookshelf',
 	wiki: './wiki'
 };
 
-var src = {
+let src = {
 	main: './main/public',
 	bookshelf: './bookshelf/public',
 	wiki: './wiki/public'
 };
-var dist = 'public';
+
+let dist = 'public';
 //...
 gulp.task('browser-sync', function(){
     browserSync.init(null, {
@@ -25,11 +29,22 @@ gulp.task('browser-sync', function(){
     });
 });
 
+gulp.task('typescript', () => {
+    return tsProject.src()
+        .pipe(tsProject())
+        .js.pipe(gulp.dest('dist'));
+});
+
+gulp.task('copy-js', () => {
+    return gulp.src(['src/**/*.js'])
+        .pipe(gulp.dest('dist'));
+});
+
 gulp.task('start', [], function(){
 	return nodemon({
 			script: './bin/www',
 			ext: 'js',
-			watch: [dir.bookshelf, dir.bookshelf+'/libs', dir.main, dir.main+'/libs', dir.wiki, dir.wiki+'/libs']
+        watch: [dir.bookshelf, dir.bookshelf + '/libs', dir.main, dir.main + '/libs', dir.wiki, dir.wiki + '/libs', 'src']
 	});
 });
 
@@ -65,7 +80,8 @@ gulp.task('watch', function(){
 	gulp.watch(src.bookshelf+'/css/*.css', ['uglify-css']);
 	gulp.watch(src.wiki+'/js/*.js', ['uglify-js']);
 	gulp.watch(src.wiki+'/css/*.css', ['uglify-css']);
+    gulp.watch('src/**/*.ts', ['typescript']);
+    gulp.watch('src/**/*.js', ['copy-js']);
 });
 
-
-gulp.task('default', ['uglify-js', 'uglify-css', 'watch', 'start']);
+gulp.task('default', ['typescript', 'copy-js', 'uglify-js', 'uglify-css', 'watch', 'start']);

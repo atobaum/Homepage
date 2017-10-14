@@ -34,7 +34,9 @@
     "gulp": "^3.9.1",
     "gulp-clean-css": "^3.0.4",
     "gulp-nodemon": "^2.2.1",
+    "gulp-typescript": "^3.2.2",
     "gulp-uglify": "^2.1.2",
-    "mocha": "^3.4.2"
+    "mocha": "^3.4.2",
+    "typescript": "^2.5.3"
   }
 }
