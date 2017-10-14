@@ -5,6 +5,7 @@
 
 let Lexer = require('./lexer');
 let Renderer = require('./renderer');
+let Components = require('./Components');
 
 class Parser {
     constructor(wiki) {
@@ -90,7 +91,6 @@ class Parser {
     async out(src, ns, pageTitle) {
         this.renderer.ns = ns;
         let env = {heading: new Heading({level: 0}), footnote: [], existingPages: [], category: []};
-
         let [toks, info] = Lexer.scan(src, ns);
 
         info.link = info.link.map(item => {

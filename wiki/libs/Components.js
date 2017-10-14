@@ -25,6 +25,26 @@ let Token = class {
 };
 
 module.exports.Token = Token;
+class Env {
+    constructor(wiki) {
+        this.wiki = wiki;
+    }
+}
+
+class LinkEnv extends Env {
+    constructor(wiki) {
+        super(wiki);
+        this.link = [];
+    }
+
+    preprocess() {
+
+    }
+
+    add(link) {
+        this.link.push(link);
+    }
+}
 
 class MacroManager {
     constructor() {
@@ -219,17 +239,24 @@ module.exports.TOC = class TOC extends Token {
 
     createSection(toks, level) {
         let section = new Section(toks, level);
-        this.curSection = this.curSection._addSection(section);
+        while (this.curSection.level >= section.level) {
+            this.curSection = this.curSection.parent;
+        }
+        section.parent = this.curSection;
+        section.index = this.curSection.subsection.length;
+        this.curSection.subsection.push(section);
+        this.curSection = section;
         return this.curSection;
     }
 
     render() {
+        this.curSection.root.renderTOC()
 
     }
 
 };
 
-module.exports.Section = class Section extends Token {
+class Section extends Token {
     constructor(toks, level) {
         super(toks);
         // this.parent = null;
@@ -239,25 +266,13 @@ module.exports.Section = class Section extends Token {
     }
 
     get indexList() {
-        if (this.parent === null) return [];
+        if (this.parent.level === 0) return [this.index];
         else return [...this.parent.indexList, this.index];
     }
 
     get root() {
         if (this.parent) return this.parent.root;
         else return this;
-    }
-
-    addSubsection(section) {
-        section.index = this.subsection.length;
-        section.parent = this;
-        this.subsection.push(section);
-        return section;
-    }
-
-    _addSection(section) {
-        if (this.level < section.level) return this.addSubsection(section);
-        else return this.parent._addSection(section);
     }
 
     render() {
@@ -274,8 +289,20 @@ module.exports.Section = class Section extends Token {
             + indexList.length
             + '>';
     }
-};
 
+    renderTOC() {
+        let result = '';
+        if (this.level !== 0) {
+            result = `<li id="rh_${this.indexList.join('_')}">${this.indexList.join('.')} <a href="#h_${this.indexList.join('_')}">${this.plainText}</a>`;
+        }
+        if (this.subsection.length > 0) {
+            result += '<ol>';
+            result += this.subsection.reduce((str, sec) => str + sec.renderTOC(), '');
+            result += '</ol>';
+        }
+        return result;
+    }
+}
 module.exports.List = class List extends Token {
     constructor(toks, ordered, level) {
         super(toks);

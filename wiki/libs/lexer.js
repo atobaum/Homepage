@@ -22,14 +22,16 @@ let blocks = {
 
 class Lexer {
     static scan(src) {
-        let toks = [];
+        let TOC = new Components.TOC();
+        let toks = [TOC];
         let pages = [];
         let cap, subToks;
         while (src) {
             //heading
             if (cap = blocks.heading.exec(src)) {
                 subToks = InlineLexer.scan(cap[2], pages);
-                toks.push({type: 'heading', level: cap[1].length - 1, toks: subToks});
+                // toks.push({type: 'heading', level: cap[1].length - 1, toks: subToks});
+                toks.push(TOC.createSection(subToks, cap[1].length - 1));
                 src = src.substr(cap[0].length);
                 continue;
             }

@@ -179,8 +179,6 @@ class InlineLexer {
             });
             break;
         }
-
-        console.log(toks);
         return new Components.Token(toks);
     }
 }
