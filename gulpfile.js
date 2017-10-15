@@ -61,7 +61,7 @@ gulp.task('uglify-js', [], function(){
     // 	.pipe(gulp.dest(dist+'/js/wiki'));
     gulp.src('src/views/**/*.js')
         .pipe(uglify())
-        .pipe(gulp.dest('public'))
+        .pipe(gulp.dest('public/js'))
 });
 
 gulp.task('uglify-css', [], function(){
@@ -76,7 +76,7 @@ gulp.task('uglify-css', [], function(){
     // 	.pipe(gulp.dest(dist+'/css/wiki'));
     gulp.src('src/views/**/*.css')
         .pipe(cleanCSS())
-        .pipe(gulp.dest('public'))
+        .pipe(gulp.dest('public/css'))
 });
 
 gulp.task('copy-pug', function () {

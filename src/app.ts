@@ -10,10 +10,7 @@ let express = require('express');
 let favicon = require('serve-favicon');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
-let subdomain = require('express-subdomain');
-
 let config = require('./config');
-
 
 let app = express();
 
@@ -31,18 +28,18 @@ if (process.env.NODE_ENV === 'development') {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
-//session setting
+//session setup
 import {SingletonMysql} from "./libs/SingletonMysql";
+//Router setup
 // let bookshelf = require('../routers/bookshelf');
+// app.use('/bookshelf', bookshelf);
 import {WikiRouter} from "./routers/wiki";
 
 
 SingletonMysql.init(config.db);
-let mysqlPool = SingletonMysql.getPool();
 let session = require('express-session');
 let MySQLStore = require('express-mysql-session')(session);
-let sessionStore = new MySQLStore({}, mysqlPool.pool);
-
+let sessionStore = new MySQLStore({}, SingletonMysql.getPool());
 app.use(session({
     secret: 'fdkjl%31nc124*|c',
     resave: false,
@@ -51,8 +48,7 @@ app.use(session({
 }));
 
 
-// app.use('/bookshelf', bookshelf);
-app.use('/wiki', (new WikiRouter(mysqlPool)).getRouter());
+app.use('/wiki', (new WikiRouter()).getRouter());
 
 app.get('/', function (req, res) {
     res.render('index', {session: req.session});

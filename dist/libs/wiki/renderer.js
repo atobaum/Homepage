@@ -3,8 +3,7 @@
  */
 "use strict";
 let katex = require("katex");
-
-class Renderer{
+class Renderer {
     constructor() {
         this._ns = null;
     }
@@ -14,15 +13,15 @@ class Renderer{
         else this._ns = ns;
     }
 
-    blockquote(tok){
+    blockquote(tok) {
         let title = tok.title ? `<h4 class="header">${tok.title}</h4>` : '';
         let ref = tok.ref ? `<p class="wiki_quote_ref">${tok.ref}</p>` : '';
         return `<blockquote class="ui raised segment">${title}<p>${tok.text}</p>${ref}</blockquote>`
     };
 
-    escapeHTML(str){
+    escapeHTML(str) {
         "use strict";
-        return str.replace(/[&<"']/g, function(m) {
+        return str.replace(/[&<"']/g, function (m) {
             switch (m) {
                 case '&':
                     return '&amp;';
@@ -42,7 +41,7 @@ class Renderer{
         return '<h'
             + (indexList.length)
             + ' class="ui dividing header" id="'
-            + "h_"+ formatedLevel
+            + "h_" + formatedLevel
             + '">'
             + `<a href="#rh_${formatedLevel}">${indexList.join('.')}</a> `
             + data.content.text
@@ -51,8 +50,8 @@ class Renderer{
             + '>';
     };
 
-    italicbold(data){
-        return '<b><i>'+data.text+'</i></b>';
+    italicbold(data) {
+        return '<b><i>' + data.text + '</i></b>';
     };
 
     // italic(data){
@@ -87,7 +86,7 @@ class Renderer{
         let regexTitle = /^(?:(.*?):)?(.+?)(?:#(.*))?$/;
         let parsedHref = regexTitle.exec(data.href);
         let href = parsedHref[2];
-        if(parsedHref[1]){//Namespace exists
+        if (parsedHref[1]) {//Namespace exists
             href = parsedHref[1] + ':' + href;
         } else if (parsedHref[1] === undefined && this._ns) {
             href = this._ns + ':' + href;
@@ -114,11 +113,11 @@ class Renderer{
     //     return result;
     // };
 
-    text(data){
+    text(data) {
         return data.text;
     };
 
-    KaTeX(tok){
+    KaTeX(tok) {
         try {
             return katex.renderToString(tok.text, {displayMode: tok.displayMode});
         } catch (e) {
@@ -128,21 +127,21 @@ class Renderer{
 
 
     //footnote reference
-    rfn(data){
+    rfn(data) {
         return `<sup id="rfn_${data.index}"><a href="#fn_${data.index}">[${data.index}]</a></sup>`;
     };
 
-    footnotes(footnotes){
+    footnotes(footnotes) {
         let result = '<hr><ul class="wiki_fns">';
-        footnotes.forEach(function(fn, index){
+        footnotes.forEach(function (fn, index) {
             result += `<li><a class="wiki_fn" id="fn_${index}" href="#rfn_${index}">[${index}]</a> ${fn.text}</li>`;
         });
         result += "</ul>";
         return result;
     };
 
-    paragraph(data){
-        return '<p>'+data.text+'</p>';
+    paragraph(data) {
+        return '<p>' + data.text + '</p>';
     };
 
     // emptyline(data){
@@ -153,12 +152,12 @@ class Renderer{
     //     return '<hr />';
     // }
 
-    list(list, notFirst){
+    list(list, notFirst) {
         let ordered = list[0].ordered;
         let result = !notFirst ? '<div class="wiki_list">' : '';
         result += `<${ordered ? 'o' : 'u'}l ${!notFirst ? 'class = "ui list"' : ''}>`;
 
-        for(let i = 0; i < list.length; i++){
+        for (let i = 0; i < list.length; i++) {
             let item = list[i];
             result += `<li>${item.text + (item.child ? this.list(item.child, 1) : '')}</li>`;
         }
@@ -180,23 +179,23 @@ class Renderer{
         return result;
     };
 
-    cat(categories){
+    cat(categories) {
         "use strict";
         let result = '';
-        categories.forEach((item)=>{
+        categories.forEach((item) => {
             result += `<a class="ui horizontal label" href="/wiki/view/Category:${item}">${item}</a>`
         });
-        return '<div class="wiki-cat ui segment">카테고리: '+result+'</div>';
+        return '<div class="wiki-cat ui segment">카테고리: ' + result + '</div>';
     };
 
-    syntax(tok){
-        let result = "<pre class='wiki-syntaxhl line-numbers"+(tok.param ? " language-"+tok.param : "")+"'><code>";
+    syntax(tok) {
+        let result = "<pre class='wiki-syntaxhl line-numbers" + (tok.param ? " language-" + tok.param : "") + "'><code>";
         result += tok.text;
         result += "</code></pre>";
         return result;
     };
 
-    error(tok){
+    error(tok) {
         return `<div class="ui negative message"><div class="header">${tok.name}</div><p>${tok.text}</p></div>`
     };
 
@@ -216,8 +215,8 @@ class Renderer{
     //     return result + '</table>';
     // };
 
-    title(pageTitle){
-        return `<h1 class="wiki_title">${(this._ns ? this._ns + ':' : '')+pageTitle}</h1>`;
+    title(pageTitle) {
+        return `<h1 class="wiki_title">${(this._ns ? this._ns + ':' : '') + pageTitle}</h1>`;
     };
 
     pageList(catTitle, pageList) {
