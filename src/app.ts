@@ -1,28 +1,27 @@
 "use strict";
-
+require('source-map-support').install();
 if (!process.env.NODE_ENV) {
     console.log('NODE_ENV is undefined. Set to development.');
 }
 
 //process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'development' ) ? 'development' : 'production';
-//process.env.NODE_ENV = "development";
-global.env = process.env.NODE_ENV;
 let express = require('express');
 //var path = require('path');
 let favicon = require('serve-favicon');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
 let subdomain = require('express-subdomain');
-let mysql = require('mysql');
 
-// let bookshelf = require('../bookshelf/app');
-// let wiki = require('../wiki/app');
+let config = require('./config');
+
 
 let app = express();
+
 // view engine setup
 app.set('views', __dirname + '/views');
 app.set('view engine', 'pug');
 
+// middleware setup
 // app.use(favicon(__dirname + '/../views/' + 'favicon.ico'));
 app.use(express.static(__dirname + '/../public'));
 if (process.env.NODE_ENV === 'development') {
@@ -32,19 +31,17 @@ if (process.env.NODE_ENV === 'development') {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
-
 //session setting
+import {SingletonMysql} from "./libs/SingletonMysql";
+// let bookshelf = require('../routers/bookshelf');
+import {WikiRouter} from "./routers/wiki";
+
+
+SingletonMysql.init(config.db);
+let mysqlPool = SingletonMysql.getPool();
 let session = require('express-session');
 let MySQLStore = require('express-mysql-session')(session);
-let config = require('../dist/config');
-let sessionStore = new MySQLStore({
-    host: config.db.host,
-    port: config.db.port,
-    user: config.db.user,
-    password: config.db.password,
-    database: config.db.database,
-    dateStrings: 'date'
-});
+let sessionStore = new MySQLStore({}, mysqlPool.pool);
 
 app.use(session({
     secret: 'fdkjl%31nc124*|c',
@@ -55,7 +52,7 @@ app.use(session({
 
 
 // app.use('/bookshelf', bookshelf);
-// app.use('/wiki', wiki);
+app.use('/wiki', (new WikiRouter(mysqlPool)).getRouter());
 
 app.get('/', function (req, res) {
     res.render('index', {session: req.session});
@@ -70,27 +67,27 @@ app.get('/auth/logout', function (req, res) {
     res.redirect(req.header('Referer'));
 });
 
-app.get('/api/auth/login', function (req, res) {
-    wiki.login(req.query.id, req.query.password)
-        .then(([result, user]) => {
-            if (result == 1) {
-                let sess = req.session;
-                sess.userId = user.user_id;
-                sess.userNickname = user.nickname;
-                sess.userAdmin = user.admin;
-                if (req.query.autoLogin == "true")
-                    sess.cookie.maxAge = 1000 * 60 * 60 * 24 * 7; //7 days
-            }
-            res.json({ok: result});
-        })
-        .catch(e => {
-            res.json({ok: 0, error: err});
-        });
-});
+// app.get('/api/auth/login', function (req, res) {
+//     wiki.login(req.query.id, req.query.password)
+//         .then(([result, user]) => {
+//             if (result == 1) {
+//                 let sess = req.session;
+//                 sess.userId = user.user_id;
+//                 sess.userNickname = user.nickname;
+//                 sess.userAdmin = user.admin;
+//                 if (req.query.autoLogin == "true")
+//                     sess.cookie.maxAge = 1000 * 60 * 60 * 24 * 7; //7 days
+//             }
+//             res.json({ok: result});
+//         })
+//         .catch(e => {
+//             res.json({ok: 0, error: err});
+//         });
+// });
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-    let err = new Error('Not Found');
+    let err: any = new Error('Not Found');
     err.status = 404;
     next(err);
 });
