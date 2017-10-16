@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const promiseMysql = require('promise-mysql');
 import * as mysql from "mysql";
+import {IConnection} from "mysql";
 export class SingletonMysql {
     private constructor() {
     };
@@ -42,7 +42,7 @@ export class SingletonMysql {
         })
     }
 
-    public static async queries<T>(work: (conn: mysql.IConnection) => Promise<T>): Promise<T> {
+    public static async queries<T>(work: (conn: IConnection) => Promise<T>): Promise<T> {
         let conn = await SingletonMysql.getConn().catch(e => {
             throw e;
         });
@@ -53,13 +53,13 @@ export class SingletonMysql {
         return result;
     }
 
-    public static transaction<T>(work: (conn: mysql.IConnection) => Promise<T>): Promise<T> {
+    public static transaction<T>(work: (conn: IConnection) => Promise<T>): Promise<T> {
         return new Promise((resolve, reject) => {
             SingletonMysql.getConn()
                 .catch(e => {
                     reject(e);
                 })
-                .then(conn => {
+                .then((conn: IConnection) => {
                     conn.beginTransaction(e => {
                         if (e) {
                             conn.release();
@@ -73,7 +73,7 @@ export class SingletonMysql {
                                         reject(e);
                                     })
                                 })
-                                .then(result => {
+                                .then((result: any) => {
                                     conn.commit(e => {
                                         if (e) conn.rollback(() => {
                                             conn.release();
