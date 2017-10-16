@@ -2,7 +2,7 @@
  * Created by Le Reveur on 2017-05-03.
  */
 import * as Components from "./Components";
-import {ETokenType, InlineToken, IToken} from "./Components";
+import {ETokenType, InlineToken} from "./Components";
 import {EnvManager} from "./EnvManager";
 
 let inlineTockens: [[ETokenType, RegExp]] = [
@@ -29,7 +29,7 @@ let inlineTockens: [[ETokenType, RegExp]] = [
 let linkSyntax = /^(?:(.*?):)?(.*?)(\#[^\#]+?)?$/;
 
 export abstract class Lexer {
-    TokenList: [[ETokenType, RegExp, (cap: string[], type: ETokenType) => IToken]];
+    TokenList: [[ETokenType, RegExp]];
     envManager: EnvManager;
 
     constructor(envManager: EnvManager) {

@@ -1,7 +1,7 @@
 /**
  * Created by Le Reveur on 2017-10-16.
  */
-import {InlineToken, IToken, Macro} from "../Components";
+import {BlockToken, InlineToken, IToken, Macro} from "../Components";
 export class Text extends InlineToken {
     constructor(text) {
         super([text]);
@@ -61,13 +61,48 @@ export class TagDecorator extends InlineToken {
     }
 }
 
+export class Line extends BlockToken {
+    constructor(toks) {
+        super(toks);
+    }
+
+    render() {
+        return this.renderContent();
+    }
+}
+
 export class EmptyLine extends Macro {
     render() {
+        return '';
     }
 
     plainText() {
+        return '';
     }
 
+}
+
+export class Section extends BlockToken {
+    index: number[];
+
+    constructor(index, toks) {
+        super(toks);
+        this.index = index;
+    }
+
+    render() {
+        let formattedLevel = this.index.join('_');
+        return '<h'
+            + this.index.length
+            + ' class="ui dividing header" id="'
+            + "h_" + formattedLevel
+            + '">'
+            + `<a href="#rh_${formattedLevel}">${this.index.join('.')}</a> `
+            + this.renderContent()
+            + '</h'
+            + this.index.length
+            + '>';
+    }
 }
 
 export class Error extends InlineToken {

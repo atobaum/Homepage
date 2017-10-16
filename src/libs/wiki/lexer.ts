@@ -8,7 +8,7 @@ import {ETokenType} from "./Components";
 import {EnvManager} from "./EnvManager";
 
 let blockTokens = [
-    // [ETokenType.SECTION, /^(={2,6}) (.+) ={2,6}\s*(\r?\n|$)/],
+    [ETokenType.SECTION, /^(={2,6}) (.+) ={2,6}\s*(\r?\n|$)/],
     [ETokenType.LI, /^(\s+)([*-]) (.+)(\r?\n|$)/],
     // [ETokenType.INDENT, /^:{1,}(.+)(\r?\n|$)/],
     [ETokenType.HR, /^-{3,}\s*(\r?\n|$)/],
@@ -19,8 +19,9 @@ let blockTokens = [
     // [ETokenType.PARAGRAPH, /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/],
     // [ETokenType.MACRO, /^{{(\S*?)(?:\((\S*?)\))?\s+([\s\S]*?)}}/],
     [ETokenType.COMMENT, /^## .*(\r?\n|$)/],
-    [ETokenType.BLOCKLATEX, /^\$\$([^\$]+?)\$\$/]
-];
+    [ETokenType.BLOCKLATEX, /^\$\$([^\$]+?)\$\$/],
+    [ETokenType.LINETEXT, /^(.*?)(?:r?\n|$)/]
+] as [[ETokenType, RegExp]];
 
 export class BlockLexer extends InlineLexer.Lexer {
     TokenList = blockTokens;
@@ -28,12 +29,13 @@ export class BlockLexer extends InlineLexer.Lexer {
 
     constructor(envManager: EnvManager) {
         super(envManager);
+        this.inlineLexer = new InlineLexer.InlineLexer(envManager);
     }
 
     makeToken(type, cap): Components.IToken {
         switch (type) {
             case ETokenType.SECTION:
-                return this.envManager.makeToken(type, cap);
+                return this.envManager.makeToken(type, [cap[1].length - 1, this.inlineLexer.scan(cap[2])]);
 
             case ETokenType.EMPTYLINE:
                 return new Components.EmptyLine();
@@ -61,6 +63,9 @@ export class BlockLexer extends InlineLexer.Lexer {
 
             case ETokenType.MACRO:
                 throw new Error('');
+
+            case ETokenType.LINETEXT:
+                return new Components.Line(this.inlineLexer.scan(cap[1]));
         }
     }
 }
