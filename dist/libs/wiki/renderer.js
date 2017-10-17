@@ -170,9 +170,11 @@ class Renderer {
         let result = first ? '<div class="ui segment compact wiki_toc">' : '';
         result += `<ol class="${first ? '' : ''}">`;
         toks.forEach(item => {
-            result += '<li id="rh_' + item.indexList.join('_') + '">' + item.indexList.join('.') + ' <a  href="#h_' + item.indexList.join('_') + '">' + item.content.plainText + '</a>';
-            if (item.child.length !== 0) result += this.toc(item.child, false);
-            result += '</li>';
+            if (item.indexList.length < 4) {
+                result += '<li id="rh_' + item.indexList.join('_') + '">' + item.indexList.join('.') + ' <a  href="#h_' + item.indexList.join('_') + '">' + item.content.plainText + '</a>';
+                if (item.child.length !== 0) result += this.toc(item.child, false);
+                result += '</li>';
+            }
         });
         result += '</ol>';
         result += (first ? '</div>' : '');

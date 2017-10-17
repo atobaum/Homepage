@@ -58,7 +58,6 @@ class Line extends Components_1.BlockToken {
     constructor(toks) {
         super(toks);
     }
-
     render() {
         return this.renderContent();
     }
@@ -78,7 +77,6 @@ class Section extends Components_1.BlockToken {
         super(toks);
         this.index = index;
     }
-
     render() {
         let formattedLevel = this.index.join('_');
         return '<h'

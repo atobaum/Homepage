@@ -106,7 +106,6 @@ class Parser {
         return {title: title, ref: ref, text: text};
     }
     ;
-
     out(src, ns, pageTitle) {
         return __awaiter(this, void 0, void 0, function*() {
             this.renderer.ns = ns;

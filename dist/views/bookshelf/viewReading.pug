@@ -1,0 +1,74 @@
+extends ../layout
+
+block head
+    script(src='/js/bookshelf/jquery.star-rating-svg.js')
+    script(src='/js/bookshelf/viewReading.js')
+    link(rel="stylesheet" type="text/css" href="/css/bookshelf/star-rating-svg.css")
+    title 읽은 책 - 한지토리
+
+block content
+    - if(book = reading.book){
+    #book_panel.ui.segment(style='height:150px')
+        div(style="float:left")
+            img#book_cover(src=book.cover_URL)
+        .ui.list(style="float:left; margin:15px")
+            .item#book_title
+                strong #{book.title}
+            .item#book_authors #{book.formatted_authors}
+            .item#book_publish #{book.publisher} | #{book.published_date}
+    - } else{
+    .ui.negative.message
+        .header 책이 데이터베이스에 없습니다.
+        p 책(ISBN #{book_id})을 #[a(href="/bookshelf/add/book?isbn13="+book_id) 추가] 해주세요.
+    - }
+    form.ui.form.segment(method='post', action='/bookshelf/reading/edit', id="input_form")
+        input(type="hidden", name="id", id="form_id", value=reading.id)
+        input(type="hidden", name="rating", id="form_rating", value=reading.rating)
+        input(type="hidden", name="is_secret", id="form_secret", value=reading.rating)
+        input(type="hidden", name="password", id="form_password", value=reading.rating)
+        .fields.inline
+            .field
+                label 읽은 날짜
+                input(type="date", name="date_started", id="form_date_started", value=reading.date_started, readonly)
+            .field
+                label ~
+            .field
+                input(type="date", name="date_finished", id="form_date_finished", value=reading.date_finished, readonly)
+
+        .field
+            label 평점
+            .rating#form_rating
+        .field(style=(reading.hideComment ? "display: none" : ''))
+            label 후기
+            textarea(name='comment', id='form_comment', readonly) #{reading.comment}
+        #is_secret.inline.field(style="display:none")
+            .ui.toggle.checkbox
+                input(type="checkbox", tabindex="0", readonly)
+                label 비밀
+        .field
+            label 읽은 사람
+            a(href="#", id="form_user") #{reading.user}
+
+        -if(!session.userId){
+        .field.inline
+            label 비밀번호
+            input(type="text", id="password")
+        -}
+        .ui.buttons
+            button#mod_btn.ui.button.yellow(type='button') 수정
+            button#del_btn.ui.button.negative(type='button') 삭제
+        .ui.buttons(style="display:none")
+            button#ok_btn.ui.button.positive(type='button') 완료
+            button#can_btn.ui.button.negative(type='reset') 취소
+
+    script.
+        if (#{reading.is_secret}) {
+            $('#is_secret input').prop('checked', true);
+        }
+        $('.rating').starRating({
+            starShape: 'rounded',
+            starSize: 25,
+            disableAfterRate: false,
+            readOnly: true,
+            initialRating: #{reading.rating} / 2
+        });

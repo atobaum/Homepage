@@ -8,7 +8,12 @@ export class Page {
     private originalText: string;
     private parsedText: string;
 
-    constructor(title?: string) {
+    constructor(fulltitle: string) {
+        if (!fulltitle) throw new Error("Error: title should be not empty.")
+
+    }
+
+    static parseTitle(fulltitle) {
 
     }
 
