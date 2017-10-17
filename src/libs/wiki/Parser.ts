@@ -89,6 +89,7 @@ class Parser {
     };
 
     async out(src, ns, pageTitle) {
+
         this.renderer.ns = ns;
         let env = {heading: new Heading({level: 0}), footnote: [], existingPages: [], category: []};
         let [toks, info] = Lexer.scan(src, ns);
@@ -252,6 +253,7 @@ class Heading {
         node.index = this.child.length;
         this.child.push(node);
         return this.child[this.child.length - 1];
+
     }
 
     addHeading(heading) {

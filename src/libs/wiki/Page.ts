@@ -12,11 +12,11 @@ export class Page {
 
     }
 
-    async clearCache(): Promise<boolean> {
-
+    async clearCache(): Promise<void> {
+        return
     }
 
-    async save(): Promise<boolean> {
-
+    async save(): Promise<void> {
+        return
     }
 }
