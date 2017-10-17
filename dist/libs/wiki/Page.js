@@ -16,10 +16,12 @@ class Page {
     }
     clearCache() {
         return __awaiter(this, void 0, void 0, function* () {
+
         });
     }
     save() {
         return __awaiter(this, void 0, void 0, function* () {
+
         });
     }
 }

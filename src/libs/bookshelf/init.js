@@ -3,7 +3,7 @@
  */
 
 module.exports = function() {
-    var config = require('../config.js');
+    var config = require('./config.js');
     var dbInit = require('./db_init.js');
     dbInit(config.db, function (err) {
         if (err) {
@@ -12,4 +12,4 @@ module.exports = function() {
             console.log("Initialization is done");
         }
     });
-}
+};

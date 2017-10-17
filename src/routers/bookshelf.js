@@ -5,11 +5,11 @@ const async = require('async');
 //var favicon = require('serve-favicon');
 //var cookieParser = require('cookie-parser');
 //var bodyParser = require('body-parser');
-let config = require('./config.js'); //development: development, dist: real service
-let aladin = require('./libs/aladin.js');
+let config = require('../libs/bookshelf/config.js'); //development: development, dist: real service
+let aladin = require('../libs/bookshelf/aladin.js');
 aladin = new aladin(config.api.aladin);
 
-let dbController = require('./libs/db_controller.js');
+let dbController = require('../libs/bookshelf/db_controller.js');
 dbController = new dbController(config.db);
 
 let app = express();

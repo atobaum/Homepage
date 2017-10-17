@@ -54,13 +54,46 @@ class TagDecorator extends Components_1.InlineToken {
     }
 }
 exports.TagDecorator = TagDecorator;
+class Line extends Components_1.BlockToken {
+    constructor(toks) {
+        super(toks);
+    }
+
+    render() {
+        return this.renderContent();
+    }
+}
+exports.Line = Line;
 class EmptyLine extends Components_1.Macro {
     render() {
+        return '';
     }
     plainText() {
+        return '';
     }
 }
 exports.EmptyLine = EmptyLine;
+class Section extends Components_1.BlockToken {
+    constructor(index, toks) {
+        super(toks);
+        this.index = index;
+    }
+
+    render() {
+        let formattedLevel = this.index.join('_');
+        return '<h'
+            + this.index.length
+            + ' class="ui dividing header" id="'
+            + "h_" + formattedLevel
+            + '">'
+            + `<a href="#rh_${formattedLevel}">${this.index.join('.')}</a> `
+            + this.renderContent()
+            + '</h'
+            + this.index.length
+            + '>';
+    }
+}
+exports.Section = Section;
 class Error extends Components_1.InlineToken {
     constructor(title, text) {
         super([title, text]);

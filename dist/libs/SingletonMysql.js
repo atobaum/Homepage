@@ -11,7 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const promiseMysql = require('promise-mysql');
 const mysql = require("mysql");
 class SingletonMysql {
     constructor() {
@@ -64,7 +63,7 @@ class SingletonMysql {
                 .catch(e => {
                 reject(e);
             })
-                .then(conn => {
+                .then((conn) => {
                 conn.beginTransaction(e => {
                     if (e) {
                         conn.release();
@@ -78,7 +77,7 @@ class SingletonMysql {
                                 reject(e);
                             });
                         })
-                            .then(result => {
+                            .then((result) => {
                             conn.commit(e => {
                                 if (e)
                                     conn.rollback(() => {

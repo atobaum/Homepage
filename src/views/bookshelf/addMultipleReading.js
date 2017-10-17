@@ -111,8 +111,7 @@ function check_form(){
     if($('#form_book').val().length === 0){
         message += '책을 선택하세요. ';
         result = false;
-    };
-
+    }
     if(!result){
         //$('.ui.message .header').text('어딘가 비어있는 폼.');
         $('.ui.message p').text(message);

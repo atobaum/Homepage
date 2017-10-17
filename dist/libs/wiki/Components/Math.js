@@ -10,7 +10,6 @@ class Math extends Components_1.InlineToken {
     constructor(text, displayMode) {
         super([text, displayMode]);
     }
-
     render() {
         try {
             return katex.renderToString(this.params[0], {displayMode: this.params[1]});
@@ -19,7 +18,6 @@ class Math extends Components_1.InlineToken {
             return (new Basic_1.Error('KaTeX Error', e.message)).render();
         }
     }
-
     plainText() {
         return this.params[0];
     }
