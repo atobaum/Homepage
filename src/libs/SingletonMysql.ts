@@ -5,7 +5,7 @@
 
 import * as mysql from "mysql";
 import {IConnection} from "mysql";
-export class SingletonMysql {
+export default class SingletonMysql {
     private constructor() {
     };
 
