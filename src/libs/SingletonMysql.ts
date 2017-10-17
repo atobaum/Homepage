@@ -3,91 +3,67 @@
  */
 "use strict";
 
-import * as mysql from "mysql";
-import {IConnection} from "mysql";
+let mysql2 = require('mysql2/promise');
 export default class SingletonMysql {
     private constructor() {
     };
 
-    private static _instance: mysql.IPool = null;
+    private static pool = null;
 
     private static checkInit(): void {
-        if (SingletonMysql._instance === null)
+        if (SingletonMysql.pool === null)
             throw new Error("Error: initiate pool first. Use SingletonMysql.init(config)");
     }
 
-    public static init(config: mysql.IPoolConfig): void {
-        if (SingletonMysql._instance)
+    public static init(config): void {
+        if (SingletonMysql.pool)
             throw new Error("Error: already initiated. use SingletonMysql.getPool().");
         else
-            SingletonMysql._instance = mysql.createPool(config);
+            SingletonMysql.pool = mysql2.createPool(config);
     }
 
-    public static getPool(): mysql.IPool {
+    public static getPool() {
         SingletonMysql.checkInit();
-        return SingletonMysql._instance;
+        return SingletonMysql.pool;
     }
 
     /**
      * @async
      * @returns {Promise<IConnection>}
      */
-    public static getConn(): Promise<mysql.IConnection> {
+    static getConn() {
         SingletonMysql.checkInit();
-        return new Promise((resolve, reject) => {
-            SingletonMysql._instance.getConnection((err, conn) => {
-                if (err) reject(err);
-                else resolve(conn);
-            })
-        })
+        return SingletonMysql.pool.getConnection();
     }
 
-    public static async queries<T>(work: (conn: IConnection) => Promise<T>): Promise<T> {
-        let conn = await SingletonMysql.getConn().catch(e => {
+    static async queries<T>(work: (conn) => Promise<T>): Promise<T> {
+        let conn, result;
+        try {
+            conn = await SingletonMysql.getConn();
+            result = await work(conn);
+        } catch (e) {
             throw e;
-        });
-        let result = await work(conn).catch(e => {
-            throw e;
-        });
-        conn.release();
+        } finally {
+            conn.release();
+        }
         return result;
     }
 
-    public static transaction<T>(work: (conn: IConnection) => Promise<T>): Promise<T> {
-        return new Promise((resolve, reject) => {
-            SingletonMysql.getConn()
-                .catch(e => {
-                    reject(e);
-                })
-                .then((conn: IConnection) => {
-                    conn.beginTransaction(e => {
-                        if (e) {
-                            conn.release();
-                            reject(e);
-                        }
-                        else {
-                            work(conn)
-                                .catch(e => {
-                                    conn.rollback(() => {
-                                        conn.release();
-                                        reject(e);
-                                    })
-                                })
-                                .then((result: any) => {
-                                    conn.commit(e => {
-                                        if (e) conn.rollback(() => {
-                                            conn.release();
-                                            reject(e);
-                                        });
-                                        else {
-                                            conn.release();
-                                            resolve(result);
-                                        }
-                                    });
-                                });
-                        }
-                    })
-                });
+    static async transaction<T>(work: (conn) => Promise<T>): Promise<T> {
+        let conn: any = await SingletonMysql.getConn().catch(e => {
+            throw e;
         });
+        let result;
+        try {
+            await conn.beginTransaction();
+            result = await work(conn);
+            await conn.commit();
+        } catch (e) {
+            await conn.rollback();
+            conn.release();
+            throw e;
+        }
+        conn.release();
+        return result;
     }
 }

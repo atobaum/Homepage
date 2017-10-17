@@ -29,7 +29,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 //session setup
-import {SingletonMysql} from "./libs/SingletonMysql";
+import SingletonMysql from "./libs/SingletonMysql";
 //Router setup
 // let bookshelf = require('../routers/bookshelf');
 // app.use('/bookshelf', bookshelf);
@@ -39,7 +39,7 @@ import {WikiRouter} from "./routers/wiki";
 SingletonMysql.init(config.db);
 let session = require('express-session');
 let MySQLStore = require('express-mysql-session')(session);
-let sessionStore = new MySQLStore({}, SingletonMysql.getPool());
+let sessionStore = new MySQLStore({}, SingletonMysql.getPool().pool);
 app.use(session({
     secret: 'fdkjl%31nc124*|c',
     resave: false,
