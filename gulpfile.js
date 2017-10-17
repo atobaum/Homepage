@@ -1,33 +1,11 @@
 "use strict";
+let path = require('path');
 let gulp = require('gulp');
 let uglify = require('gulp-uglify');
 let cleanCSS = require('gulp-clean-css');
 let nodemon = require('gulp-nodemon');
-let browserSync = require('browser-sync');
 let ts = require('gulp-typescript');
 let tsProject = ts.createProject('tsconfig.json');
-
-// let dir = {
-//     main: './main',
-//     bookshelf: './bookshelf',
-//     wiki: './wiki'
-// };
-//
-// let src = {
-//     main: './main/views',
-//     bookshelf: './bookshelf/views',
-//     wiki: './wiki/views'
-// };
-//
-// let dist = 'views';
-//...
-// gulp.task('browser-sync', function(){
-//     browserSync.init(null, {
-//         proxy: "http://localhost:3000",
-//         files: ["./views", dir.bookshelf+'/views', dir.main+'/views', dir.wiki+'/views'],
-//         port: 7000
-//     });
-// });
 
 gulp.task('typescript', () => {
     return tsProject.src()
@@ -87,8 +65,17 @@ gulp.task('copy-pug', function () {
 gulp.task('watch', function(){
     gulp.watch('src/views/**/*.js', ['uglify-js']);
     gulp.watch('src/views/**/*.css', ['uglify-css']);
-    gulp.watch('src/**/*.ts', ['typescript']);
-    gulp.watch('src/**/*.js', ['copy-js']);
+    gulp.watch('src/**/*.ts', evt => {
+        return gulp.src(evt.path)
+            .pipe(tsProject())
+            .js.pipe(gulp.dest(path.parse(evt.path).dir.replace('src', 'dist')));
+    });
+
+    gulp.watch(['src/**/*.js', '!src/views/**/*.js'], evt => {
+        return gulp.src(evt.path)
+            .pipe(gulp.dest(evt.path.replace('src', 'dist')));
+    });
+
     gulp.watch('src/**/*.pug', ['copy-pug']);
 });
 
