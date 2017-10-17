@@ -1,0 +1,10 @@
+extends layout
+
+block head2
+    link(rel="stylesheet" href='/css/wiki/wiki_view.css')
+    title #{wikiTitle} - Wiki
+
+block content
+    - var formatPriType = function(type){switch(type){case 8: return "만들"; case 4: return "읽을"; case 2: return "수정할"; case 1: return "삭제할"}};
+    h1 권한 부족.
+    h2 <span style="color:red;">#{wikiTitle}</span> 을/를 #{formatPriType(priType)} 수 없습니다.

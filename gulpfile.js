@@ -1,71 +1,92 @@
-var gulp = require('gulp');
-var uglify = require('gulp-uglify');
-var cleanCSS = require('gulp-clean-css');
-var nodemon = require('gulp-nodemon');
-var browserSync =  require('browser-sync');
+"use strict";
+let path = require('path');
+let gulp = require('gulp');
+let gutil = require('gulp-util');
+let uglify = require('gulp-uglify');
+let cleanCSS = require('gulp-clean-css');
+let del = require('del');
+let nodemon = require('gulp-nodemon');
+let ts = require('gulp-typescript');
+let tsProject = ts.createProject('tsconfig.json');
 
-var dir = {
-	main: './main',
-	bookshelf: './bookshelf',
-	wiki: './wiki'
-};
-
-var src = {
-	main: './main/public',
-	bookshelf: './bookshelf/public',
-	wiki: './wiki/public'
-};
-var dist = 'public';
-//...
-gulp.task('browser-sync', function(){
-    browserSync.init(null, {
-        proxy: "http://localhost:3000",
-        files: ["./public", dir.bookshelf+'/views', dir.main+'/views', dir.wiki+'/views'],
-        port: 7000
+gulp.task('start', [], function () {
+    return nodemon({
+        script: './bin/www',
+        ext: 'js',
+        watch: ['dist']
     });
 });
-
-gulp.task('start', [], function(){
-	return nodemon({
-			script: './bin/www',
-			ext: 'js',
-			watch: [dir.bookshelf, dir.bookshelf+'/libs', dir.main, dir.main+'/libs', dir.wiki, dir.wiki+'/libs']
-	});
+gulp.task('clean', () => {
+    return del.sync(['dist', 'public/**/*', '!public/semantic', '!public/semantic/**/*', '!public/favicon.ico']);
 });
 
+//server side
+gulp.task('typescript', () => {
+    return tsProject.src()
+        .pipe(tsProject())
+        .js.pipe(gulp.dest('dist'));
+});
+gulp.task('copy-js', () => {
+    return gulp.src(['src/**/*.js', '!src/views/**/*.js'])
+        .pipe(gulp.dest('dist'));
+});
+
+//client side
 gulp.task('uglify-js', [], function(){
-	gulp.src(src.main+'/js/*.js')
-		.pipe(uglify())
-		.pipe(gulp.dest(dist+'/js'));
-    gulp.src(src.bookshelf+'/js/*.js')
+    gulp.src('src/views/**/*.js')
         .pipe(uglify())
-        .pipe(gulp.dest(dist+'/js/bookshelf'));
-	gulp.src(src.wiki+'/js/*.js')
-		.pipe(uglify())
-		.pipe(gulp.dest(dist+'/js/wiki'));
+        .pipe(gulp.dest('public/js'))
 });
-
 gulp.task('uglify-css', [], function(){
-	gulp.src(src.main+'/css/*.css')
-		.pipe(cleanCSS())
-		.pipe(gulp.dest(dist+'/css'));
-	gulp.src(src.bookshelf+'/css/*.css')
+    gulp.src('src/views/**/*.css')
         .pipe(cleanCSS())
-        .pipe(gulp.dest(dist+'/css/bookshelf'));
-	gulp.src(src.wiki +'/css/*.css')
-		.pipe(cleanCSS())
-		.pipe(gulp.dest(dist+'/css/wiki'));
-
+        .pipe(gulp.dest('public/css'))
 });
+gulp.task('copy-pug', function () {
+    gulp.src('src/views/**/*.pug')
+        .pipe(gulp.dest('dist/views'))
+});
+
+function changeDir(evt, from, to) {
+    return path.parse(evt.path).dir.replace(from, to);
+}
+function notify(event) {
+    gutil.log('File', gutil.colors.yellow(event.path), 'was', gutil.colors.magenta(event.type));
+}
 
 gulp.task('watch', function(){
-	gulp.watch(src.main+'/js/*.js', ['uglify-js']);
-	gulp.watch(src.main+'/css/*.css', ['uglify-css']);
-	gulp.watch(src.bookshelf+'/js/*.js', ['uglify-js']);
-	gulp.watch(src.bookshelf+'/css/*.css', ['uglify-css']);
-	gulp.watch(src.wiki+'/js/*.js', ['uglify-js']);
-	gulp.watch(src.wiki+'/css/*.css', ['uglify-css']);
+    //client side
+    gulp.watch('src/views/**/*.js', (evt) => {
+        notify(evt);
+        return gulp.src(evt.path)
+            .pipe(uglify())
+            .pipe(gulp.dest(changeDir(evt, 'src' + path.sep + 'views', 'public' + path.sep + 'js')));
+    });
+    gulp.watch('src/views/**/*.css', (evt) => {
+        notify(evt);
+        return gulp.src(evt.path)
+            .pipe(cleanCSS())
+            .pipe(gulp.dest(changeDir(evt, 'src' + path.sep + 'views', 'public' + path.sep + 'css')));
+    });
+    gulp.watch('src/views/**/*.pug', (evt) => {
+        notify(evt);
+        return gulp.src(evt.path)
+            .pipe(gulp.dest(changeDir(evt, 'src' + path.sep + 'views', 'views')));
+    });
+
+    //server side
+    gulp.watch('src/**/*.ts', evt => {
+        notify(evt);
+        return gulp.src(evt.path)
+            .pipe(tsProject())
+            .js.pipe(gulp.dest(path.parse(evt.path).dir.replace('src', 'dist')));
+    });
+    gulp.watch(['src/**/*.js', '!src/views/**/*.js'], evt => {
+        notify(evt);
+        return gulp.src(evt.path)
+            .pipe(gulp.dest(evt.path.replace('src', 'dist')));
+    });
 });
+gulp.task('compile', ['typescript', 'copy-js', 'uglify-js', 'uglify-css', 'copy-pug']);
 
-
-gulp.task('default', ['uglify-js', 'uglify-css', 'watch', 'start']);
+gulp.task('default', ['watch', 'start']);
