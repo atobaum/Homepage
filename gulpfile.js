@@ -22,7 +22,6 @@ gulp.task('start', [], function(){
     return nodemon({
         script: './bin/www',
         ext: 'js',
-        // watch: [dir.bookshelf, dir.bookshelf + '/libs', dir.main, dir.main + '/libs', dir.wiki, dir.wiki + '/libs', 'src']
         watch: ['dist']
     });
 });
