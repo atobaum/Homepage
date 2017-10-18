@@ -56,12 +56,13 @@ function notify(event) {
 
 gulp.task('watch', function(){
     //client side
-    gulp.watch('src/views/**/*.js', (evt) => {
-        notify(evt);
-        return gulp.src(evt.path)
-            .pipe(uglify())
-            .pipe(gulp.dest(changeDir(evt, 'src' + path.sep + 'views', 'public' + path.sep + 'js')));
-    });
+    // gulp.watch('src/views/**/*.js', (evt) => {
+    //     notify(evt);
+    //     return gulp.src(evt.path)
+    //         .pipe(uglify())
+    //         .pipe(gulp.dest(changeDir(evt, 'src' + path.sep + 'views', 'public' + path.sep + 'js')));
+    // });
+    gulp.watch('src/views/**/*.js', ['uglify-js']);
     gulp.watch('src/views/**/*.css', (evt) => {
         notify(evt);
         return gulp.src(evt.path)

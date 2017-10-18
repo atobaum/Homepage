@@ -1,5 +1,6 @@
 "use strict";
 import * as express from "express";
+import Page from "../libs/wiki/Page";
 
 export class WikiRouter {
     private router: express.Router;
@@ -36,33 +37,38 @@ export class WikiRouter {
 //                 });
 //         });
 //
-//         this.router.get(/\/edit\/(.*)/, function (req, res) {
-//             let title = decodeURI(req.params[0]);
-//             let userId = req.session ? req.session.userId : null;
-//             let newPage = req.query.newPage;
-//             wiki.getSrc(title, userId)
-//                 .then(page => {
-//                     if (page.noPage === 1) { //no namespace
-//                         res.render('error', {
-//                             error: {message: "You tried edit a page whose namespace is not exists:" + page.ns_title},
-//                             session: req.session
-//                         });
-//                     } else if (page.noPage === 2) {
-//                         let data = {
-//                             title: page.title,
-//                             newPage: true,
-//                         };
-//                         res.render('editPage', {wiki: data, session: req.session});
-//                     } else if (page.noPrivilege) {
-//                         res.render('noPrivilege', {wikiTitle: page.title, priType: 4, session: req.session});
-//                     } else {
-//                         res.render('editPage', {wiki: page, session: req.session});
-//                     }
-//                 })
-//                 .catch(e => {
-//                     res.render('error', {error: e, session: req.session});
-//                 });
-//         });
+        this.router.get(/\/edit\/(.*)/, function (req, res) {
+            let title = decodeURI(req.params[0]);
+            let userId = req.session ? req.session.userId : null;
+            let newPage = req.query.newPage;
+            let data = {
+                title: title,
+                newPage: true,
+            };
+            res.render('wiki/editPage', {wiki: data, session: req.session});
+            //     wiki.getSrc(title, userId)
+            //         .then(page => {
+            //             if (page.noPage === 1) { //no namespace
+            //                 res.render('error', {
+            //                     error: {message: "You tried edit a page whose namespace is not exists:" + page.ns_title},
+            //                     session: req.session
+            //                 });
+            //             } else if (page.noPage === 2) {
+            //                 let data = {
+            //                     title: page.title,
+            //                     newPage: true,
+            //                 };
+            //                 res.render('editPage', {wiki: data, session: req.session});
+            //             } else if (page.noPrivilege) {
+            //                 res.render('noPrivilege', {wikiTitle: page.title, priType: 4, session: req.session});
+            //             } else {
+            //                 res.render('editPage', {wiki: page, session: req.session});
+            //             }
+            //         })
+            //         .catch(e => {
+            //             res.render('error', {error: e, session: req.session});
+            //         });
+        });
 //
 //         router.get(/\/history\/(.*)/, function (req, res) {
 //             res.render('error', {
@@ -105,12 +111,18 @@ export class WikiRouter {
 //             });
 //         });
 //
-//         router.post('/api/parse', async (req, res) => {
-//             let parsedPage = await wiki.parse(req.body.text, req.body.title).catch(e => {
-//                 res.json({e})
-//             });
-//             res.json(parsedPage);
-//         });
+        this.router.post('/api/parse', async (req, res) => {
+            let page = new Page(req.body.title, true);
+            await page.setSrc(req.body.text)
+                .catch(e => {
+                    res.json(e)
+                });
+            page.render()
+                .then(result => {
+                    res.json(result);
+                    console.log(result)
+                });
+        });
 //
 //         router.get(/\/api\/parse\/(.*)/, function(req, res){
 //             let title = decodeURI(req.params[0]);
@@ -200,15 +212,15 @@ export class WikiRouter {
 //             }
 //         });
 //
-// // catch 404 and forward to error handler
-//         router.use(function(req, res, next) {
-//             let err = new Error('Not Found');
+//         // catch 404 and forward to error handler
+//         this.router.use(function(req, res, next) {
+//             let err: any = new Error('Not Found');
 //             err.status = 404;
 //             next(err);
 //         });
 //
-// // error handler
-//         router.use(function(err, req, res, next) {
+//         // error handler
+//         this.router.use(function(err, req, res, next) {
 //             // set locals, only providing error in development
 //             res.locals.message = err.message;
 //             res.locals.error = req.app.get('env') === 'development' ? err : {};

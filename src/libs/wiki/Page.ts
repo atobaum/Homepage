@@ -1,5 +1,5 @@
 import SingletonMysql from "../SingletonMysql";
-import User from "../User";
+import Parser from "./Parser";
 /**
  * Created by Le Reveur on 2017-10-15.
  */
@@ -62,16 +62,17 @@ export default class Page {
     private rev_id: number;
     private rev_counter: number;
     private cached: boolean;
+    private minor: boolean;
 
     constructor(fulltitle: string, isNew: boolean) {
         if (!fulltitle) throw new Error("Error: title should be not empty.");
         this.titles = Page.parseTitle(fulltitle);
         this.isNew = isNew;
         this.status = EPageStat.ONLY_TITLE;
-        this.PAC = [];
+        this.PAC = [null, null];
     }
 
-    private async updateNs(): Promise<> {
+    private async updateNs(): Promise<void> {
         if (this.status !== EPageStat.ONLY_TITLE)
             throw new PageError(EPageError.INVALID_OP, this.status, "updateNs");
         return await SingletonMysql.queries(async conn => {
@@ -93,7 +94,7 @@ export default class Page {
      *
      * @returns page{Promise} - A promise object that gives the page. If namespace doesn't exist, page.noPage = 1. If namespace exists but page is not, page.noPage = 2. Otherwise, page.noPage = undefined.
      */
-    private async updatePageInfo(): Promise<> {
+    private async updatePageInfo(): Promise<void> {
         if (this.status !== EPageStat.ONLY_TITLE)
             throw new PageError(EPageError.INVALID_OP, this.status, "updatePageInfo");
         return await SingletonMysql.queries(async conn => {
@@ -116,7 +117,7 @@ export default class Page {
         });
     }
 
-    public async setSrc(src: string): Promise<> {
+    public async setSrc(src: string): Promise<void> {
         if (this.status !== EPageStat.ONLY_TITLE)
             throw new PageError(EPageError.INVALID_OP, this.status, "setSrc");
         if (this.isNew)
@@ -126,6 +127,12 @@ export default class Page {
         this.src = src;
         this.status = EPageStat.SET_SRC;
         return;
+    }
+
+    async render() {
+        if (this.status !== EPageStat.SET_SRC)
+            throw new PageError(EPageError.INVALID_OP, this.status, "render");
+        return await Parser.render(this.titles, this.src);
     }
 
     async getSrc(): Promise<string> {
@@ -138,10 +145,10 @@ export default class Page {
             row = (await conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [this.pageId, this.rev_id]))[0][0];
             this.src = row.text;
             this.minor = row.minor;
-            this.userId = row.user_id;
-            this.userText = row.userText;
-            this.comment = row.comment;
-            this.created = row.created;
+            // this.userId = row.user_id;
+            // this.userText = row.userText;
+            // this.comment = row.comment;
+            // this.created = row.created;
             this.status = EPageStat.GET_SRC;
             return this.src;
         });
@@ -285,19 +292,6 @@ export default class Page {
 //         }
     }
 
-    async save(user?: User): Promise<> {
-        if (this.status !== EPageStat.SET_SRC)
-            throw new PageError(EPageError.INVALID_OP, this.status, "save");
-        return SingletonMysql.queries(conn => {
-            let rev_id = this.rev_counter + 1;
-            //check access control
-//             if (!(await thisClass.checkAC(data.ns_id, data.page_id, userId, 2, data.ns_PAC, page_PAC))) {
-//                 let error = new Error('You have no privilege for this page.');
-//                 error.name = "NO_PRIVILEGE";
-//                 throw error;
-//             }
-//
-        });
 //
 //             let revision = {
 //                 page_id: data.page_id,
@@ -328,7 +322,7 @@ export default class Page {
 //             } else
 //                 return await conn.query("INSERT INTO revision SET ?", [revision]);
 //         })();
-    }
+// }
 
     /**
      *
@@ -338,7 +332,7 @@ export default class Page {
      * @param type{number} - 0: subcategory, 1: page, 2:file
      * @returns {*}
      */
-    updateCategory(conn, page_id, categories, type = 1) {
+// updateCategory(conn, page_id, categories, type = 1) {
 //         return this.makeTransaction(async conn => {
 //             let query = "DELETE FROM categorylink WHERE \`to\` = ?";
 //             await conn.query(query, [page_id]).catch(e => {
@@ -367,9 +361,9 @@ export default class Page {
 //             });
 //             return categories;
 //         })();
-    }
+//     }
 
-    async clearCache(): Promise<> {
+    async clearCache(): Promise<void> {
         if (this.status !== EPageStat.PAGE_INFO)
             throw new PageError(EPageError.INVALID_OP, this.status, "clearCache");
         return SingletonMysql.queries(async conn => {

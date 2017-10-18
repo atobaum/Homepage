@@ -23,7 +23,7 @@ let blockTokens = [
     [ETokenType.LINETEXT, /^(.*?)(?:r?\n|$)/]
 ] as [[ETokenType, RegExp]];
 
-export class BlockLexer extends InlineLexer.Lexer {
+export default class BlockLexer extends InlineLexer.Lexer {
     TokenList = blockTokens;
     inlineLexer: InlineLexer.InlineLexer;
 
