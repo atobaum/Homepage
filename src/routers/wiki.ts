@@ -120,7 +120,6 @@ export class WikiRouter {
             page.render()
                 .then(result => {
                     res.json(result);
-                    console.log(result)
                 });
         });
 //

@@ -1,5 +1,5 @@
 import * as Components from "./Components";
-import {ETokenType, Footnote, InlineToken, Link, RFootnote, Section} from "./Components";
+import {ETokenType, Footnote, InlineToken, IToken, Link, RFootnote, Section} from "./Components";
 import {Env} from "./EnvManager";
 import {TOC} from "./Components/TOC";
 /**
@@ -15,15 +15,14 @@ export class SectionEnv implements Env<Section> {
         this.toc = new TOC(null, null);
     }
 
-    afterScan(): Promise<void> {
+    afterScan(toks: IToken[]): Promise<void> {
+        toks.unshift(this.toc.root);
         return;
     }
 
     makeToken([level, toks]): Section {
         let section = new Section(toks);
-        let t = this.toc.addSection(level, section);
-        console.log(t);
-        this.toc = t;
+        this.toc = this.toc.addSection(level, section);
         return section;
     }
 }
@@ -39,7 +38,7 @@ export class LinkEnv implements Env<Link> {
         this.links = [];
     }
 
-    async afterScan(): Promise<void> {
+    async afterScan(toks): Promise<void> {
         return undefined;
     }
 
@@ -64,17 +63,11 @@ export class LinkEnv implements Env<Link> {
     }
 }
 
-
-// export class TOCEnv implements Env<Section>{
-//
-// }
-
-
 export class FootnoteEnv implements Env<RFootnote> {
     key: ETokenType = ETokenType.RFOOTNOTE;
     fns: Footnote[] = [];
 
-    afterScan(): Promise<void> {
+    afterScan(toks): Promise<void> {
         return null;
     }
 
@@ -82,5 +75,24 @@ export class FootnoteEnv implements Env<RFootnote> {
         let fn = new Footnote(this.fns.length, inlineToks);
         this.fns.push(fn);
         return fn.getRef();
+    }
+}
+
+export class TitleEnv implements Env<Components.SimpleTag> {
+    key: ETokenType = ETokenType.TITLE;
+
+    fulltitle: string;
+
+    constructor(titles) {
+        this.fulltitle = `${(titles[0] !== 'Main' ? titles[0] + ':' : '') + titles[1]}`
+    }
+
+    afterScan(toks: IToken[]) {
+        toks.unshift(new Components.SimpleTag('h1', 'class="wiki_title"', this.fulltitle));
+        return null;
+    }
+
+    makeToken(args: any[]): Components.SimpleTag {
+        return new Components.SimpleTag('h1', 'class="wiki_title"', this.fulltitle);
     }
 }

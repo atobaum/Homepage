@@ -12,12 +12,15 @@ export default class Parser {
 
     static async render(titles: [string, string], src: string) {
         let em = new EnvManager();
+
         em.addEnv(new Env.LinkEnv(titles[0]));
-        em.addEnv(new Env.FootnoteEnv());
         em.addEnv(new Env.SectionEnv());
+        em.addEnv(new Env.TitleEnv(titles));
+        em.addEnv(new Env.FootnoteEnv());
         let lexer = new BlockLexer(em);
 
         let toks = lexer.scan(src);
+        await em.afterScan(toks);
         return toks.map(item => item.render()).join('');
 
         // info.link = info.link.map(item => {

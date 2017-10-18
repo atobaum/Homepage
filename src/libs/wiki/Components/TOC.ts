@@ -43,7 +43,6 @@ export class TOC extends Macro {
     }
 
     addSection(level: number, section: Section): TOC {
-        console.log(this.indexList, level, section.plainText());
         if (this.indexList.length < level)
             return this.addChild(section);
         else
@@ -51,7 +50,25 @@ export class TOC extends Macro {
     }
 
     render() {
+        let result;
+        if (this.isRoot)
+            result = '<div class="ui segment compact wiki_toc"><ol>';
+        else {
+            result = `<li id="rh_${this.indexList.join('_')}">${this.indexList.join('.')} <a  href="#h_${this.indexList.join('_')}">${this.section.plainText()}</a>`
+        }
 
+        if (this.children.length !== 0)
+            result += '<ol>'
+                + this.children.map(item => {
+                    if (item.indexList.length < 4) {
+                        return item.render();
+                    }
+                    else return '';
+                }).join('')
+                + '</ol>';
+
+        result += (this.isRoot ? '</ol></div>' : '</li>');
+        return result;
     }
 
     plainText() {

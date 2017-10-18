@@ -166,20 +166,20 @@ class Renderer{
         return result;
     };
 
-    toc(toks, first = true) {
-        let result = first ? '<div class="ui segment compact wiki_toc">' : '';
-        result += `<ol class="${first ? '' : ''}">`;
-        toks.forEach(item => {
-            if (item.indexList.length < 4) {
-                result += '<li id="rh_' + item.indexList.join('_') + '">' + item.indexList.join('.') + ' <a  href="#h_' + item.indexList.join('_') + '">' + item.content.plainText + '</a>';
-                if (item.child.length !== 0) result += this.toc(item.child, false);
-                result += '</li>';
-            }
-        });
-        result += '</ol>';
-        result += (first ? '</div>' : '');
-        return result;
-    };
+    // toc(toks, first = true) {
+    //     let result = first ? '<div class="ui segment compact wiki_toc">' : '';
+    //     result += `<ol class="${first ? '' : ''}">`;
+    //     toks.forEach(item => {
+    //         if (item.indexList.length < 4) {
+    //             result += '<li id="rh_' + item.indexList.join('_') + '">' + item.indexList.join('.') + ' <a  href="#h_' + item.indexList.join('_') + '">' + item.content.plainText + '</a>';
+    //             if (item.child.length !== 0) result += this.toc(item.child, false);
+    //             result += '</li>';
+    //         }
+    //     });
+    //     result += '</ol>';
+    //     result += (first ? '</div>' : '');
+    //     return result;
+    // };
 
     cat(categories){
         "use strict";
@@ -217,9 +217,9 @@ class Renderer{
     //     return result + '</table>';
     // };
 
-    title(pageTitle){
-        return `<h1 class="wiki_title">${(this._ns ? this._ns + ':' : '')+pageTitle}</h1>`;
-    };
+    // title(pageTitle){
+    //     return `<h1 class="wiki_title">${(this._ns ? this._ns + ':' : '')+pageTitle}</h1>`;
+    // };
 
     pageList(catTitle, pageList) {
         return pageList.map((item, index) => {
