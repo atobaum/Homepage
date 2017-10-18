@@ -33,7 +33,7 @@ describe('Wiki', function () {
 //         });
 //
 //         it('Raw page', function (done) {
-//             wiki.getRawPage('Test:view test')
+//             wiki.getSrc('Test:view test')
 //                 .then((page) => {
 //                     done(assert.equal(`== title ==\r\nabc`, page.text));
 //                 })
@@ -54,7 +54,7 @@ describe('Wiki', function () {
 //                 comment: 'test' + text
 //             };
 //             wiki.editPage(page, null).then(() => {
-//                 wiki.getRawPage('Test:edit test').then(data => {
+//                 wiki.getSrc('Test:edit test').then(data => {
 //                     done(assert.equal(text, data.text));
 //                 }).catch(done);
 //             }).catch(done);

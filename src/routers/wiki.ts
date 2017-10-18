@@ -40,7 +40,7 @@ export class WikiRouter {
 //             let title = decodeURI(req.params[0]);
 //             let userId = req.session ? req.session.userId : null;
 //             let newPage = req.query.newPage;
-//             wiki.getRawPage(title, userId)
+//             wiki.getSrc(title, userId)
 //                 .then(page => {
 //                     if (page.noPage === 1) { //no namespace
 //                         res.render('error', {
@@ -131,7 +131,7 @@ export class WikiRouter {
 //         router.get(/\/api\/rawtext\/(.*)/, function(req, res){
 //             let title = decodeURI(req.params[0]);
 //             let userId = req.session ? req.session.userId : null;
-//             wiki.getRawPage(title, userId, function(err, page){
+//             wiki.getSrc(title, userId, function(err, page){
 //                 if(err){
 //                     if(err.name === 'NO_PAGE_ERROR') {
 //                         res.json({ok:2, error: err});
