@@ -2,6 +2,7 @@
  * Created by Le Reveur on 2017-10-16.
  */
 import {BlockToken, InlineToken, IToken, Macro} from "../Components";
+import {TOC} from "./TOC";
 export class Text extends InlineToken {
     constructor(text) {
         super([text]);
@@ -83,24 +84,28 @@ export class EmptyLine extends Macro {
 }
 
 export class Section extends BlockToken {
-    index: number[];
+    private _toc: TOC;
 
-    constructor(index, toks) {
+    constructor(toks) {
         super(toks);
-        this.index = index;
+    }
+
+    set toc(toc: TOC) {
+        this._toc = toc;
     }
 
     render() {
-        let formattedLevel = this.index.join('_');
+        let indexList = this._toc.indexList;
+        let formattedLevel = indexList.join('_');
         return '<h'
-            + this.index.length
+            + indexList.length
             + ' class="ui dividing header" id="'
             + "h_" + formattedLevel
             + '">'
-            + `<a href="#rh_${formattedLevel}">${this.index.join('.')}</a> `
+            + `<a href="#rh_${formattedLevel}">${indexList.join('.')}</a> `
             + this.renderContent()
             + '</h'
-            + this.index.length
+            + indexList.length
             + '>';
     }
 }

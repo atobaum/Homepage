@@ -1,6 +1,7 @@
 import * as Components from "./Components";
 import {ETokenType, Footnote, InlineToken, Link, RFootnote, Section} from "./Components";
 import {Env} from "./EnvManager";
+import {TOC} from "./Components/TOC";
 /**
  * Created by Le Reveur on 2017-10-17.
  */
@@ -10,12 +11,20 @@ export class SectionEnv implements Env<Section> {
     key: ETokenType = ETokenType.SECTION;
     toc: Components.TOC;
 
+    constructor() {
+        this.toc = new TOC(null, null);
+    }
+
     afterScan(): Promise<void> {
         return;
     }
 
     makeToken([level, toks]): Section {
-        return new Section(level, toks);
+        let section = new Section(toks);
+        let t = this.toc.addSection(level, section);
+        console.log(t);
+        this.toc = t;
+        return section;
     }
 }
 
