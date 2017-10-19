@@ -82,15 +82,15 @@ block content
                 input(type='number' name="pages"  min=0)
             button.ui.positive.button 확인
 
-    #book_panel.ui.segment
+    #book_panel.ui.segment(v-if='show')
         div(style="float:left")
-            img#book_cover
+            img(:src="coverURL")
         .ui.list(style="float:left; margin:15px")
             .item
-                strong#book_title
-            .item#book_authors
-            .item#book_publish
-        .ui.button#change_book 책 바꾸기
+                strong {{ title }}
+            .item {{ strAuthors }}
+            .item {{ publisher }}|{{ publishedDate }}
+        .ui.button 책 바꾸기
 
     form.ui.form.segment(method='post', action='/bookshelf/reading', id="input_form" onsubmit="return check_form();")
         input(type="hidden", name="rating", id="form_rating")
