@@ -41,7 +41,10 @@ export default class Aladin {
             if (item.translator)
                 authors = authors.concat(item.translator.split('|').map(item => new Author(item, EAuthorType.TRANSLATOR)));
 
-            return new Book(item.title, authors, item.pub_nm, item.pub_date, item.isbn13, item.cover_l_url);
+            let pubDate = [item.pub_date.substr(0, 4), item.pub_date.substr(4, 2), item.pub_date.substr(6, 2)].join('-');
+            let book = new Book(item.title, authors, item.pub_nm, pubDate, item.isbn13, item.cover_l_url);
+            book.description = item.description;
+            return book;
         });
     };
 
