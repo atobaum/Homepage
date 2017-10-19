@@ -40,19 +40,11 @@ export default class BookshelfRouter {
             });
         });
 
-        // this.router.get('/reading/:id', function(req, res, next){
-        //     dbController.readingInfo(req.params.id, req.session.userId, function (err, reading) {
-        //         if (err) {
-        //             res.render('err', {error: err, session: req.session});
-        //         } else {
-        //             reading.book.title = reading.book.title_ko;
-        //             res.render('bookshelf/viewReading', {
-        //                 reading: reading,
-        //                 session: req.session
-        //             });
-        //         }
-        //     });
-        // });
+        this.router.get('/reading/:id', (req, res, next) => {
+            Reading.load(req.params.id, req.session.userId)
+                .catch(e => res.render('bookshelf/err', {error: e, session: req.session}))
+                .then(reading => res.render('bookshelf/viewReading', {reading: reading, session: req.session}));
+        });
 
         // this.router.post('/book/add', function(req, res, next){
         //     let book = JSON.parse(req.body);
