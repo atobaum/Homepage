@@ -36,6 +36,15 @@ export default class SingletonMysql {
         return SingletonMysql.pool.getConnection();
     }
 
+    /**
+     *
+     * @async
+     * @param query
+     * @param params
+     */
+    static query<T>(query: string, params): Promise<T> {
+        return SingletonMysql.getPool().query(query, params);
+    }
     static async queries<T>(work: (conn) => Promise<T>): Promise<T> {
         let conn, result;
         try {
@@ -50,9 +59,7 @@ export default class SingletonMysql {
     }
 
     static async transaction<T>(work: (conn) => Promise<T>): Promise<T> {
-        let conn: any = await SingletonMysql.getConn().catch(e => {
-            throw e;
-        });
+        let conn: any = await SingletonMysql.getConn();
         let result;
         try {
             await conn.beginTransaction();
