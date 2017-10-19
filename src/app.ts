@@ -15,7 +15,7 @@ let config = require('./config');
 let app = express();
 
 // view engine setup
-app.set('views', '/views');
+app.set('views', __dirname + '/views');
 app.set('view engine', 'pug');
 
 // middleware setup
