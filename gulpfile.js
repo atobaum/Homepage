@@ -13,7 +13,7 @@ gulp.task('start', [], function () {
     return nodemon({
         script: './bin/www',
         ext: 'js',
-        watch: ['dist', 'public']
+        watch: ['dist', '!dist/views']
     });
 });
 gulp.task('clean', () => {
@@ -78,7 +78,7 @@ gulp.task('watch', function(){
     gulp.watch('src/views/**/*.pug', (evt) => {
         notify(evt);
         return gulp.src(evt.path)
-            .pipe(gulp.dest(changeDir(evt, 'src' + path.sep + 'views', 'views')));
+            .pipe(gulp.dest(changeDir(evt, 'src', 'dist')));
     });
 
     //server side
