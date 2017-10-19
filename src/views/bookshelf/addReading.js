@@ -92,12 +92,11 @@ function setBook(book){
     bookPanel.publishedDate = book.publishedDate;
     bookPanel.strAuthors = book.strAuthors;
     bookPanel.show = true;
-    $('#form_isbn13').val(book.isbn13);
+    $('#form_book').val(JSON.stringify(book));
     $('.ui.search').search('set value', '');
     $('#book_list_wrapper').hide();
     $('#book_panel').show();
     $('#btns_add_book').hide();
-    $('#form_book').val(JSON.stringify(book));
     $('#manual_authors .message').hide();
 }
 
@@ -157,11 +156,15 @@ $(document).ready(function(){
         apiSettings:{
             url: "/bookshelf/api/searchbook?keyword={query}",
             onResponse: function(res) {
-                res.result.forEach(book => {
-                    book.strAuthors = book.authors.map(author => author.name + ' ' + author.type).join(', ');
-                    book.desc = book.strAuthors + ' | ' + book.publisher + ' | ' + book.publishedDate;
-                });
-                return res;
+                if (res.error)
+                    console.log(res.error);
+                else {
+                    res.result.forEach(book => {
+                        book.strAuthors = book.authors.map(author => author.name + ' ' + author.type).join(', ');
+                        book.desc = book.strAuthors + ' | ' + book.publisher + ' | ' + book.publishedDate;
+                    });
+                    return res;
+                }
             }
         },
         searchDelay: 1000,

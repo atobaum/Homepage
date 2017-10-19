@@ -1,5 +1,5 @@
 import SingletonMysql from "../SingletonMysql";
-import {Author} from "./Author";
+import {Author, EAuthorType} from "./Author";
 /**
  * Created by Le Reveur on 2017-10-18.
  */
@@ -11,8 +11,11 @@ export class Book {
     protected publisher: string;
     protected publishedDate: string;
     protected coverURL: string;
+    public description: string;
 
     constructor(title: string, authors: Author[], publisher: string, publichedDate: string, isbn13: number, coverURL?) {
+        if (!(title && authors.length && publisher && publichedDate && isbn13))
+            throw new Error('constructor argument not fulfilled: Book');
         this.title = title;
         this.authors = authors;
         this.publisher = publisher;
@@ -28,29 +31,48 @@ export class Book {
     parseAuthors() {
 
     }
+
+    static createFromJSON(json: any) {
+        let authors = json.authors.map(item => Author.createFromJSON(item));
+        try {
+            return new Book(json.title, authors, json.publisher, json.publishedDate, json.isbn13, json.coverURL);
+        } catch (e) {
+            console.log(json);
+            throw e;
+        }
+    }
+
+    static load(isbn13: string): Promise<Book> {
+        return SingletonMysql.queries(async conn => {
+            let [rows] = await conn.query('SELECT * FROM books JOIN publishers ON publishers.id = books.publisher_id WHERE books.isbn13 = ?', [isbn13]);
+            if (rows.length === 0) {
+                let error = new Error("There's no such book.");
+                error.name = "NoBookError";
+                throw error;
+
+            } else {
+                let row = rows[0];
+                let isbn13 = row.isbn13;
+                let authors = (await conn.query('SELECT * FROM authors WHERE book_id=?', [isbn13]))[0];
+                authors = authors.map(item => new Author(item.name_ko, (item.type_id == 1 ? EAuthorType.AUTHOR : EAuthorType.TRANSLATOR)));
+                return new Book(row.title, authors, row.name, row.published_date, row.isbn13, row.cover_URL);
+            }
+        });
+    }
 }
 
 export class DetailBook extends Book {
     private subtitle: string;
     private pages: number;
     private language: string;
-    private description: string;
     private link: string;
     private checked: boolean;
     private originalTitle: string;
     private publisherId: number;
 
     getBookInfo(): Promise<void> {
-        let query = 'select books.title_ko, books.subtitle, publishers.name, books.published_date, books.pages, books.title_original, books.language, books.description, books.link,  books.cover_URL, books.isbn13, books.checked from books JOIN publishers ON publishers.id = books.publisher_id where books.isbn13 = ?';
-        return SingletonMysql.queries(async conn => {
-            let [rows] = conn.query(query, [this.isbn13]);
-            if (rows.length === 0) {
-                let error = new Error("There's no such book.");
-                error.name = "NoBookError";
-                throw error;
-            }
-            // await this.updateAuthors(rows[0]);
-        });
+        throw new Error();
+
     }
 
     async save() {

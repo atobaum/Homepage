@@ -8,16 +8,25 @@ block head
     
 block content
     h1 책장
-    table.ui.celled.table
+    table#readings.ui.celled.table
         thead
             tr
                 th 책 제목
                 th 저자
                 th 날짜
                 th 읽은 사람
-        tbody(id='tbdReadings')
+        tbody
+            tr(v-for="reading in readings")
+                td
+                    a(:href="'/bookshelf/book/'+reading.book.isbn13") {{ reading.book.title }}
+                td {{ reading.book.authors.map(author => author.name + ' ' + author.type).join(', ') }}
+                td
+                    a(:href="'/bookshelf/reading/'+reading.id") {{ reading.date[0] }} ~ {{ reading.date[1] }}
+                td {{ reading.user }}
+
         tfoot
             tr
                 th(colspan=5).center.aligned
-                    .ui.pagination.menu
+                    .ui.pagination.menu(v-for="num in pages")
+                        a.item(href="#" v-bind:class="{ active: num == curPage }" v-on:click="pageNumber") {{ num }}
     a.ui.green.basic.button(href="/bookshelf/reading/add") 읽은 책 추가
