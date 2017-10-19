@@ -77,3 +77,4 @@ test.*
 .idea
 !/test/test.spec.js
 /src/config.ts
+*.bak

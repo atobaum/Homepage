@@ -49,15 +49,22 @@ export class Book {
                 let error = new Error("There's no such book.");
                 error.name = "NoBookError";
                 throw error;
-
             } else {
                 let row = rows[0];
                 let isbn13 = row.isbn13;
                 let authors = (await conn.query('SELECT * FROM authors WHERE book_id=?', [isbn13]))[0];
                 authors = authors.map(item => new Author(item.name_ko, (item.type_id == 1 ? EAuthorType.AUTHOR : EAuthorType.TRANSLATOR)));
-                return new Book(row.title, authors, row.name, row.published_date, row.isbn13, row.cover_URL);
+                return new Book(row.title_ko, authors, row.name, row.published_date, row.isbn13, row.cover_URL);
             }
         });
+    }
+
+    getIsbn13() {
+        return this.isbn13;
+    }
+
+    save() {
+
     }
 }
 
