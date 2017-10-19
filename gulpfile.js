@@ -2,7 +2,7 @@
 let path = require('path');
 let gulp = require('gulp');
 let gutil = require('gulp-util');
-let uglify = require('gulp-uglify');
+let uglify = require('gulp-babel-minify');
 let cleanCSS = require('gulp-clean-css');
 let del = require('del');
 let nodemon = require('gulp-nodemon');
@@ -13,7 +13,7 @@ gulp.task('start', [], function () {
     return nodemon({
         script: './bin/www',
         ext: 'js',
-        watch: ['dist']
+        watch: ['dist', 'public']
     });
 });
 gulp.task('clean', () => {
@@ -34,7 +34,15 @@ gulp.task('copy-js', () => {
 //client side
 gulp.task('uglify-js', [], function(){
     gulp.src('src/views/**/*.js')
-        .pipe(uglify())
+        .pipe(uglify({
+            mangle: {
+                keepClassName: true
+            }
+        }))
+        .pipe(gulp.dest('public/js'))
+});
+gulp.task('copy-client-js', [], function () {
+    gulp.src('src/views/**/*.js')
         .pipe(gulp.dest('public/js'))
 });
 gulp.task('uglify-css', [], function(){
@@ -56,13 +64,11 @@ function notify(event) {
 
 gulp.task('watch', function(){
     //client side
-    // gulp.watch('src/views/**/*.js', (evt) => {
-    //     notify(evt);
-    //     return gulp.src(evt.path)
-    //         .pipe(uglify())
-    //         .pipe(gulp.dest(changeDir(evt, 'src' + path.sep + 'views', 'public' + path.sep + 'js')));
-    // });
-    gulp.watch('src/views/**/*.js', ['uglify-js']);
+    gulp.watch('src/views/**/*.js', (evt) => {
+        notify(evt);
+        return gulp.src(evt.path)
+            .pipe(gulp.dest(changeDir(evt, 'src' + path.sep + 'views', 'public' + path.sep + 'js')));
+    });
     gulp.watch('src/views/**/*.css', (evt) => {
         notify(evt);
         return gulp.src(evt.path)
@@ -88,6 +94,8 @@ gulp.task('watch', function(){
             .pipe(gulp.dest(evt.path.replace('src', 'dist')));
     });
 });
-gulp.task('compile', ['typescript', 'copy-js', 'uglify-js', 'uglify-css', 'copy-pug']);
+gulp.task('compile', ['clean', 'typescript', 'copy-js', 'uglify-js', 'uglify-css', 'copy-pug']);
+
+gulp.task('compile-dev', ['typescript', 'copy-js', 'copy-client-js', 'uglify-css', 'copy-pug']);
 
 gulp.task('default', ['watch', 'start']);
