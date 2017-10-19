@@ -1,50 +1,55 @@
+import SingletonMysql from "./SingletonMysql";
 /**
  * Created by Le Reveur on 2017-10-18.
  */
 export default class User {
-    userInfo() {
+    private id: number;
+    private username: string;
+    private admin: boolean;
+
+    constructor(id, username, admin = false) {
+        this.id = id;
+        this.username = username;
+        this.admin = admin;
 
     }
 
-    createUser(user, callback) {
+    // createUser(user, callback) {
         // this.conn.query("INSERT INTO user (username, nickname, password, email) VALUES (?, ?, PASSWORD(?), ?)", [user.username, user.nickname, user.password, user.email], callback);
-    }
+    // }
 
     updateUser() {
 
     }
 
-    checkUsername(username) {
-//         return this.makeWork2(async conn => {
-//             let rows = await conn.query("SELECT user_id FROM user WHERE username=?", [username]);
-//             return rows.length !== 0
-//         })
+    static checkUsername(username) {
+        return SingletonMysql.queries(conn => {
+            return conn.query("SELECT user_id FROM user WHERE user_id=?", [username])
+                .then(res => res[0].length !== 0);
+        });
     }
-//
-//     checkNickname(username) {
-//         return this.makeWork2(async conn => {
-//             let rows = await conn.query("SELECT user_id FROM user WHERE nickname=?", [username]);
-//             return rows.length !== 0
-//         })
-//     }
-//     login(username, password) {
-//         return this.makeWork(async (conn) => {
-//             let [user] = await conn.query("SELECT user_id, nickname, admin, password = PASSWORD(?) as correct FROM user WHERE username = ?", [password, username]).catch(e => {
-//                 throw e
-//             });
-//             return [(user ? user.correct : 2), user];
-//         })();
-//     }
-//     checkAdmin(userId){
-//         if (!userId) return Promise.resolve(false);
-//         return this.makeWork2(async conn=> {
-//             let users = await conn.query('SELECT admin FROM user WHERE user_id = ?', [userId]).catch(e => {
-//                 throw e
-//             });
-//             if (users.length === 0) throw new Error("Wrong User Id");
-//             else if (users[0].admin === 1) return true;
-//             else return false;
-//         });
-//     }
-// }
+
+    static checkNickname(username): Promise<boolean> {
+        return SingletonMysql.queries(conn => {
+            return conn.query("SELECT user_id FROM user WHERE nickname=?", [username])
+                .then(res => res[0].length !== 0);
+        });
+    }
+
+    static login(username, password): Promise<User> {
+        return SingletonMysql.query("SELECT user_id, nickname, admin, password = PASSWORD(?) as correct FROM user WHERE username = ?", [password, username])
+            .then(res => {
+                let user = res[0][0];
+                if (!res[0].length) {
+                    let e: any = new Error('Wrong username');
+                    e.code = 2;
+                    throw e;
+                } else if (user.correct != 1) {
+                    let e: any = new Error('Wrong password');
+                    e.code = 0;
+                    throw e;
+                } else
+                    return new User(user.user_id, user.nickname, user.admin == 1);
+            });
+    }
 }

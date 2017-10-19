@@ -32,6 +32,7 @@ app.use(cookieParser());
 import SingletonMysql from "./libs/SingletonMysql";
 import BookshelfRouter from "./routers/bookshelf";
 import {WikiRouter} from "./routers/wiki";
+import User from "./libs/User";
 
 SingletonMysql.init(config.db);
 let session = require('express-session');
@@ -43,6 +44,11 @@ app.use(session({
     saveUninitialized: true,
     store: sessionStore
 }));
+app.use((req, res, next) => {
+    if (req.session.user)
+        req.user = req.session.user;
+    next();
+});
 
 //Router setup
 let bookshelf = require('./routers/bookshelf');
@@ -62,23 +68,18 @@ app.get('/auth/logout', function (req, res) {
     res.redirect(req.header('Referer'));
 });
 
-// app.get('/api/auth/login', function (req, res) {
-//     wiki.login(req.query.id, req.query.password)
-//         .then(([result, user]) => {
-//             if (result == 1) {
-//                 let sess = req.session;
-//                 sess.userId = user.user_id;
-//                 sess.userNickname = user.nickname;
-//                 sess.userAdmin = user.admin;
-//                 if (req.query.autoLogin == "true")
-//                     sess.cookie.maxAge = 1000 * 60 * 60 * 24 * 7; //7 days
-//             }
-//             res.json({ok: result});
-//         })
-//         .catch(e => {
-//             res.json({ok: 0, error: err});
-//         });
-// });
+app.get('/api/auth/login', function (req, res) {
+    User.login(req.query.id, req.query.password)
+        .then(user => {
+            req.session.user = user;
+            if (req.query.autoLogin == "true")
+                session.cookie.maxAge = 1000 * 60 * 60 * 24 * 7; //7 days
+            res.json({ok: 1});
+        })
+        .catch(e => {
+            res.json({ok: e.code, error: e});
+        });
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
