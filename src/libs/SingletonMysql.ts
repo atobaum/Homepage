@@ -42,7 +42,7 @@ export default class SingletonMysql {
      * @param query
      * @param params
      */
-    static query<T>(query: string, params): Promise<T> {
+    static query<T>(query: string, params?): Promise<T> {
         return SingletonMysql.getPool().query(query, params);
     }
     static async queries<T>(work: (conn) => Promise<T>): Promise<T> {
