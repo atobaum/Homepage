@@ -30,11 +30,8 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 //session setup
 import SingletonMysql from "./libs/SingletonMysql";
-//Router setup
-// let bookshelf = require('../routers/bookshelf');
-// app.use('/bookshelf', bookshelf);
+import BookshelfRouter from "./routers/bookshelf";
 import {WikiRouter} from "./routers/wiki";
-
 
 SingletonMysql.init(config.db);
 let session = require('express-session');
@@ -47,7 +44,9 @@ app.use(session({
     store: sessionStore
 }));
 
-
+//Router setup
+let bookshelf = require('./routers/bookshelf');
+app.use('/bookshelf', (new BookshelfRouter(config.bookshelf)).getRouter());
 app.use('/wiki', (new WikiRouter()).getRouter());
 
 app.get('/', function (req, res) {
