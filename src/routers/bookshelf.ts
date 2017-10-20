@@ -2,6 +2,7 @@
 import {Router} from "express";
 import DaumBook from "../libs/bookshelf/DaumBook";
 import Reading, {ESearchType} from "../libs/bookshelf/Reading";
+import {Book} from "../libs/bookshelf/Book";
 export default class BookshelfRouter {
     private router: Router;
     private daum: DaumBook;
@@ -18,32 +19,29 @@ export default class BookshelfRouter {
 
     private routes() {
         this.router.get('/', function (req, res) {
-            res.render('bookshelf/main', {"title": "Bookshelf", session: req.session});
+            res.render('bookshelf/main', {"title": "Bookshelf"});
         });
 
         this.router.get('/reading/add', function (req, res, next) {
             res.render('bookshelf/addReading', {
-                "title": "읽은 책 추가하기", session: req.session
+                "title": "읽은 책 추가하기"
             });
         });
 
         this.router.get('/book/add', function (req, res, next) {
             res.render('bookshelf/editBook', {
                 title: "책 추가하기",
-                session: req.session
             });
         });
 
         this.router.get('/book/:isbn13', function (req, res, next) {
-            res.render('bookshelf/editBook', {
-                session: req.session
-            });
+            res.render('bookshelf/editBook');
         });
 
         this.router.get('/reading/:id', (req, res, next) => {
             Reading.load(req.params.id, req.session.userId)
-                .catch(e => res.render('bookshelf/err', {error: e, session: req.session}))
-                .then(reading => res.render('bookshelf/viewReading', {reading: reading, session: req.session}));
+                .catch(e => res.render('bookshelf/err', {error: e}))
+                .then(reading => res.render('bookshelf/viewReading', {reading: reading}));
         });
 
         // this.router.post('/book/add', function(req, res, next){
@@ -54,19 +52,21 @@ export default class BookshelfRouter {
         //     });
         // });
 
-        // this.router.post('/reading', async (req, res)=>{
-        //     let reading = req.body;
-        //     let tempBook = JSON.parse(reading.book);
-        //     if(req.session.userId){
-        //         reading.user_id = req.session.userId;
-        //         reading.user = req.session.userNickname;
-        //     }
-        //     let book = Book.createFromJSON(JSON.parse(reading.book));
-        //
-        //     (new Reading(reading.user, book, reading.date_started, reading.date_finished, reading.rating, reading.comment, reading.link, reading.is_secret=='1')).save()
-        //         .catch(e=>res.render('bookshelf/error', {error: e}))
-        //         .then(()=>res.redirect('/bookshelf'))
-        // });
+        this.router.post('/reading', async (req, res) => {
+            if (!req.session.userId)
+                res.render("bookshelf/error", {error: new Error("로그인 하세요.")});
+            else {
+                let reading = req.body;
+                let tempBook = JSON.parse(reading.book);
+                reading.user_id = req.session.userId;
+                reading.user = req.session.userNickname;
+                let book = Book.createFromJSON(JSON.parse(reading.book));
+
+                (new Reading(reading.user, book, reading.date_started, reading.date_finished, reading.rating, reading.comment, reading.link, reading.is_secret == '1')).save()
+                    .catch(e => res.render('bookshelf/error', {error: e}))
+                    .then(() => res.redirect('/bookshelf'))
+            }
+        });
 
         // this.router.post('/reading/edit', function(req, res, next){
         //     let reading = req.body;
@@ -74,7 +74,7 @@ export default class BookshelfRouter {
         //     dbController.editReading(req.body, function(err){
         //         if(err){
         //             res.render('bookshelf/error', {error:err,
-        //                 session: req.session});
+        //                 });
         //         } else{
         //             res.redirect('/bookshelf');
         //         }

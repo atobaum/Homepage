@@ -29,4 +29,6 @@ block content
                 th(colspan=5).center.aligned
                     .ui.pagination.menu(v-for="num in pages")
                         a.item(href="#" v-bind:class="{ active: num == curPage }" v-on:click="pageNumber") {{ num }}
+    -if(user){
     a.ui.green.basic.button(href="/bookshelf/reading/add") 읽은 책 추가
+    -}

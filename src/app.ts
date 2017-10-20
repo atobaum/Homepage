@@ -45,8 +45,9 @@ app.use(session({
     store: sessionStore
 }));
 app.use((req, res, next) => {
-    if (req.session.user)
-        req.user = req.session.user;
+    if (req.session.user) {
+        res.locals.user = req.session.user;
+    }
     next();
 });
 
@@ -56,11 +57,11 @@ app.use('/bookshelf', (new BookshelfRouter(config.bookshelf)).getRouter());
 app.use('/wiki', (new WikiRouter()).getRouter());
 
 app.get('/', function (req, res) {
-    res.render('index', {session: req.session});
+    res.render('index');
 });
 
 app.get('/login', function (req, res) {
-    res.render('login', {session: req.session});
+    res.render('login');
 });
 
 app.get('/auth/logout', function (req, res) {

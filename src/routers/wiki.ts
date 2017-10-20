@@ -16,7 +16,7 @@ export class WikiRouter {
         });
 
         this.router.get(/\/search\/(.*)/, function (req, res) {
-            res.render('noPage', {title: decodeURI(req.params[0]), session: req.session});
+            res.render('noPage', {title: decodeURI(req.params[0]),});
         });
 
 //         this.router.get(/\/view\/(.*)/, function (req, res) {
@@ -27,13 +27,13 @@ export class WikiRouter {
 //                     if (page.noPage) {
 //                         res.redirect('/wiki/search/' + encodeURI(title));
 //                     } else if (page.noPrivilege) {
-//                         res.render('noPrivilege', {wikiTitle: title, priType: 4, session: req.session});
+//                         res.render('noPrivilege', {wikiTitle: title, priType: 4, });
 //                     } else {
-//                         res.render('viewPage', {wiki: page, session: req.session});
+//                         res.render('viewPage', {wiki: page, });
 //                     }
 //                 })
 //                 .catch(e => {
-//                     res.render('error', {error: e, session: req.session});
+//                     res.render('error', {error: e, });
 //                 });
 //         });
 //
@@ -45,28 +45,28 @@ export class WikiRouter {
                 title: title,
                 newPage: true,
             };
-            res.render('wiki/editPage', {wiki: data, session: req.session});
+            res.render('wiki/editPage', {wiki: data,});
             //     wiki.getSrc(title, userId)
             //         .then(page => {
             //             if (page.noPage === 1) { //no namespace
             //                 res.render('error', {
             //                     error: {message: "You tried edit a page whose namespace is not exists:" + page.ns_title},
-            //                     session: req.session
+            //
             //                 });
             //             } else if (page.noPage === 2) {
             //                 let data = {
             //                     title: page.title,
             //                     newPage: true,
             //                 };
-            //                 res.render('editPage', {wiki: data, session: req.session});
+            //                 res.render('editPage', {wiki: data, });
             //             } else if (page.noPrivilege) {
-            //                 res.render('noPrivilege', {wikiTitle: page.title, priType: 4, session: req.session});
+            //                 res.render('noPrivilege', {wikiTitle: page.title, priType: 4, });
             //             } else {
-            //                 res.render('editPage', {wiki: page, session: req.session});
+            //                 res.render('editPage', {wiki: page, });
             //             }
             //         })
             //         .catch(e => {
-            //             res.render('error', {error: e, session: req.session});
+            //             res.render('error', {error: e, });
             //         });
         });
 //
@@ -82,11 +82,6 @@ export class WikiRouter {
 //                 error: {message: "준비중..."}
 //             });
 //         });
-//
-//         router.get('/admin', (req, res)=>{
-//             res.render('admin', {session: req.session});
-//         });
-//
 //
 // //for backend
 //         router.get(/\/delete\/(.*)/, function (req, res) {
@@ -106,8 +101,8 @@ export class WikiRouter {
 //                     res.redirect('/wiki/view/' + encodeURI(title));
 //                 }).catch(e => {
 //                 if (e.name === "NO_PRIVILEGE") {
-//                     res.render('noPrivilege', {wikiTitle: title, priType: 2, session: req.session});
-//                 } else res.render('error', {error: e, session: req.session});
+//                     res.render('noPrivilege', {wikiTitle: title, priType: 2, });
+//                 } else res.render('error', {error: e, });
 //             });
 //         });
 //
@@ -178,63 +173,6 @@ export class WikiRouter {
 //                     res.json({ok: 0, error: e});
 //                 });
 //         });
-//
-//         router.get('/api/admin', async (req, res)=>{
-//             try {
-//                 let userId = req.session ? req.session.userId : null;
-//                 if (!userId) return ({ok: 0, error: new Error('Please Login first.')});
-//
-//                 // let admin = await wiki.checkAdmin(userId);
-//                 let admin = req.session.userAdmin;
-//                 if (!admin) {res.json({ok: 0, error: new Error('No Privilege')}); return;}
-//                 switch (req.query.action.toLowerCase()) {
-//                     case 'clearcache':
-//                         await wiki.clearCache(req.query.title).catch(e => {
-//                             throw e;
-//                         });
-//                         res.json({ok: 1});
-//                         break;
-//                     case 'changetitle':
-//                         let title = await wiki.changeTitle(req.query.title, req.query.newTitle).catch(e => {
-//                             throw e;
-//                         });
-//
-//                         if (title) res.json({ok: 1, title: title});
-//                         else res.json({ok: 0, error: new Error('Fail to remane page')});
-//                         break;
-//                     default:
-//                         res.json({ok:0, error: new Error('Unsupported Action: '+req.query.action)});
-//                 }
-//             } catch (e) {
-//                 console.log(e);
-//                 res.json({ok: 0, error: e});
-//             }
-//         });
-//
-//         // catch 404 and forward to error handler
-//         this.router.use(function(req, res, next) {
-//             let err: any = new Error('Not Found');
-//             err.status = 404;
-//             next(err);
-//         });
-//
-//         // error handler
-//         this.router.use(function(err, req, res, next) {
-//             // set locals, only providing error in development
-//             res.locals.message = err.message;
-//             res.locals.error = req.app.get('env') === 'development' ? err : {};
-//
-//             // render the error page
-//             res.status(err.status || 500);
-//             res.render('error', {session: req.session});
-//         });
-//
-//         router.login = (uname, pass)=> wiki.login(uname, pass);
-//         router.userInfo = wiki.userInfo;
-//         router.createUser = wiki.createUser;
-//         router.updateUser = wiki.updateUser;
-//         router.checkUsername = wiki.checkUsername;
-//         router.checkNickname = wiki.checkNickname;
     }
 
     public getRouter() {
