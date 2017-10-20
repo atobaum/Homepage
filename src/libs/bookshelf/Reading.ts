@@ -1,5 +1,7 @@
 import SingletonMysql from "../SingletonMysql";
 import {Book} from "./Book";
+import User from "../User";
+import {ESaveType} from "../common";
 /**
  * Created by Le Reveur on 2017-10-18.
  */
@@ -15,9 +17,10 @@ export default class Reading {
     private isSecret: boolean;
     private book: Book;
     private userId: number;
-    private user: string;
+    private user: User;
+    private saveType: ESaveType;
 
-    constructor(user, book: Book, startDate, finishedDate, rating, comment, link, isSecret) {
+    constructor(user, book: Book, startDate, finishedDate, rating, comment, link, isSecret, saveType: ESaveType = ESaveType.NEW) {
         this.book = book;
         this.date = [startDate, finishedDate];
         this.rating = rating;
@@ -25,6 +28,7 @@ export default class Reading {
         this.link = link;
         this.isSecret = isSecret == '1';
         this.user = user;
+        this.saveType = saveType;
     }
 
     setId(id: number) {
@@ -74,11 +78,11 @@ export default class Reading {
             rating: this.rating,
             comment: this.comment,
             link: this.link,
-            user_id: this.userId,
-            user: this.user,
+            user_id: this.user.getId(),
+            user: this.user.getUsername(),
             is_secret: this.isSecret
         };
-        return SingletonMysql.query('INSERT INTO readings SET ?', [data]);
+        return await SingletonMysql.query('INSERT INTO readings SET ?', [data]);
     }
 
     static async searchReading(type: ESearchType, keyword, page: number = 1) {

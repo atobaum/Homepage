@@ -11,9 +11,15 @@ export default class User {
         this.id = id;
         this.username = username;
         this.admin = admin;
-
     }
 
+    getId() {
+        return this.id;
+    }
+
+    getUsername() {
+        return this.username;
+    }
     // createUser(user, callback) {
         // this.conn.query("INSERT INTO user (username, nickname, password, email) VALUES (?, ?, PASSWORD(?), ?)", [user.username, user.nickname, user.password, user.email], callback);
     // }

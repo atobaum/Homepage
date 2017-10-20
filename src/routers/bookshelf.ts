@@ -3,6 +3,7 @@ import {Router} from "express";
 import DaumBook from "../libs/bookshelf/DaumBook";
 import Reading, {ESearchType} from "../libs/bookshelf/Reading";
 import {Book} from "../libs/bookshelf/Book";
+import * as path from "path";
 export default class BookshelfRouter {
     private router: Router;
     private daum: DaumBook;
@@ -19,53 +20,49 @@ export default class BookshelfRouter {
 
     private routes() {
         this.router.get('/', function (req, res) {
-            res.render('bookshelf/main', {"title": "Bookshelf"});
+            res.render('bookshelf' + path.sep + 'main', {"title": "Bookshelf"});
         });
 
         this.router.get('/reading/add', function (req, res, next) {
-            res.render('bookshelf/addReading', {
+            res.render('bookshelf' + path.sep + 'addReading', {
                 "title": "읽은 책 추가하기"
             });
         });
 
         this.router.get('/book/add', function (req, res, next) {
-            res.render('bookshelf/editBook', {
+            res.render('bookshelf' + path.sep + 'editBook', {
                 title: "책 추가하기",
             });
         });
 
         this.router.get('/book/:isbn13', function (req, res, next) {
-            res.render('bookshelf/editBook');
+            res.render('bookshelf' + path.sep + 'editBook');
         });
 
         this.router.get('/reading/:id', (req, res, next) => {
             Reading.load(req.params.id, req.session.userId)
-                .catch(e => res.render('bookshelf/err', {error: e}))
-                .then(reading => res.render('bookshelf/viewReading', {reading: reading}));
+                .catch(e => res.render('error', {error: e}))
+                .then(reading => res.render('bookshelf' + path.sep + 'viewReading', {reading: reading}));
         });
 
         // this.router.post('/book/add', function(req, res, next){
         //     let book = JSON.parse(req.body);
         //     dbController.addBook(book, (err)=>{
-        //         if(err) res.render('bookshelf/error');
-        //         else res.redirect('/bookshelf/book/'+book.isbn13);
+        //         if(err) res.render('bookshelf\error');
+        //         else res.redirect('/bookshelf\book/'+book.isbn13);
         //     });
         // });
 
-        this.router.post('/reading', async (req, res) => {
-            if (!req.session.userId)
-                res.render("bookshelf/error", {error: new Error("로그인 하세요.")});
-            else {
-                let reading = req.body;
-                let tempBook = JSON.parse(reading.book);
-                reading.user_id = req.session.userId;
-                reading.user = req.session.userNickname;
-                let book = Book.createFromJSON(JSON.parse(reading.book));
+        this.router.post('/reading', async (req: any, res) => {
+            let reading = req.body;
+            let tempBook = JSON.parse(reading.book);
+            reading.user_id = req.session.userId;
+            reading.user = req.session.userNickname;
+            let book = Book.createFromJSON(JSON.parse(reading.book));
 
-                (new Reading(reading.user, book, reading.date_started, reading.date_finished, reading.rating, reading.comment, reading.link, reading.is_secret == '1')).save()
-                    .catch(e => res.render('bookshelf/error', {error: e}))
-                    .then(() => res.redirect('/bookshelf'))
-            }
+            (new Reading(req.user, book, reading.date_started, this.checkEmptyString(reading.date_finished), reading.rating, this.checkEmptyString(reading.comment), this.checkEmptyString(reading.link), reading.is_secret == '1')).save()
+                .catch(e => res.render('error', {error: e}))
+                .then(() => res.redirect('/bookshelf'));
         });
 
         // this.router.post('/reading/edit', function(req, res, next){
@@ -73,8 +70,8 @@ export default class BookshelfRouter {
         //     reading.user_id = req.session.userId;
         //     dbController.editReading(req.body, function(err){
         //         if(err){
-        //             res.render('bookshelf/error', {error:err,
-        //                 });
+        //             res.render('bookshelf\error', {error:err,
+        //             });
         //         } else{
         //             res.redirect('/bookshelf');
         //         }
@@ -146,5 +143,9 @@ export default class BookshelfRouter {
         //             res.json({ok:0, error: "Not supported action: "+req.query.action});
         //     }
         // });
+    }
+
+    checkEmptyString(str) {
+        return str ? str : null;
     }
 }

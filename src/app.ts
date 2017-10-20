@@ -6,7 +6,7 @@ if (!process.env.NODE_ENV) {
 
 //process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'development' ) ? 'development' : 'production';
 let express = require('express');
-//var path = require('path');
+var path = require('path');
 let favicon = require('serve-favicon');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
@@ -15,7 +15,7 @@ let config = require('./config');
 let app = express();
 
 // view engine setup
-app.set('views', __dirname + '/views');
+app.set('views', __dirname + path.sep + 'views');
 app.set('view engine', 'pug');
 
 // middleware setup
@@ -46,6 +46,7 @@ app.use(session({
 }));
 app.use((req, res, next) => {
     if (req.session.user) {
+        req.user = new User(req.session.user.id, req.session.user.username, req.session.user.adim);
         res.locals.user = req.session.user;
         next();
     } else if (req.method == "POST")
