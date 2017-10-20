@@ -1,6 +1,6 @@
 "use strict";
 
-let readings;
+let readings, modal;
 
 function getRecentReadings(page) {
     $.ajax({
@@ -27,6 +27,10 @@ function getRecentReadings(page) {
     });
 }
 
+let ViewAddReading = {
+    template: ``
+};
+let app;
 $(document).ready(function(){
     readings = new Vue({
         el: 'table#readings',
@@ -42,4 +46,42 @@ $(document).ready(function(){
         }
     });
     getRecentReadings(1);
+    modal = new Vue({
+        el: '#modal',
+        data: {
+            curView: 'test'
+        },
+        components: {
+            test: {template: "<h1>asdf</h1>"}
+        },
+        methods: {
+            showAddReading: () => {
+
+            },
+            viewReading: (id) => {
+            },
+        }
+    });
+    $('#addReading').click();
+    const NotFound = {template: '<p>Page not found</p>'};
+    const Home = {template: '<p>home page</p>'};
+    const About = {template: '<p>about page</p>'};
+    const routes = {
+        '/': Home,
+        '/about': About
+    };
+    app = new Vue({
+        el: '#app',
+        data: {
+            currentRoute: window.location.pathname
+        },
+        computed: {
+            ViewComponent () {
+                return routes[this.currentRoute] || NotFound
+            }
+        },
+        render (h) {
+            return h(this.ViewComponent)
+        }
+    })
 });

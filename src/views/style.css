@@ -36,3 +36,7 @@ footer.ui.inverted.vertical{
 .ui.container{
     max-width: 960px !important;
 }
+
+.disable {
+    display: none;
+}

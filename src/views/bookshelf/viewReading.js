@@ -3,34 +3,14 @@
  */
 $(function(){
     $('#mod_btn').click(function(){
-        $.get({
-            url: '/bookshelf/api/comment?action=get&password='+$('#password').val()+'&id='+$('#form_id').val(),
-            success: function (response) {
-                if (response.ok === 0) {
-                    alert('오류 발생. 관리자에게 문의하세요.');
-                    return;
-                }
-                if(response.ok === 2){
-                    alert('잘못된 비밀번호. 당신 맞나요?');
-                    return;
-                }
-                var comment = response.result;
-                $('#form_comment').val(comment);
-                $('#form_comment').parent().show();
+        $('#form_comment').parent().show();
 
-                $('#form_password').val($('#password').val());
-                $('form *').removeAttr('readonly');
-                $('.rating').starRating('setReadOnly', false);
+        $('form *').removeAttr('readonly');
+        $('.rating').starRating('setReadOnly', false);
 
-                $('#is_secret').show();
-                $('#password').parent().hide();
-                $('#ok_btn').parent().show();
-                $('#mod_btn').parent().hide();
-            },
-            error: function () {
-                alert('error');
-            }
-        });
+        $('#is_secret').show();
+        $('#ok_btn').parent().show();
+        $('#mod_btn').parent().hide();
     });
 
     $('#ok_btn').click(function(){

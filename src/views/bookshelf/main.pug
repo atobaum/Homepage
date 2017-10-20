@@ -18,7 +18,7 @@ block content
         tbody
             tr(v-for="reading in readings")
                 td
-                    a(:href="'/bookshelf/book/'+reading.book.isbn13") {{ reading.book.title }}
+                    a(:href="'/bookshelf/book/'+reading.book.isbn13" ) {{ reading.book.title }}
                 td {{ reading.book.authors.map(author => author.name + ' ' + author.type).join(', ') }}
                 td
                     a(:href="'/bookshelf/reading/'+reading.id") {{ reading.date[0] }} ~ {{ reading.date[1] }}
@@ -30,5 +30,11 @@ block content
                     .ui.pagination.menu(v-for="num in pages")
                         a.item(href="#" v-bind:class="{ active: num == curPage }" v-on:click="pageNumber") {{ num }}
     -if(user){
-    a.ui.green.basic.button(href="/bookshelf/reading/add") 읽은 책 추가
+    a.ui.green.basic.button#addReading(href="/bookshelf/reading/add") 읽은 책 추가
     -}
+
+    .ui.modal#modal
+        i.close.icon
+        .header
+        component.body(v-bind:is="curView")
+        .footer

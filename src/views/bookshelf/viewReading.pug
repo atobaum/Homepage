@@ -19,7 +19,6 @@ block content
         input(type="hidden", name="id", id="form_id", value=reading.id)
         input(type="hidden", name="rating", id="form_rating", value=reading.rating)
         input(type="hidden", name="is_secret", id="form_secret", value=reading.rating)
-        input(type="hidden", name="password", id="form_password", value=reading.rating)
         .fields.inline
             .field
                 label 읽은 날짜
@@ -32,11 +31,9 @@ block content
         .field
             label 평점
             .rating#form_rating
-        -if(reading.comment){
         .field
             label 후기
             textarea(name='comment', id='form_comment', readonly) #{reading.comment}
-        -}
         #is_secret.inline.field(style="display:none")
             .ui.toggle.checkbox
                 input(type="checkbox", tabindex="0", readonly)
@@ -45,7 +42,7 @@ block content
             label 읽은 사람
             a(href="#", id="form_user") #{reading.user}
 
-        -if(reading.comment){
+        -if(user && user.id == reading.userId){
         .ui.buttons
             button#mod_btn.ui.button.yellow(type='button') 수정
             button#del_btn.ui.button.negative(type='button') 삭제

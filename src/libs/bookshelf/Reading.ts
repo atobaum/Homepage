@@ -21,6 +21,8 @@ export default class Reading {
     private saveType: ESaveType;
 
     constructor(user, book: Book, startDate, finishedDate, rating, comment, link, isSecret, saveType: ESaveType = ESaveType.NEW) {
+        if (saveType === ESaveType.NEW && book == null)
+            throw new Error("book required when construct Reading instance in New mode");
         this.book = book;
         this.date = [startDate, finishedDate];
         this.rating = rating;
@@ -35,6 +37,7 @@ export default class Reading {
         if (this.id)
             throw new Error('id already setted.');
         this.id = id;
+        return this;
     }
 
     static async load(id, userId?: number) {
@@ -58,10 +61,11 @@ export default class Reading {
             reading.date_started,
             reading.date_finished,
             reading.rating,
-            (reading.is_secret && reading.user_id !== userId ? null : reading.comment),
+            (reading.is_secret && (reading.user_id !== userId) ? null : reading.comment),
             reading.link,
             reading.is_secret);
         temp.id = reading.id;
+        temp.userId = reading.user_id;
         return temp;
     }
 
@@ -70,19 +74,25 @@ export default class Reading {
     }
 
     async save() {
-        await this.book.save();
-        let data = {
+        let data: any = {
             date_started: this.date[0],
             date_finished: this.date[1],
-            book_id: this.book.getIsbn13(),
             rating: this.rating,
             comment: this.comment,
             link: this.link,
-            user_id: this.user.getId(),
             user: this.user.getUsername(),
             is_secret: this.isSecret
         };
-        return await SingletonMysql.query('INSERT INTO readings SET ?', [data]);
+        if (this.saveType === ESaveType.NEW) {
+            await this.book.save();
+            data.book_id = this.book.getIsbn13();
+            data.user_id = this.user.getId();
+            return await SingletonMysql.query('INSERT INTO readings SET ?', [data]);
+        } else if (this.saveType === ESaveType.EDIT) {
+            return await SingletonMysql.query('UPDATE readings SET ? WHERE id=? AND user_id=?', [data, this.id, this.user.getId()])
+
+        }
+
     }
 
     static async searchReading(type: ESearchType, keyword, page: number = 1) {
@@ -98,4 +108,5 @@ export default class Reading {
         let pages = Math.ceil(numOfReadings / articlePerPage);
         return [result, pages]
     }
+
 }

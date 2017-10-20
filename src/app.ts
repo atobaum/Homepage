@@ -48,6 +48,7 @@ app.use((req, res, next) => {
     if (req.session.user) {
         req.user = new User(req.session.user.id, req.session.user.username, req.session.user.adim);
         res.locals.user = req.session.user;
+        req.userId = req.session.user.id;
         next();
     } else if (req.method == "POST")
         res.render("error", {error: new Error("로그인 하세요.")});

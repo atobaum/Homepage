@@ -1,9 +1,13 @@
 "use strict";
+/**
+ * @todo reading edit
+ */
 import {Router} from "express";
 import DaumBook from "../libs/bookshelf/DaumBook";
 import Reading, {ESearchType} from "../libs/bookshelf/Reading";
 import {Book} from "../libs/bookshelf/Book";
 import * as path from "path";
+import {ESaveType} from "../libs/common";
 export default class BookshelfRouter {
     private router: Router;
     private daum: DaumBook;
@@ -40,10 +44,14 @@ export default class BookshelfRouter {
         });
 
         this.router.get('/reading/:id', (req, res, next) => {
-            Reading.load(req.params.id, req.session.userId)
+            Reading.load(req.params.id, req.userId)
                 .catch(e => res.render('error', {error: e}))
-                .then(reading => res.render('bookshelf' + path.sep + 'viewReading', {reading: reading}));
+                .then(reading => {
+                    console.log(reading);
+                    res.render('bookshelf' + path.sep + 'viewReading', {reading: reading})
+                });
         });
+
 
         // this.router.post('/book/add', function(req, res, next){
         //     let book = JSON.parse(req.body);
@@ -55,50 +63,42 @@ export default class BookshelfRouter {
 
         this.router.post('/reading', async (req: any, res) => {
             let reading = req.body;
-            let tempBook = JSON.parse(reading.book);
-            reading.user_id = req.session.userId;
-            reading.user = req.session.userNickname;
+            reading.user_id = req.session.user.id;
+            reading.user = req.session.user.username;
             let book = Book.createFromJSON(JSON.parse(reading.book));
 
-            (new Reading(req.user, book, reading.date_started, this.checkEmptyString(reading.date_finished), reading.rating, this.checkEmptyString(reading.comment), this.checkEmptyString(reading.link), reading.is_secret == '1')).save()
+            (new Reading(req.user, book, reading.date_started, BookshelfRouter.checkEmptyString(reading.date_finished), reading.rating, BookshelfRouter.checkEmptyString(reading.comment), BookshelfRouter.checkEmptyString(reading.link), reading.is_secret == '1', ESaveType.NEW)).save()
                 .catch(e => res.render('error', {error: e}))
                 .then(() => res.redirect('/bookshelf'));
         });
 
-        // this.router.post('/reading/edit', function(req, res, next){
-        //     let reading = req.body;
-        //     reading.user_id = req.session.userId;
-        //     dbController.editReading(req.body, function(err){
-        //         if(err){
-        //             res.render('bookshelf\error', {error:err,
-        //             });
-        //         } else{
-        //             res.redirect('/bookshelf');
-        //         }
-        //     });
-        // });
+        this.router.post('/reading/edit', function (req: any, res) {
+            let reading = req.body;
+            reading.user_id = req.session.user.id;
+            reading.user = req.session.user.username;
+            console.log(reading);
 
-        // this.router.post('/api/reading/delete', function(req, res){
-        //     dbController.deleteReading(req.body, function(err){
-        //         if(err && err.name==="WrongPasswordError"){
-        //             res.json({ok:2});
-        //         } else if(err){
-        //             res.json({ok:0, error:err});
-        //         }else {
-        //             res.json({ok:1});
-        //         }
-        //     });
-        // });
+            (new Reading(req.user, null, reading.date_started, BookshelfRouter.checkEmptyString(reading.date_finished), reading.rating, BookshelfRouter.checkEmptyString(reading.comment), BookshelfRouter.checkEmptyString(reading.link), reading.is_secret == '1', ESaveType.EDIT)).setId(reading.id).save()
+                .catch(e => res.render('error', {error: e}))
+                .then(() => res.redirect('/bookshelf'));
+        });
 
-        // this.router.get('/api/bookinfo/aladin', function(req, res, next){
-        //     aladin.bookInfo(req.query.isbn13, function(err, book){
-        //         if(err){
-        //             res.json({ok:0, error:err});
-        //         } else{
-        //             res.json({ok:1, result: book});
-        //         }
-        //     });
-        // });
+        this.router.get('/api/reading/:id', function (req, res) {
+            switch (req.query.action.toLowerCase()) {
+                case 'get':
+                    Reading.load(req.params.id, req.userId)
+                        .catch(e => res.json({ok: 0, error: e}))
+                        .then(reading => res.json({ok: 1, reading: reading}));
+                    break;
+            }
+        });
+
+        this.router.post('/api/reading/:id', function (req, res) {
+            switch (req.query.action.toLoserString()) {
+                case 'edit':
+                    break;
+            }
+        });
 
         this.router.get('/api/searchbook', (req, res) => {
             return this.daum.search(req.query.keyword)
@@ -119,33 +119,9 @@ export default class BookshelfRouter {
                     res.json({ok: 1, result: result})
                 });
         });
-        // this.router.get('/api/comment', function(req, res){
-        //     if(!req.query.action){
-        //         res.json({ok:0, error: "No action query."});
-        //         return;
-        //     }
-        //
-        //     switch (req.query.action){
-        //         case 'get':
-        //             dbController.getSecretComment(req.query.id, req.session.userId, req.query.password, function (err, comment) {
-        //                 if (err) {
-        //                     if (err.name = "WrongPasswordError") {
-        //                         res.json({ok: 2}); //Worng Password
-        //                     } else {
-        //                         res.json({ok: 0, error: err});
-        //                     }
-        //                     return;
-        //                 }
-        //                 res.json({ok: 1, result: comment});
-        //             });
-        //             break;
-        //         default:
-        //             res.json({ok:0, error: "Not supported action: "+req.query.action});
-        //     }
-        // });
     }
 
-    checkEmptyString(str) {
+    static checkEmptyString(str) {
         return str ? str : null;
     }
 }
