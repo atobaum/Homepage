@@ -47,8 +47,11 @@ app.use(session({
 app.use((req, res, next) => {
     if (req.session.user) {
         res.locals.user = req.session.user;
-    }
-    next();
+        next();
+    } else if (req.method == "POST")
+        res.render("error", {error: new Error("로그인 하세요.")});
+    else
+        next();
 });
 
 //Router setup
