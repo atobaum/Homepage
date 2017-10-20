@@ -20,7 +20,7 @@ app.set('view engine', 'pug');
 
 // middleware setup
 // app.use(favicon(__dirname + '/../views/' + 'favicon.ico'));
-app.use(express.static(__dirname + '/../public'));
+app.use('/static', express.static(__dirname + '/../public'));
 if (process.env.NODE_ENV === 'development') {
     let logger = require('morgan');
     app.use(logger('dev'));
