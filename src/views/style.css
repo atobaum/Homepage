@@ -40,3 +40,10 @@ footer.ui.inverted.vertical{
 .disable {
     display: none;
 }
+
+.text-overflow {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-wrap: break-word;
+    overflow: hidden;
+}

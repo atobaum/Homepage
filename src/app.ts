@@ -28,13 +28,15 @@ if (process.env.NODE_ENV === 'development') {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
-//session setup
 import SingletonMysql from "./libs/SingletonMysql";
-import BookshelfRouter from "./routers/bookshelf";
-import {WikiRouter} from "./routers/wiki";
+//session setup
 import User from "./libs/User";
-
+//Router setup
+import {WikiRouter} from "./routers/wiki";
+import ApiRouter from "./routers/api";
 SingletonMysql.init(config.db);
+
+
 let session = require('express-session');
 let MySQLStore = require('express-mysql-session')(session);
 let sessionStore = new MySQLStore({}, SingletonMysql.getPool().pool);
@@ -56,10 +58,14 @@ app.use((req, res, next) => {
         next();
 });
 
-//Router setup
-let bookshelf = require('./routers/bookshelf');
-app.use('/bookshelf', (new BookshelfRouter(config.bookshelf)).getRouter());
+let api = new ApiRouter();
+
+app.get('/bookshelf', (req, res) => res.render('bookshelf/main'));
+api.use('/bookshelf', (new (require('./routers/bookshelfApi').default)(config.bookshelf)).getRouter());
+
 app.use('/wiki', (new WikiRouter()).getRouter());
+
+app.use('/api', api.getRouter());
 
 app.get('/', function (req, res) {
     res.render('index');
@@ -74,18 +80,6 @@ app.get('/auth/logout', function (req, res) {
     res.redirect(req.header('Referer'));
 });
 
-app.get('/api/auth/login', function (req, res) {
-    User.login(req.query.id, req.query.password)
-        .then(user => {
-            req.session.user = user;
-            if (req.query.autoLogin == "true")
-                session.cookie.maxAge = 1000 * 60 * 60 * 24 * 7; //7 days
-            res.json({ok: 1});
-        })
-        .catch(e => {
-            res.json({ok: e.code, error: e});
-        });
-});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -104,4 +98,5 @@ app.use(function (err, req, res, next) {
     res.status(err.status || 500);
     res.render('error');
 });
+
 module.exports = app;

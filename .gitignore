@@ -70,6 +70,7 @@ jspm_packages
 ### private data ###
 *.config
 *config.js
+!webpack.config.js
 
 ### test files ###
 test.*

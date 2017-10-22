@@ -1,40 +1,9 @@
 extends ../layout
 
 block head
-    script(src = "/js/bookshelf/main.js")
-    //link(rel="stylesheet" href="/css/bookshelf/main.js")
-
     title 책장 - hanjitori
-    
+
 block content
-    h1 책장
-    table#readings.ui.celled.table
-        thead
-            tr
-                th 책 제목
-                th 저자
-                th 날짜
-                th 읽은 사람
-        tbody
-            tr(v-for="reading in readings")
-                td
-                    a(:href="'/bookshelf/book/'+reading.book.isbn13" ) {{ reading.book.title }}
-                td {{ reading.book.authors.map(author => author.name + ' ' + author.type).join(', ') }}
-                td
-                    a(:href="'/bookshelf/reading/'+reading.id") {{ reading.date[0] }} ~ {{ reading.date[1] }}
-                td {{ reading.user }}
-
-        tfoot
-            tr
-                th(colspan=5).center.aligned
-                    .ui.pagination.menu(v-for="num in pages")
-                        a.item(href="#" v-bind:class="{ active: num == curPage }" v-on:click="pageNumber") {{ num }}
-    -if(user){
-    a.ui.green.basic.button#addReading(href="/bookshelf/reading/add") 읽은 책 추가
-    -}
-
-    .ui.modal#modal
-        i.close.icon
-        .header
-        component.body(v-bind:is="curView")
-        .footer
+    main.ui.container
+        #app
+    script(src = "/static/bookshelf/bookshelf.js")

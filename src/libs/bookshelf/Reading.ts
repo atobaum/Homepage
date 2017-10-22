@@ -19,6 +19,7 @@ export default class Reading {
     private userId: number;
     private user: User;
     private saveType: ESaveType;
+    private own: boolean;
 
     constructor(user, book: Book, startDate, finishedDate, rating, comment, link, isSecret, saveType: ESaveType = ESaveType.NEW) {
         if (saveType === ESaveType.NEW && book == null)
@@ -66,6 +67,7 @@ export default class Reading {
             reading.is_secret);
         temp.id = reading.id;
         temp.userId = reading.user_id;
+        temp.own = reading.user_id == userId;
         return temp;
     }
 
@@ -87,12 +89,12 @@ export default class Reading {
             await this.book.save();
             data.book_id = this.book.getIsbn13();
             data.user_id = this.user.getId();
-            return await SingletonMysql.query('INSERT INTO readings SET ?', [data]);
+            await SingletonMysql.query('INSERT INTO readings SET ?', [data]);
+            return;
         } else if (this.saveType === ESaveType.EDIT) {
-            return await SingletonMysql.query('UPDATE readings SET ? WHERE id=? AND user_id=?', [data, this.id, this.user.getId()])
-
+            await SingletonMysql.query('UPDATE readings SET ? WHERE id=? AND user_id=?', [data, this.id, this.user.getId()]);
+            return;
         }
-
     }
 
     static async searchReading(type: ESearchType, keyword, page: number = 1) {
