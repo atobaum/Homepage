@@ -1,11 +1,9 @@
 extends ../layout
 
 block head
-    //link(rel="stylesheet" href="/css/bookshelf/main.js")
-
     title 책장 - hanjitori
-    
+
 block content
-    h1 책장
-    #app
+    main.ui.container
+        #app
     script(src = "/static/bookshelf/bookshelf.js")

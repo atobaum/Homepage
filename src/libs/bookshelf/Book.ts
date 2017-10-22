@@ -40,6 +40,7 @@ export class Book {
         try {
             return new Book(json.title, authors, json.publisher, json.publishedDate, json.isbn13, json.coverURL);
         } catch (e) {
+            console.log('error', e);
             console.log(json);
             throw e;
         }
@@ -88,7 +89,6 @@ export class Book {
                     else {
                         publisherId = (await conn.query('SELECT id FROM publishers WHERE name=?', [this.publisher]))[0][0].id;
                     }
-                    console.log(this, publisherId);
                     let data = {
                         isbn13: this.isbn13,
                         title_ko: this.title,

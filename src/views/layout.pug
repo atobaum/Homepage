@@ -25,6 +25,7 @@ html
                 block rightNav
 
                 .item.ui.dropdown
+                    input#isUser(type="hidden", value=(user == null ? 0 : 1))
                     i.large.user.icon
                     .menu
                         - if(user){
@@ -38,9 +39,7 @@ html
                         a.item(href="/login") 로그인
                         -}
 
-        .ui.container.segment
-            block content
-
+        block content
         footer.ui.inverted.vertical.footer.segment(style='text-align: center')
             p.
                 hanjitori.com | #[a(href='mailto:lereveurdesetoiles@gmail.com') Contact]

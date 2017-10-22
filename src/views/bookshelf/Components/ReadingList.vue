@@ -8,11 +8,11 @@
                 th 읽은 사람
         tbody
             tr(v-for="reading in readings")
-                td
-                    a(href="#", @click="viewBook(reading.book.isbn13)") {{ reading.book.title }}
+                td.text-overflow
+                    a(@click="viewBook(reading.book.isbn13)") {{ reading.book.title }}
                 td {{ reading.book.authors.map(author => author.name + ' ' + author.type).join(', ') }}
                 td
-                    a(href="#", @click="viewReading(reading.id)") {{ reading.date[0] }} ~ {{ reading.date[1] }}
+                    a(@click="viewReading(reading.id)") {{ reading.date[0] }} ~ {{ reading.date[1] }}
                 td {{ reading.user }}
 
         tfoot
@@ -46,18 +46,17 @@
         },
         methods: {
             changePage: function (num) {
-                axios.get('/bookshelf/api/recentreading?page=' + num)
+                axios.get('/api/bookshelf/recentreading?page=' + num)
                     .then(result => {
                         let res = result.data.result;
                         this.readings = res[0];
                         this.maxPage = res[1];
                         this.curPage = num;
-                        console.log(this.curPage)
                     })
                     .catch(e => {
                         throw e;
                     });
-            }
+            },
         },
         mounted: function () {
             this.changePage(1);

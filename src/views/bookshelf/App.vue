@@ -1,50 +1,58 @@
 <template lang="pug">
     div
-        ReadingList
-        a.ui.green.basic.button#addReading(href="/bookshelf/reading/add", v-if="isUser") 읽은 책 추가
+        .ui.styled.fluid.accordion
+            .title
+            view-reading(:id="readingNum", @resetAcc="resetAcc()").content
+            .title
+            add-reading.content(v-if="isUser", @resetAcc="resetAcc()")
 
+        a.ui.green.basic.button(v-if="addButton", @click="openAddReading") 읽은 책 추가
+        reading-list(:viewReading="openViewReading")
 </template>
-
 <script>
     import ReadingList from "./Components/ReadingList.vue"
+    import ViewReading from "./Components/ViewReading.vue"
+    import AddReading from "./Components/AddReading.vue"
     export default {
         data () {
             return {
                 readings: [],
-                msg: 'Welcome to Your Vue.js App'
+                isUser: document.getElementById('isUser').value == '1',
+                readingNum: null,
+                addButton: $('#isUser').val() == '1'
             }
         },
-        props: ["isUser"],
-        components: {ReadingList: ReadingList},
-
+        methods: {
+            openViewReading: function (num) {
+                $(this.$el).children('.accordion').accordion('open', 0);
+                $(this.$el).children('.accordion').accordion('close', 1);
+                this.addButton = this.isUser;
+                this.readingNum = num;
+            },
+            openAddReading: function () {
+                $(this.$el).children('.accordion').accordion('close', 0);
+                $(this.$el).children('.accordion').accordion('open', 1);
+                this.addButton = false;
+            },
+            resetAcc: function () {
+                $(this.$el).children('.accordion').accordion('close', 0);
+                $(this.$el).children('.accordion').accordion('close', 1);
+                this.addButton = this.isUser;
+            }
+        },
+        mounted: function () {
+            $(this.$el).children('.accordion').accordion();
+        },
+        components: {ViewReading: ViewReading, ReadingList: ReadingList, AddReading: AddReading},
     }
 </script>
 
 <style>
-    #app {
-        font-family: 'Avenir', Helvetica, Arial, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-align: center;
-        color: #2c3e50;
-        margin-top: 60px;
+    .accordion > .title {
+        display: none;
     }
 
-    h1, h2 {
-        font-weight: normal;
-    }
-
-    ul {
-        list-style-type: none;
-        padding: 0;
-    }
-
-    li {
-        display: inline-block;
-        margin: 0 10px;
-    }
-
-    a {
-        color: #42b983;
+    .ui.green.basic.button {
+        margin: 10px;
     }
 </style>
