@@ -17,7 +17,7 @@ $(function(){
    });
    $('.ui.search').search({
        apiSettings: {
-           url: '/wiki/api/titleSearch?q={query}'
+           url: '/api/wiki/titleSearch?q={query}'
        },
        fields: {
            results : 'result'

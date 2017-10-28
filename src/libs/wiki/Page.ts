@@ -235,8 +235,6 @@ export class Page extends IPage {
         return [ns, parsedTitle[2]];
     }
 
-
-
     async save(): Promise<void> {
         if (this.status !== EPageStat.SET_SRC)
             throw new PageError(EPageError.INVALID_OP, this.status, "save");

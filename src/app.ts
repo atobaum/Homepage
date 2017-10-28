@@ -8,10 +8,8 @@ import * as express from "express";
 import SingletonMysql from "./libs/SingletonMysql";
 //session setup
 import User from "./libs/User";
-//Router setup
-import {WikiRouter} from "./routers/wiki";
 import ApiRouter from "./routers/api";
-
+import {WikiRouter} from "./routers/wiki";
 
 let path = require('path');
 let favicon = require('serve-favicon');
@@ -58,14 +56,15 @@ app.use((req: express.Request, res, next) => {
         next();
 });
 
-let api = new ApiRouter();
-
+//Router setup
 app.get('/bookshelf', (req, res) => res.render('bookshelf/main'));
+let api = new ApiRouter();
 api.use('/bookshelf', (new (require('./routers/bookshelfApi').default)(config.bookshelf)).getRouter());
-
-app.use('/wiki', (new WikiRouter()).getRouter());
+api.use('/wiki', require('./routers/WikiApi').default);
 
 app.use('/api', api.getRouter());
+
+app.use('/wiki', (new WikiRouter()).getRouter());
 
 app.get('/', function (req, res) {
     res.render('index');
