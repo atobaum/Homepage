@@ -1,22 +1,22 @@
 extends layout
 
 block head2
-    title #{wiki.title} - Wiki
-    meta(name="wiki_title" content=wiki.title)
+    title #{page[0]} - Wiki
+    meta(name="wiki_title" content=page[0])
     link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css")
     link(rel="stylesheet" href='/static/css/wiki/wiki_view.css')
     script(src="/static/js/wiki/wiki_view.js")
 
 block content
-    .ui
+    .ui.container.segment
         .ui.compact.menu.wiki_article_menu
-            a.item(href='/wiki/edit/' + wiki.title) 수정
-            a.item(href='/wiki/history/' + wiki.title) 역사
-            a.item(href='/wiki/xref/' + wiki.title) 역링크
-            - if (session.userAdmin){
+            a.item(href='/wiki/edit/' + page[0]) 수정
+            a.item(href='/wiki/history/' + page[0]) 역사
+            a.item(href='/wiki/xref/' + page[0]) 역링크
+            - if (user && user.admin){
             a.item#btn_etc 기타
             - }
-        .wiki_content.language-javascript !{wiki.parsedContent}
+        .wiki_content.language-javascript !{page[1]}
     .ui.modal#modal_etc
         i.close.icon
         .header 기타 설정
