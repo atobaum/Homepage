@@ -21,13 +21,17 @@ export class Li extends BigToken {
 
     parse(toks) {
         let siblings = [this];
-        console.log(this);
-        while (toks[0] && toks[0] instanceof Li && toks[0].level >= this.level) {
+        console.log(this, toks);
+        try {
+            while (toks[0] instanceof Li && ((toks[0].level === this.level && toks[0].ordered === this.ordered) || toks[0].level > this.level)) {
             let tok = toks.shift();
-            if (toks[0].level === this.level)
+                if (tok.level === this.level)
                 siblings.push(tok);
             else
-                this.child = tok.parse(toks);
+                    siblings[siblings.length - 1].child = tok.parse(toks);
+        }
+        } catch (e) {
+            console.log(e);
         }
         return new List(siblings, this.ordered);
     }
@@ -39,7 +43,7 @@ export class List extends BigToken {
 
     constructor(list, ordered, isRoot = false) {
         super(list);
-        console.log(list);
+        // console.log(list);
         this.ordered = ordered;
         this.isRoot = isRoot;
     }
