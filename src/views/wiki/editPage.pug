@@ -12,13 +12,14 @@ block content
             - var editType = page.isNew ? " (새 문서 만들기)" : " (R"+page.revId+" 수정)";
             small !{editType}
         form.ui.form#edit_form(method="POST" action="/wiki/edit/" + encodeURI(page.fulltitle) onsubmit="return check_edit_form();")
-            input(type="hidden" name="major")
             input(type="hidden" name="title" value=page.fulltitle)
+            input(type="hidden" name="id" value=page.pageId)
+
             .ui.top.attached.tabular.menu
                 a.item.active(data-tab="edit") 편집
                 a.item(data-tab="preview") 미리보기
             .ui.bottom.attached.tab.segment.active(data-tab="edit")
-                textarea.ui.textarea(rows=25 name="text" readonly=page.readOnly) !{page.srcStr}
+                textarea.ui.textarea(rows=25 name="src" readonly=page.readOnly) !{page.srcStr}
             .ui.bottom.attached.tab.segment(data-tab="preview")
                 .wiki_content.language-javascript.preview
             - if(!page.readOnly){
@@ -26,7 +27,7 @@ block content
                 .ui.field.small.input.ten.wide
                     input(type="text" name="comment" placeholder="Comment...")
                 .ui.checkbox.field.two.wide
-                    input#btn_major_edit(type="checkbox")
+                    input#btn_major_edit(name='major', type="checkbox")
                     label(for='btn_major_edit') Major
                 button.right.ui.primary.button(type='submit') 제출
             - }
@@ -47,7 +48,8 @@ block content
                     data: {text: $('.tab textarea').val(), title: $('#edit_form input[name="title"]').val()},
                     success: function (res) {
                         $('.preview').html(res);
-                        $('.wiki-syntaxhl code').each((i, elem) = > {Prism.highlightElement(elem)
+                        $('.wiki-syntaxhl code').each(function (i, elem) {
+                            Prism.highlightElement(elem)
                     })
                         ;
                     },

@@ -9,7 +9,6 @@ import SingletonMysql from "./libs/SingletonMysql";
 //session setup
 import User from "./libs/User";
 import ApiRouter from "./routers/api";
-import {WikiRouter} from "./routers/wiki";
 
 let path = require('path');
 let favicon = require('serve-favicon');
@@ -61,24 +60,20 @@ app.get('/bookshelf', (req, res) => res.render('bookshelf/main'));
 let api = new ApiRouter();
 api.use('/bookshelf', (new (require('./routers/bookshelfApi').default)(config.bookshelf)).getRouter());
 api.use('/wiki', require('./routers/WikiApi').default);
-
 app.use('/api', api.getRouter());
 
-app.use('/wiki', (new WikiRouter()).getRouter());
+app.use('/wiki', require('./routers/wiki').default);
 
 app.get('/', function (req, res) {
     res.render('index');
 });
-
 app.get('/login', function (req, res) {
     res.render('login');
 });
-
 app.get('/auth/logout', function (req: any, res) {
     req.session.destroy();
     res.redirect(req.header('Referer'));
 });
-
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

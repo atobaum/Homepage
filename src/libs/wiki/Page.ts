@@ -1,5 +1,6 @@
 import SingletonMysql from "../SingletonMysql";
 import Parser from "./Parser";
+import User from "../User";
 /**
  * Created by Le Reveur on 2017-10-15.
  */
@@ -31,9 +32,12 @@ enum EPageError{
     NO_NS, NO_TITLE, INVALID_OP
 }
 export enum EPageStat{
+    ONLY_ID,
     ONLY_TITLE, PAGE_INFO, NS_INFO, SET_SRC, GET_SRC, RENDERED, DELETED
 }
 enum EPageOp{
+    PREVIEW,
+    SAVE,
     GET_SRC,
     RENDER,
     LOAD_PAGE_INFO, SET_NS, SET_SRC, DELETE, LOAD_SRC, GET_RENDER
@@ -75,6 +79,8 @@ export class Page extends IPage {
     private rev_counter: number;
     private cached: boolean;
     private minor: boolean;
+    private user: User;
+    private comment: string;
 
     constructor(fulltitle: string, isNew: boolean) {
         super();
@@ -84,6 +90,16 @@ export class Page extends IPage {
         this.isNew = isNew;
         this.status = EPageStat.ONLY_TITLE;
         this.PAC = [null, null];
+    }
+
+    static createPageWithId(id: number, user: User): Page {
+        if (!id) throw new Error("Error: id should be not empty.");
+        let page = new Page('temp', false);
+        page.pageId = id;
+        page.user = user;
+        page.status = EPageStat.ONLY_ID;
+        page.PAC = [null, null];
+        return page;
     }
 
     static async getRenderedPage(fulltitle, userId) {
@@ -99,9 +115,26 @@ export class Page extends IPage {
         return await page.loadSrc();
     }
 
+    static async edit(data, user) {
+        if (!data.id)
+            throw new Error('Error: required in function "edit" id');
+        let page = Page.createPageWithId(parseInt(data.id), user);
+        await page.loadPageInfo();
+        page.srcStr = data.src;
+        page.status = EPageStat.SET_SRC;
+        page.minor = !data.major;
+        page.comment = data.comment;
+        await page.save();
+        return;
+    }
+
     private checkState(op: EPageOp) {
         // console.log(PageStatToString(this.status));
         switch (this.status) {
+            case EPageStat.ONLY_ID:
+                if ((op !== EPageOp.LOAD_PAGE_INFO))
+                    throw new PageError(EPageError.INVALID_OP, EPageStat.ONLY_ID, op);
+                return;
             case EPageStat.ONLY_TITLE:
                 if ((op !== EPageOp.LOAD_PAGE_INFO) && (op !== EPageOp.SET_NS))
                     throw new PageError(EPageError.INVALID_OP, EPageStat.ONLY_TITLE, op);
@@ -122,6 +155,9 @@ export class Page extends IPage {
             case EPageStat.DELETED:
 
             case EPageStat.SET_SRC:
+                if ((op !== EPageOp.SAVE) && (op !== EPageOp.PREVIEW))
+                    throw new PageError(EPageError.INVALID_OP, EPageStat.SET_SRC, op);
+                return;
 
             case EPageStat.RENDERED:
 
@@ -153,12 +189,20 @@ export class Page extends IPage {
      *
      * @returns page{Promise} - A promise object that gives the page. If namespace doesn't exist, page.noPage = 1. If namespace exists but page is not, page.noPage = 2. Otherwise, page.noPage = undefined.
      */
-    private async loadPageInfo(): Promise<void> {
-        if (this.status !== EPageStat.ONLY_TITLE)
-            throw new PageError(EPageError.INVALID_OP, this.status, "loadPageInfo");
-        return await SingletonMysql.queries(async conn => {
-            let query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
-            let [rows] = await conn.query(query, this.titles);
+    private loadPageInfo(): Promise<void> {
+        this.checkState(EPageOp.LOAD_PAGE_INFO);
+        let q, data;
+        if (this.status == EPageStat.ONLY_TITLE) {
+            q = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
+            data = this.titles;
+        }
+        else {
+            q = "SELECT * FROM fullpage WHERE page_id = ?";
+            data = [this.pageId];
+        }
+
+        return SingletonMysql.queries(async conn => {
+            let [rows] = await conn.query(q, data);
             if (rows.length === 0)
                 throw new PageError(EPageError.NO_TITLE, this.status, this.titles.join(':'));
             let row = rows[0];
@@ -244,14 +288,24 @@ export class Page extends IPage {
     }
 
     async save(): Promise<void> {
-        if (this.status !== EPageStat.SET_SRC)
-            throw new PageError(EPageError.INVALID_OP, this.status, "save");
+        this.checkState(EPageOp.SAVE);
         if (this.isNew) {
-
+            throw new Error('not supported yet: create new page');
         } else {
-
+            //add revision
+            let revision = {
+                page_id: this.pageId,
+                rev_id: this.revId + 1,
+                user_id: this.user.getId(),
+                user_text: this.user.getUsername(),
+                text: this.srcStr,
+                parent_id: this.revId,
+                minor: this.minor,
+                comment: this.comment
+            };
+            await SingletonMysql.query("INSERT INTO revision SET ?", [revision]);
+            return;
         }
-        return
     }
 
     /**
