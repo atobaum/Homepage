@@ -23,91 +23,49 @@ export enum ETokenType{
     ESCAPE, ITALIC, BOLD, ITALICBOLD, UNDERLINE, SUP, SUB, URLLINK, LINK, DEL, NEWLINE, RFOOTNOTE, FOOTNOTE, FONTSIZE, FONTCOLOR, TEXT, INLINELATEX, MACRO, BLOCKLATEX, SECTION, LIST, LI, HR, BR, QUOTE, TABLE, EMPTYLINE, PARAGRAPH, COMMENT
 }
 
-export interface IToken {
-    render(): string;
-    plainText(): string;
-}
-
 export abstract class Token {
+    parse(toks: Token[]): Token {
+        return this;
+    }
+
     abstract render(): string;
 
     abstract plainText(): string;
 }
 
-export abstract class InlineToken implements IToken {
-    protected params: any[];
-
-    constructor(params: any[]) {
-        this.params = params;
-    }
+export abstract class BigToken extends Token {
+    needParse: boolean;
+    private toks: Token[];
 
     abstract render();
 
-    abstract plainText();
-}
-
-export abstract class BlockToken implements IToken {
-    private toks: IToken[];
-
-    abstract render();
-
-    constructor(toks: IToken[]) {
+    constructor(toks: Token[], needParse: boolean = false) {
+        super();
         this.toks = toks;
     }
 
     renderContent(): string {
-        return this.toks.reduce((str, tok) => str + tok.render(), '');
+        if (this.toks.length)
+            return this.toks.reduce((str, tok) => str + tok.render(), '');
+        else
+            return '';
     }
 
     plainText() {
-        return this.toks.reduce((str, tok) => str + tok.plainText(), '');
+        if (this.toks.length)
+            return this.toks.reduce((str, tok) => str + tok.plainText(), '');
+        else
+            return '';
     }
 }
 
-export abstract class Macro implements IToken {
-    abstract render();
-
-    abstract plainText();
+export abstract class TokenFactory {
+    static scan(src: string) {
+        throw new Error('Implement scan');
+    };
 }
 
-export class Li extends BlockToken {
-    ordered: boolean;
-    level: number;
-    child: List = null;
-
-    constructor(toks: InlineToken[], ordered: boolean, level: number) {
-        super(toks);
-        this.ordered = ordered;
-        this.level = level;
-    }
-
-    render() {
-        return `<li>${this.renderContent()}${this.child ? this.child.render() : ''}</li>`;
-    }
-
-}
-export class List extends BlockToken {
-    ordered: boolean;
-    isRoot: boolean;
-
-    constructor(list, ordered, isRoot = false) {
-        super(list);
-        this.ordered = ordered;
-        this.isRoot = isRoot;
-    }
-
-    render() {
-        let result = '';
-        result += this.isRoot ? '<div class="wiki_list ui list">' : '';
-        result += this.ordered ? '<ol>' : '<ul>';
-        result += this.renderContent();
-        result += this.ordered ? '</ol>' : '</ul>';
-        result += this.isRoot ? '</div>' : '';
-        return result;
-    }
-}
-
-// export class TOC extends BlockToken {
+// export class TOC extends BigToken {
 //     constructor(toks: Section[]) {
 //         super(toks);
 //     }
@@ -130,7 +88,7 @@ export class List extends BlockToken {
 //     }
 // }
 //
-// export class Section extends BlockToken{
+// export class Section extends BigToken{
 //     level: number;
 //     constructor(toks: InlineToken[], level: number) {
 //         super(toks);
@@ -153,10 +111,10 @@ export class List extends BlockToken {
 //     }
 // }
 
-export class Footnote extends BlockToken {
+export class Footnote extends BigToken {
     index: number;
 
-    constructor(index: number, inlikeToks: InlineToken[]) {
+    constructor(index: number, inlikeToks: Token[]) {
         super(inlikeToks);
         this.index = index;
     }
@@ -170,17 +128,21 @@ export class Footnote extends BlockToken {
     }
 }
 
-export class RFootnote extends InlineToken {
+export class RFootnote extends Token {
+    private index: number;
+    private _plainText: string;
     constructor(index: number, plainText: string) {
-        super([index, plainText]);
+        super();
+        this.index = index;
+        this._plainText = plainText;
     }
 
     render() {
-        return `<sup id="rfn_${this.params[0]}"><a href="#fn_${this.params[0]}">[${this.params[1]}]</a></sup>`;
+        return `<sup id="rfn_${this.index}"><a href="#fn_${this.index}">[${this._plainText}]</a></sup>`;
     }
 
     plainText() {
-        return `[${this.params[0]}]`;
+        return this._plainText;
     }
 }
 
@@ -189,3 +151,4 @@ export * from './Components/Table'
 export * from './Components/Link'
 export * from './Components/Math'
 export * from './Components/TOC'
+export * from './Components/List'

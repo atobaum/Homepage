@@ -1,9 +1,9 @@
 import {Section} from "./Basic";
-import {Macro} from "../Components";
+import {Token} from "../Components";
 /**
  * Created by Le Reveur on 2017-10-17.
  */
-export class TOC extends Macro {
+export class TOC extends Token {
     parent: TOC;
     children: TOC[];
     index: number;

@@ -10,7 +10,7 @@ import Parser from "./Parser";
 class PageError extends Error {
     code: EPageError;
 
-    constructor(type: EPageError, stat: EPageStat, context: string) {
+    constructor(type: EPageError, stat: EPageStat, context: any) {
         let message = "ERROR: ";
         switch (type) {
             case EPageError.INVALID_OP:
@@ -33,6 +33,14 @@ enum EPageError{
 export enum EPageStat{
     ONLY_TITLE, PAGE_INFO, NS_INFO, SET_SRC, GET_SRC, RENDERED, DELETED
 }
+enum EPageOp{
+    GET_SRC,
+    RENDER,
+    LOAD_PAGE_INFO, SET_NS, SET_SRC, DELETE, LOAD_SRC, GET_RENDER
+}
+export enum EAccessControl {
+    CREATE = 8, READ = 4, UPDATE = 2, DELETE = 1
+}
 function PageStatToString(stat: EPageStat): string {
     switch (stat) {
         case EPageStat.ONLY_TITLE:
@@ -50,13 +58,20 @@ function PageStatToString(stat: EPageStat): string {
     }
 }
 
-export default class Page {
-    private titles: [string, string];
+export abstract class IPage {
+    titles: [string, string];
+    srcStr: string;
+    renStr: string;
+
+    get fulltitle() {
+        return (this.titles[0] === 'Main' || this.titles[0] == null ? this.titles[1] : this.titles.join(':'));
+    }
+}
+
+export class Page extends IPage {
     private PAC: [number, number];
     private nsId: number;
     private pageId: number;
-    private src: string;
-    private rendered: string;
     private isNew: boolean;
     private status: EPageStat;
     private rev_id: number;
@@ -65,11 +80,50 @@ export default class Page {
     private minor: boolean;
 
     constructor(fulltitle: string, isNew: boolean) {
+        super();
         if (!fulltitle) throw new Error("Error: title should be not empty.");
         this.titles = Page.parseTitle(fulltitle);
         this.isNew = isNew;
         this.status = EPageStat.ONLY_TITLE;
         this.PAC = [null, null];
+    }
+
+    static async getRenderedPage(fulltitle, userId) {
+        let page = new Page(fulltitle, false);
+        await page.loadPageInfo();
+        await page.loadSrc();
+        return await page.getRenderedPage();
+    }
+
+    private checkState(op: EPageOp) {
+        switch (this.status) {
+            case EPageStat.ONLY_TITLE:
+                if ((op !== EPageOp.LOAD_PAGE_INFO) && (op !== EPageOp.SET_NS))
+                    throw new PageError(EPageError.INVALID_OP, EPageStat.ONLY_TITLE, op);
+                return;
+            case EPageStat.NS_INFO:
+                if ((op !== EPageOp.SET_SRC) && (op !== EPageOp.LOAD_SRC) && (op !== EPageOp.GET_RENDER))
+                    throw new PageError(EPageError.INVALID_OP, EPageStat.NS_INFO, op);
+                return;
+            case EPageStat.GET_SRC:
+                if ((op !== EPageOp.RENDER) && (op !== EPageOp.GET_SRC) && (op !== EPageOp.GET_RENDER))
+                    throw new PageError(EPageError.INVALID_OP, EPageStat.GET_SRC, op);
+                return;
+            case EPageStat.PAGE_INFO:
+                if ((op !== EPageOp.LOAD_SRC) && (op !== EPageOp.GET_RENDER))
+                    throw new PageError(EPageError.INVALID_OP, EPageStat.PAGE_INFO, op);
+                return;
+
+            case EPageStat.DELETED:
+
+            case EPageStat.SET_SRC:
+
+            case EPageStat.RENDERED:
+
+            default:
+                throw new Error('Unhandled status: ' + PageStatToString(this.status))
+
+        }
     }
 
     private async updateNs(): Promise<void> {
@@ -94,9 +148,9 @@ export default class Page {
      *
      * @returns page{Promise} - A promise object that gives the page. If namespace doesn't exist, page.noPage = 1. If namespace exists but page is not, page.noPage = 2. Otherwise, page.noPage = undefined.
      */
-    private async updatePageInfo(): Promise<void> {
+    private async loadPageInfo(): Promise<void> {
         if (this.status !== EPageStat.ONLY_TITLE)
-            throw new PageError(EPageError.INVALID_OP, this.status, "updatePageInfo");
+            throw new PageError(EPageError.INVALID_OP, this.status, "loadPageInfo");
         return await SingletonMysql.queries(async conn => {
             let query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
             let [rows] = await conn.query(query, this.titles);
@@ -114,6 +168,7 @@ export default class Page {
             this.cached = row.cached === 1;
             this.rev_id = row.rev_id;
             this.rev_counter = row.rev_counter;
+            this.status = EPageStat.PAGE_INFO;
         });
     }
 
@@ -123,8 +178,8 @@ export default class Page {
         if (this.isNew)
             await this.updateNs();
         else
-            await this.updatePageInfo();
-        this.src = src;
+            await this.loadPageInfo();
+        this.srcStr = src;
         this.status = EPageStat.SET_SRC;
         return;
     }
@@ -132,25 +187,22 @@ export default class Page {
     async render() {
         if (this.status !== EPageStat.SET_SRC)
             throw new PageError(EPageError.INVALID_OP, this.status, "render");
-        return await Parser.render(this.titles, this.src);
+        return await Parser.render(this.titles, this.srcStr);
     }
 
-    async getSrc(): Promise<string> {
-        if (this.status !== EPageStat.ONLY_TITLE || this.isNew)
-            throw new PageError(EPageError.INVALID_OP, this.status, "getSrc, isNew");
-        this.updatePageInfo();
-        // if(this.status === EPageStat.DELETED)
+    loadSrc(): Promise<any> {
+        this.checkState(EPageOp.LOAD_SRC);
         return SingletonMysql.queries(async conn => {
             let rows, row;
             row = (await conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [this.pageId, this.rev_id]))[0][0];
-            this.src = row.text;
+            this.srcStr = row.text;
             this.minor = row.minor;
             // this.userId = row.user_id;
             // this.userText = row.userText;
             // this.comment = row.comment;
             // this.created = row.created;
             this.status = EPageStat.GET_SRC;
-            return this.src;
+            return this.srcStr;
         });
     }
 
@@ -254,7 +306,8 @@ export default class Page {
 //         });
     }
 
-    async getParsedPage(title, userId, updateCache) {
+    // async getPageRenderedPage(userId): Promise<string>  {
+    //     this.checkState();
 //         let pageInfo = await this.getPageInfo(title);
 //         if (pageInfo.deleted) {
 //             let error = new Error('Page is deleted.');
@@ -290,7 +343,7 @@ export default class Page {
 //             touched: pageInfo.touched,
 //             parsedContent: parsedPage
 //         }
-    }
+// }
 
 //
 //             let revision = {
@@ -374,5 +427,11 @@ export default class Page {
 
     async changeTitle(oldTitle, newTitle) {
         throw new Error("Not implemented.");
+    }
+
+    async getRenderedPage(): Promise<IPage> {
+        this.checkState(EPageOp.RENDER);
+        this.renStr = await Parser.render(this.titles, this.srcStr);
+        return this;
     }
 }

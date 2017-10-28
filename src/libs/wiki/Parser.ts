@@ -10,7 +10,7 @@ export default class Parser {
     private constructor() {
     }
 
-    static async render(titles: [string, string], src: string) {
+    static async render(titles: [string, string], src: string, as: boolean = false) {
         let em = new EnvManager();
 
         em.addEnv(new Env.LinkEnv(titles[0]));
@@ -21,26 +21,16 @@ export default class Parser {
 
         let toks = lexer.scan(src);
         await em.afterScan(toks);
-        return toks.map(item => item.render()).join('');
 
-        // info.link = info.link.map(item => {
-        //     let regexTitle = /^(?:(.*?):)?(.+?)(?:#(.*))?$/;
-        //     let parsedHref = regexTitle.exec(item.toLowerCase());
-        //     let href = parsedHref[2];
-        //     if (parsedHref[1]) {//Namespace exists
-        //         href = parsedHref[1] + ':' + href;
-        //     } else if (parsedHref[1] === undefined && ns) {
-        //         href = ns + ':' + href;
-        //     } else href = "Main:" + href;
-        //     return href;
-        // });
-        // env.existingPages = await this.wiki.existingPages(info.link, ns);
-        // let content = this.parse(toks, env);
-        // env.heading = env.heading.root;
-        // if (env.heading.child.length !== 0)
-        //     content = this.renderer.toc(env.heading.child) + content;
-        // if (pageTitle)
-        //     content = this.renderer.title(pageTitle) + content;
+        //parse
+        let toks2 = [];
+        let tok;
+        while (tok = toks.shift())
+            toks2.push(tok.parse(toks));
+
+        //render
+        return toks2.map(item => item.render()).join('');
+
         // if (ns === "Category") {
         //     content += await this.wiki.getPageList(pageTitle).then(async (pageList) => {
         //         return this.renderer.pageList(pageTitle, pageList)

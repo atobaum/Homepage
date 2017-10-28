@@ -1,29 +1,35 @@
 /**
  * Created by Le Reveur on 2017-10-16.
  */
-import {BlockToken, InlineToken, IToken, Macro} from "../Components";
+import {BigToken, Token} from "../Components";
 import {TOC} from "./TOC";
-export class Text extends InlineToken {
+export class Text extends Token {
+    private text;
     constructor(text) {
-        super([text]);
+        super();
+        this.text = text;
     }
 
     render() {
-        return this.params[0];
+        return this.text;
     }
 
     plainText() {
-        return this.params[0]
+        return this.text;
     }
 }
 
-export class SelfClosingSimpleTag extends InlineToken {
+export class SelfClosingSimpleTag extends Token {
+    private tag: string;
+    private param: string;
     constructor(tag: string, param: string) {
-        super([tag, param]);
+        super();
+        this.tag = tag;
+        this.param = param;
     }
 
     render() {
-        return `<${this.params[0]}${this.params[1] ? ' ' + this.params[1] : ''}>`;
+        return `<${this.tag}${this.param ? ' ' + this.param : ''}>`;
     }
 
     plainText() {
@@ -31,25 +37,35 @@ export class SelfClosingSimpleTag extends InlineToken {
     }
 }
 
-export class SimpleTag extends InlineToken {
+export class SimpleTag extends Token {
+    private tag: string;
+    private param: string;
+    private text: string;
     constructor(tag: string, param: string, text: string) {
-        super([tag, param, text]);
+        super();
+        this.tag = tag;
+        this.param = param;
+        this.text = text;
     }
 
     plainText() {
-        return this.params[2];
+        return this.text;
     };
 
     render() {
-        return `<${this.params[0]}${this.params[1] ? ' ' + this.params[1] : ''}>${this.params[2]}</${this.params[0]}>`;
+        return `<${this.tag}${this.param ? ' ' + this.param : ''}>${this.text}</${this.tag}>`;
     }
 }
 
-export class TagDecorator extends InlineToken {
-    innerTok: IToken;
+export class TagDecorator extends Token {
+    private tag: string;
+    private param: string;
+    private innerTok: Token;
 
-    constructor(tag: string, param: string, innerTok: IToken) {
-        super([tag, param]);
+    constructor(tag: string, param: string, innerTok: Token) {
+        super();
+        this.tag = tag;
+        this.param = param;
         this.innerTok = innerTok;
     }
 
@@ -58,11 +74,11 @@ export class TagDecorator extends InlineToken {
     }
 
     render() {
-        return `<${this.params[0]}${this.params[1] ? ' ' + this.params[1] : ''}>${this.innerTok.render()}</${this.params[0]}>`;
+        return `<${this.tag}${this.param ? ' ' + this.param : ''}>${this.innerTok.render()}</${this.tag}>`;
     }
 }
 
-export class Line extends BlockToken {
+export class Line extends BigToken {
     constructor(toks) {
         super(toks);
     }
@@ -72,7 +88,7 @@ export class Line extends BlockToken {
     }
 }
 
-export class EmptyLine extends Macro {
+export class EmptyLine extends Token {
     render() {
         return '';
     }
@@ -83,7 +99,7 @@ export class EmptyLine extends Macro {
 
 }
 
-export class Section extends BlockToken {
+export class Section extends BigToken {
     private _toc: TOC;
 
     constructor(toks) {
@@ -110,13 +126,17 @@ export class Section extends BlockToken {
     }
 }
 
-export class Error extends InlineToken {
+export class Error extends Token {
+    private title: string;
+    private text: string;
     constructor(title, text) {
-        super([title, text]);
+        super();
+        this.title = title;
+        this.text = text;
     }
 
     render() {
-        return `<div class="ui negative message"><div class="header">${this.params[0]}</div><p>${this.params[1]}</p></div>`
+        return `<div class="ui negative message"><div class="header">${this.title}</div><p>${this.text}</p></div>`
     }
 
     plainText() {

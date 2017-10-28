@@ -1,5 +1,5 @@
 import * as Components from "./Components";
-import {ETokenType, Footnote, InlineToken, IToken, Link, RFootnote, Section} from "./Components";
+import {ETokenType, Footnote, Link, RFootnote, Section, Token} from "./Components";
 import {Env} from "./EnvManager";
 import {TOC} from "./Components/TOC";
 /**
@@ -15,7 +15,7 @@ export class SectionEnv implements Env<Section> {
         this.toc = new TOC(null, null);
     }
 
-    afterScan(toks: IToken[]): Promise<void> {
+    afterScan(toks: Token[]): Promise<void> {
         toks.unshift(this.toc.root);
         return;
     }
@@ -71,7 +71,7 @@ export class FootnoteEnv implements Env<RFootnote> {
         return null;
     }
 
-    makeToken(inlineToks: InlineToken[]): RFootnote {
+    makeToken(inlineToks: Token[]): RFootnote {
         let fn = new Footnote(this.fns.length, inlineToks);
         this.fns.push(fn);
         return fn.getRef();
@@ -87,7 +87,7 @@ export class TitleEnv implements Env<Components.SimpleTag> {
         this.fulltitle = `${(titles[0] !== 'Main' ? titles[0] + ':' : '') + titles[1]}`
     }
 
-    afterScan(toks: IToken[]) {
+    afterScan(toks: Token[]) {
         toks.unshift(new Components.SimpleTag('h1', 'class="wiki_title"', this.fulltitle));
         return null;
     }

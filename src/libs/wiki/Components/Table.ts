@@ -1,11 +1,11 @@
 /**
  * Created by Le Reveur on 2017-10-16.
  */
-import {BlockToken, InlineToken} from "../Components";
-class TCell extends BlockToken {
+import {BigToken, Token} from "../Components";
+class TCell extends BigToken {
     head: boolean;
 
-    constructor(inToks: InlineToken[], head: boolean) {
+    constructor(inToks: Token[], head: boolean) {
         super(inToks);
         this.head = head;
     }
@@ -17,7 +17,7 @@ class TCell extends BlockToken {
             return `<td>${this.renderContent()}</td>`;
     }
 }
-class TRow extends BlockToken {
+class TRow extends BigToken {
     head: boolean;
 
     constructor(cells: TCell[], option) {
@@ -34,7 +34,7 @@ class TRow extends BlockToken {
     }
 }
 
-export class Table extends BlockToken {
+export class Table extends BigToken {
     constructor(rows) {
         super(rows);
     }

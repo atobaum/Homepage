@@ -1,25 +1,29 @@
 /**
  * Created by Le Reveur on 2017-10-16.
  */
-import {InlineToken} from "../Components";
+import {Token} from "../Components";
 import {Error} from "./Basic";
 let katex = require("katex");
 
-export class Math extends InlineToken {
+export class Math extends Token {
+    private text: string;
+    private block: boolean;
     constructor(text: string, displayMode: boolean) {
-        super([text, displayMode]);
+        super();
+        this.text = text;
+        this.block = displayMode;
     }
 
     render() {
         try {
-            return katex.renderToString(this.params[0], {displayMode: this.params[1]});
+            return katex.renderToString(this.text, {displayMode: this.block});
         } catch (e) {
             return (new Error('KaTeX Error', e.message)).render();
         }
     }
 
     plainText() {
-        return this.params[0];
+        return this.text;
     }
 }
 

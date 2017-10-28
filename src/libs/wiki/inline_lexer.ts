@@ -2,7 +2,7 @@
  * Created by Le Reveur on 2017-05-03.
  */
 import * as Components from "./Components";
-import {ETokenType, InlineToken} from "./Components";
+import {ETokenType, Token} from "./Components";
 import {EnvManager} from "./EnvManager";
 
 let inlineTockens: [[ETokenType, RegExp]] = [
@@ -31,33 +31,38 @@ let linkSyntax = /^(?:(.*?):)?(.*?)(\#[^\#]+?)?$/;
 export abstract class Lexer {
     TokenList: [[ETokenType, RegExp]];
     envManager: EnvManager;
+    private name: string;
 
-    constructor(envManager: EnvManager) {
+    constructor(envManager: EnvManager, name: string) {
         this.envManager = envManager;
+        this.name = name;
     }
 
-    scan(src: string): Components.IToken[] {
+    scan(src: string): Components.Token[] {
         let cap;
         let type: ETokenType;
         let syntax: RegExp;
-        let toks: Components.IToken[] = [];
+        let toks: Components.Token[] = [];
 
         WhileLoop:
             while (src) {
                 for ([type, syntax] of this.TokenList) {
                     if (cap = syntax.exec(src)) {
-                        toks.push(this.makeToken(type, cap));
+                        // console.log(this.name, type, cap)
+                        let temp = this.makeToken(type, cap);
+                        if (temp)
+                            toks.push(temp);
                         src = src.substr(cap[0].length);
                         continue WhileLoop;
                     }
                 }
-                toks.push(new Components.Error('Infinite Loop in InlineParser', "Error occurred in processing " + src));
+                toks.push(new Components.Error('Infinite Loop in ' + this.name + ' Lexer', "Error occurred in processing " + src));
                 break;
             }
         return toks;
     }
 
-    makeToken(type: Components.ETokenType, cap): Components.IToken {
+    makeToken(type: Components.ETokenType, cap): Components.Token {
         throw new Error("Error: Override 'makeToken'");
     };
 }
@@ -66,10 +71,10 @@ export class InlineLexer extends Lexer {
     TokenList = inlineTockens;
 
     constructor(envManager: EnvManager) {
-        super(envManager);
+        super(envManager, "Inline");
     }
 
-    makeToken(type, cap): Components.InlineToken {
+    makeToken(type, cap): Components.Token {
         switch (type) {
             case ETokenType.ITALICBOLD:
                 let bold = new Components.SimpleTag('b', null, cap[1]);
@@ -108,19 +113,21 @@ export class InlineLexer extends Lexer {
             case ETokenType.LINK:
                 let text = cap[2] || cap[1];
                 let parsedLink = linkSyntax.exec(cap[1]).slice(1, 4);
-                return this.envManager.makeToken(type, [...parsedLink, text]) as InlineToken;
+                return this.envManager.makeToken(type, [...parsedLink, text]) as Token;
 
             case ETokenType.NEWLINE:
                 return new Components.SelfClosingSimpleTag('br', null);
 
             case ETokenType.RFOOTNOTE:
-                return this.envManager.makeToken(ETokenType.RFOOTNOTE, this.scan(cap[1])) as InlineToken;
+                return this.envManager.makeToken(ETokenType.RFOOTNOTE, this.scan(cap[1])) as Token;
 
             case ETokenType.INLINELATEX:
                 return new Components.Math(cap[1], false);
 
             case ETokenType.BLOCKLATEX:
                 return new Components.Math(cap[1], true);
+            default:
+                throw new Error('Un handled type: ' + type);
 
 // //macro
 // case ETokenType.MACRO:
