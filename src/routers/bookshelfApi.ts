@@ -23,13 +23,13 @@ export default class BookshelfApiRouter {
     }
 
     private routes() {
-        this.router.get('/reading/:id', function (req: any, res) {
+        this.router.get('/reading/:id', function (req, res) {
             Reading.load(req.params.id, req.userId)
                 .catch(e => res.json({ok: 0, error: e}))
                 .then(reading => res.json({ok: 1, reading: reading}));
         });
 
-        this.router.post('/reading', function (req: any, res) {
+        this.router.post('/reading', function (req, res) {
             let reading = req.body;
             switch (req.query.action.toLowerCase()) {
                 case 'edit':

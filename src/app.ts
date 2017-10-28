@@ -3,17 +3,23 @@ require('source-map-support').install();
 if (!process.env.NODE_ENV) {
     console.log('NODE_ENV is undefined. Set to development.');
 }
-
 //process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'development' ) ? 'development' : 'production';
-let express = require('express');
-var path = require('path');
+import * as express from "express";
+import SingletonMysql from "./libs/SingletonMysql";
+//session setup
+import User from "./libs/User";
+//Router setup
+import {WikiRouter} from "./routers/wiki";
+import ApiRouter from "./routers/api";
+
+
+let path = require('path');
 let favicon = require('serve-favicon');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
 let config = require('./config');
 
 let app = express();
-
 // view engine setup
 app.set('views', __dirname + path.sep + 'views');
 app.set('view engine', 'pug');
@@ -28,12 +34,6 @@ if (process.env.NODE_ENV === 'development') {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
-import SingletonMysql from "./libs/SingletonMysql";
-//session setup
-import User from "./libs/User";
-//Router setup
-import {WikiRouter} from "./routers/wiki";
-import ApiRouter from "./routers/api";
 SingletonMysql.init(config.db);
 
 
@@ -46,7 +46,7 @@ app.use(session({
     saveUninitialized: true,
     store: sessionStore
 }));
-app.use((req, res, next) => {
+app.use((req: express.Request, res, next) => {
     if (req.session.user) {
         req.user = new User(req.session.user.id, req.session.user.username, req.session.user.adim);
         res.locals.user = req.session.user;
@@ -75,7 +75,7 @@ app.get('/login', function (req, res) {
     res.render('login');
 });
 
-app.get('/auth/logout', function (req, res) {
+app.get('/auth/logout', function (req: any, res) {
     req.session.destroy();
     res.redirect(req.header('Referer'));
 });

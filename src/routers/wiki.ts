@@ -1,6 +1,6 @@
 "use strict";
 import * as express from "express";
-import Page from "../libs/wiki/Page";
+import {Page} from "../libs/wiki/Page";
 
 export class WikiRouter {
     private router: express.Router;
@@ -11,7 +11,7 @@ export class WikiRouter {
     }
 
     private routes() {
-        this.router.get('/', (req: express.Request, res: express.Response) => {
+        this.router.get('/', (req, res: express.Response) => {
             res.redirect('/wiki/view/index');
         });
 
@@ -19,56 +19,28 @@ export class WikiRouter {
             res.render('noPage', {title: decodeURI(req.params[0]),});
         });
 
-//         this.router.get(/\/view\/(.*)/, function (req, res) {
-//             let title = decodeURI(req.params[0]);
-//             let userId = req.session ? req.session.userId : null;
-//             wiki.getParsedPage(title, userId, req.query.updateCache !== undefined)
-//                 .then(page => {
-//                     if (page.noPage) {
-//                         res.redirect('/wiki/search/' + encodeURI(title));
-//                     } else if (page.noPrivilege) {
-//                         res.render('noPrivilege', {wikiTitle: title, priType: 4, });
-//                     } else {
-//                         res.render('viewPage', {wiki: page, });
-//                     }
-//                 })
-//                 .catch(e => {
-//                     res.render('error', {error: e, });
-//                 });
-//         });
-//
-        this.router.get(/\/edit\/(.*)/, function (req, res) {
+        this.router.get(/\/view\/(.*)/, function (req: express.Request, res) {
             let title = decodeURI(req.params[0]);
-            let userId = req.session ? req.session.userId : null;
-            let newPage = req.query.newPage;
-            let data = {
-                title: title,
-                newPage: true,
-            };
-            res.render('wiki/editPage', {wiki: data,});
-            //     wiki.getSrc(title, userId)
-            //         .then(page => {
-            //             if (page.noPage === 1) { //no namespace
-            //                 res.render('error', {
-            //                     error: {message: "You tried edit a page whose namespace is not exists:" + page.ns_title},
-            //
-            //                 });
-            //             } else if (page.noPage === 2) {
-            //                 let data = {
-            //                     title: page.title,
-            //                     newPage: true,
-            //                 };
-            //                 res.render('editPage', {wiki: data, });
-            //             } else if (page.noPrivilege) {
-            //                 res.render('noPrivilege', {wikiTitle: page.title, priType: 4, });
-            //             } else {
-            //                 res.render('editPage', {wiki: page, });
-            //             }
-            //         })
-            //         .catch(e => {
-            //             res.render('error', {error: e, });
-            //         });
+            let userId = req.userId;
+            Page.getRenderedPage(title, userId)
+                .then((result) => {
+                    console.log(result);
+                    res.render('wiki/viewPage', {page: result});
+                })
+                .catch(e => {
+                    res.render('error', {error: e});
+                });
         });
+
+        // this.router.get(/\/edit\/(.*)/, function (req, res) {
+        //     let title = decodeURI(req.params[0]);
+        //     let userId = req.userId;
+        //     Page.getSrc(title, userId)
+        //         .then(result=>{
+        //             res.render('wiki/editPage', {page: result, newPage: false});
+        //         })
+        //         .catch(e=>res.render('error', {error:e}));
+        // });
 //
 //         router.get(/\/history\/(.*)/, function (req, res) {
 //             res.render('error', {
@@ -121,7 +93,7 @@ export class WikiRouter {
 //         router.get(/\/api\/parse\/(.*)/, function(req, res){
 //             let title = decodeURI(req.params[0]);
 //             let userId = req.session ? req.session.userId : null;
-//             wiki.getParsedPage(title, userId, function(err, page){
+//             wiki.getRenderedPage(title, userId, function(err, page){
 //                 if(err){
 //                     if(err.name === 'NO_PAGE_ERROR') {
 //                         res.json({ok:2, error: err});
@@ -137,7 +109,7 @@ export class WikiRouter {
 //         router.get(/\/api\/rawtext\/(.*)/, function(req, res){
 //             let title = decodeURI(req.params[0]);
 //             let userId = req.session ? req.session.userId : null;
-//             wiki.getSrc(title, userId, function(err, page){
+//             wiki.loadSrc(title, userId, function(err, page){
 //                 if(err){
 //                     if(err.name === 'NO_PAGE_ERROR') {
 //                         res.json({ok:2, error: err});
