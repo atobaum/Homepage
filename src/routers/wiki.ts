@@ -32,15 +32,18 @@ export class WikiRouter {
                 });
         });
 
-        // this.router.get(/\/edit\/(.*)/, function (req, res) {
-        //     let title = decodeURI(req.params[0]);
-        //     let userId = req.userId;
-        //     Page.getSrc(title, userId)
-        //         .then(result=>{
-        //             res.render('wiki/editPage', {page: result, newPage: false});
-        //         })
-        //         .catch(e=>res.render('error', {error:e}));
-        // });
+        this.router.get(/\/edit\/(.*)/, function (req, res) {
+            let title = decodeURI(req.params[0]);
+            let userId = req.userId;
+            Page.getSrc(title, userId)
+                .then(result => {
+                    res.render('wiki/editPage', {page: result});
+                })
+                .catch(e => {
+                    console.log(e);
+                    res.render('error', {error: e})
+                });
+        });
 //
 //         router.get(/\/history\/(.*)/, function (req, res) {
 //             res.render('error', {

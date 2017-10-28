@@ -59,13 +59,10 @@ function PageStatToString(stat: EPageStat): string {
 }
 
 export abstract class IPage {
+    fulltitle: string;
     titles: [string, string];
     srcStr: string;
     renStr: string;
-
-    get fulltitle() {
-        return (this.titles[0] === 'Main' || this.titles[0] == null ? this.titles[1] : this.titles.join(':'));
-    }
 }
 
 export class Page extends IPage {
@@ -74,7 +71,7 @@ export class Page extends IPage {
     private pageId: number;
     private isNew: boolean;
     private status: EPageStat;
-    private rev_id: number;
+    private revId: number;
     private rev_counter: number;
     private cached: boolean;
     private minor: boolean;
@@ -83,6 +80,7 @@ export class Page extends IPage {
         super();
         if (!fulltitle) throw new Error("Error: title should be not empty.");
         this.titles = Page.parseTitle(fulltitle);
+        this.fulltitle = (this.titles[0] === 'Main' || this.titles[0] == null ? this.titles[1] : this.titles.join(':'));
         this.isNew = isNew;
         this.status = EPageStat.ONLY_TITLE;
         this.PAC = [null, null];
@@ -95,7 +93,14 @@ export class Page extends IPage {
         return await page.getRenderedPage();
     }
 
+    static async getSrc(fulltitle, userId) {
+        let page = new Page(fulltitle, false);
+        await page.loadPageInfo();
+        return await page.loadSrc();
+    }
+
     private checkState(op: EPageOp) {
+        // console.log(PageStatToString(this.status));
         switch (this.status) {
             case EPageStat.ONLY_TITLE:
                 if ((op !== EPageOp.LOAD_PAGE_INFO) && (op !== EPageOp.SET_NS))
@@ -166,7 +171,7 @@ export class Page extends IPage {
             this.pageId = row.page_id;
             this.PAC = [row.ns_PAC, row.page_PAC];
             this.cached = row.cached === 1;
-            this.rev_id = row.rev_id;
+            this.revId = row.rev_id;
             this.rev_counter = row.rev_counter;
             this.status = EPageStat.PAGE_INFO;
         });
@@ -191,10 +196,13 @@ export class Page extends IPage {
     }
 
     loadSrc(): Promise<any> {
+        let tmp = this;
         this.checkState(EPageOp.LOAD_SRC);
         return SingletonMysql.queries(async conn => {
             let rows, row;
-            row = (await conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [this.pageId, this.rev_id]))[0][0];
+            row = (await conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [this.pageId, this.revId]))[0][0];
+            if (!row)
+                throw new Error('Invalid page id and rev_id: ' + this.pageId + ' , ' + this.revId + ' , ' + "title: " + this.titles);
             this.srcStr = row.text;
             this.minor = row.minor;
             // this.userId = row.user_id;
@@ -202,7 +210,7 @@ export class Page extends IPage {
             // this.comment = row.comment;
             // this.created = row.created;
             this.status = EPageStat.GET_SRC;
-            return this.srcStr;
+            return this;
         });
     }
 

@@ -1,31 +1,27 @@
 extends layout
 
 block head2
-    title #{wiki.title} - Wiki
+    title #{page.title} - Wiki
     link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css")
     link(rel="stylesheet" href='/static/css/wiki/wiki_view.css')
 
 block content
-    .ui
+    .ui.container
         h1
-            a(href="/wiki/view/" + wiki.title)= wiki.title
-            - var editType = wiki.newPage ? " (새 문서 만들기)" : " (R"+wiki.rev_id+" 수정)";
+            a(href="/wiki/view/" + page.fulltitle)= page.fulltitle
+            - var editType = page.isNew ? " (새 문서 만들기)" : " (R"+page.revId+" 수정)";
             small !{editType}
-        form.ui.form#edit_form(method="POST" action="/wiki/edit/" + encodeURI(wiki.title) onsubmit="return check_edit_form();")
+        form.ui.form#edit_form(method="POST" action="/wiki/edit/" + encodeURI(page.fulltitle) onsubmit="return check_edit_form();")
             input(type="hidden" name="major")
-            input(type="hidden" name="title" value=wiki.title)
+            input(type="hidden" name="title" value=page.fulltitle)
             .ui.top.attached.tabular.menu
                 a.item.active(data-tab="edit") 편집
                 a.item(data-tab="preview") 미리보기
             .ui.bottom.attached.tab.segment.active(data-tab="edit")
-                - if(!wiki.readOnly){
-                textarea.ui.textarea(rows=25 name="text") !{wiki.text}
-                - } else{
-                textarea.ui.textarea(rows=25 name="text" readonly='') !{wiki.text}
-                - }
+                textarea.ui.textarea(rows=25 name="text" readonly=page.readOnly) !{page.srcStr}
             .ui.bottom.attached.tab.segment(data-tab="preview")
                 .wiki_content.language-javascript.preview
-            - if(!wiki.readOnly){
+            - if(!page.readOnly){
             .fields
                 .ui.field.small.input.ten.wide
                     input(type="text" name="comment" placeholder="Comment...")
@@ -47,7 +43,7 @@ block content
             $('.tabular.menu a.item[data-tab="preview"]').click(function () {
                 $('.ui.dimmer').dimmer('show');
                 $.post({
-                    url: '/wiki/api/parse',
+                    url: '/api/wiki/parse',
                     data: {text: $('.tab textarea').val(), title: $('#edit_form input[name="title"]').val()},
                     success: function (res) {
                         $('.preview').html(res);
