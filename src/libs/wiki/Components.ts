@@ -64,52 +64,6 @@ export abstract class TokenFactory {
     };
 }
 
-// export class TOC extends BigToken {
-//     constructor(toks: Section[]) {
-//         super(toks);
-//     }
-//
-//     createSection(toks, level) {
-//         let section = new Section(toks, level);
-//         while (this.curSection.level >= section.level) {
-//             this.curSection = this.curSection.parent;
-//         }
-//         section.parent = this.curSection;
-//         section.index = this.curSection.subsection.length;
-//         this.curSection.subsection.push(section);
-//         this.curSection = section;
-//         return this.curSection;
-//     }
-//
-//     render() {
-//         this.curSection.root.renderTOC()
-//
-//     }
-// }
-//
-// export class Section extends BigToken{
-//     level: number;
-//     constructor(toks: InlineToken[], level: number) {
-//         super(toks);
-//         this.level = level;
-//     }
-//
-//     render() {
-//         let indexList = this.indexList;
-//         let formattedLevel = indexList.join('_');
-//         return '<h'
-//             + (indexList.length)
-//             + ' class="ui dividing header" id="'
-//             + "h_" + formattedLevel
-//             + '">'
-//             + `<a href="#rh_${formattedLevel}">${indexList.join('.')}</a> `
-//             + this.renderContent()
-//             + '</h'
-//             + indexList.length
-//             + '>';
-//     }
-// }
-
 export class Footnote extends BigToken {
     index: number;
 

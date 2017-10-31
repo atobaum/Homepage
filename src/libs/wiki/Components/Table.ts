@@ -2,7 +2,7 @@
  * Created by Le Reveur on 2017-10-16.
  */
 import {BigToken, Token} from "../Components";
-class TCell extends BigToken {
+export class TCell extends BigToken {
     head: boolean;
 
     constructor(inToks: Token[], head: boolean) {
@@ -17,12 +17,20 @@ class TCell extends BigToken {
             return `<td>${this.renderContent()}</td>`;
     }
 }
-class TRow extends BigToken {
+export class TRow extends BigToken {
     head: boolean;
 
-    constructor(cells: TCell[], option) {
+    constructor(cells: TCell[]) {
         super(cells);
-        this.head = option === 'h';
+        this.head = cells[0].head;
+    }
+
+    parse(toks) {
+        let table = [this];
+        while (toks[0] instanceof TRow) {
+            table.push(toks.shift());
+        }
+        return new Table(table);
     }
 
     render() {
@@ -34,7 +42,7 @@ class TRow extends BigToken {
     }
 }
 
-export class Table extends BigToken {
+class Table extends BigToken {
     constructor(rows) {
         super(rows);
     }

@@ -95,7 +95,7 @@ export class Line extends BigToken {
     }
 }
 
-export class Paragraph extends BigToken {
+class Paragraph extends BigToken {
     constructor(toks) {
         super(toks);
     }

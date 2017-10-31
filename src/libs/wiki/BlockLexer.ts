@@ -7,7 +7,14 @@ import * as Components from "./Components";
 import {ETokenType, Token} from "./Components";
 import {EnvManager} from "./EnvManager";
 import Lexer from "./Lexer";
+import {TCell, TRow} from "./Components/Table";
 
+function table(cap, em, il) {
+    let caps = cap[0].split('||');
+    caps.shift();
+    let head = caps.pop().trim() == 'h';
+    return new TRow(caps.map(item => new TCell(il.scan(item.trim()), head)));
+}
 export default class BlockLexer extends Lexer {
     TokenList = [
         [ETokenType.SECTION, /^(={2,6}) (.+) ={2,6}\s*(\r?\n|$)/, (cap, em, il) => em.makeToken(ETokenType.SECTION, [cap[1].length - 1, il.scan(cap[2])])],
@@ -16,7 +23,7 @@ export default class BlockLexer extends Lexer {
         [ETokenType.HR, /^-{3,}\s*(\r?\n|$)/, cap => new Components.SelfClosingSimpleTag('hr', null)],
         // [ETokenType.QUOTE, /^>(?:\((.*?)(?:\|(.*?))?\))? (.*?)(\r?\n|$)/],
         // [ETokenType.TEXTBOX, /^/],
-        // [ETokenType.TABLE, /^(?:\|\|.*\r?\n|$)+/],
+        [ETokenType.TABLE, /^\|\|.*?(\r?\n|$)/, table],
         [ETokenType.EMPTYLINE, /^(\s*\r?\n)+/, cap => new Components.EmptyLine()],
         // [ETokenType.PARAGRAPH, /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/],
         // [ETokenType.MACRO, /^{{(\S*?)(?:\((\S*?)\))?\s+([\s\S]*?)}}/],
