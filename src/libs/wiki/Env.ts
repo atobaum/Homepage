@@ -7,7 +7,6 @@ import {Footnotes} from "./Components/Footnote";
  * Created by Le Reveur on 2017-10-17.
  */
 
-
 export class SectionEnv implements Env<Section> {
     key: ETokenType = ETokenType.SECTION;
     toc: Components.TOC;
@@ -26,7 +25,11 @@ export class SectionEnv implements Env<Section> {
         this.toc = this.toc.addSection(level, section);
         return section;
     }
+
+    save(conn) {
+    };
 }
+
 export class LinkEnv implements Env<Link> {
     key = ETokenType.LINK;
 
@@ -36,10 +39,6 @@ export class LinkEnv implements Env<Link> {
     constructor(ns = "Main") {
         this.ns = ns;
         this.links = [];
-    }
-
-    async afterScan(toks): Promise<void> {
-        return undefined;
     }
 
     makeToken([ns, title, anchor, text]): Link {
@@ -61,24 +60,43 @@ export class LinkEnv implements Env<Link> {
         this.links.push(link);
         return link;
     }
+
+    async afterScan(toks, conn): Promise<void> {
+        let titles = this.links.map(link => link.getTitles());
+        let nsTitles = titles.map(item => item[0]);
+        let pageTitles = titles.map(item => item[1]);
+        let [rows] = await conn.query("SELECT ns_title, page_title FROM fullpage WHERE ns_title IN (?) AND page_title IN (?)", [nsTitles, pageTitles]);
+        rows = rows.map(item => (item.ns_title + ":" + item.page_title).toLowerCase());
+        this.links.forEach(item => {
+            if (rows.includes(item.getTitles().join(":").toLowerCase()))
+                item.isExist = true;
+        });
+        return null;
+    }
+
+    save(conn) {
+    };
+
 }
 
 export class FootnoteEnv implements Env<RFootnote> {
     key: ETokenType = ETokenType.RFOOTNOTE;
     fns: Footnote[] = [];
 
-    afterScan(toks): Promise<void> {
-        toks.push(new Footnotes(this.fns));
-        return null;
-    }
-
     makeToken(inlineToks: Token[]): RFootnote {
         let fn = new Footnote(inlineToks, this.fns.length);
         this.fns.push(fn);
         return new RFootnote(fn);
     }
-}
 
+    afterScan(toks): Promise<void> {
+        toks.push(new Footnotes(this.fns));
+        return null;
+    }
+
+    save(conn) {
+    };
+}
 
 export class TitleEnv implements Env<Components.SimpleTag> {
     key: ETokenType = ETokenType.TITLE;
@@ -93,6 +111,9 @@ export class TitleEnv implements Env<Components.SimpleTag> {
         toks.unshift(new Components.SimpleTag('h1', 'class="wiki_title"', this.fulltitle));
         return null;
     }
+
+    save(conn) {
+    };
 
     makeToken(args: any[]): Components.SimpleTag {
         return new Components.SimpleTag('h1', 'class="wiki_title"', this.fulltitle);

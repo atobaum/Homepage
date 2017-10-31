@@ -35,7 +35,7 @@ export class Link extends Token {
     private title: string;
     private href: string;
     private text: string;
-    private isExist: boolean;
+    public isExist: boolean;
 
     constructor(ns, title, href, text) {
         super();
@@ -51,6 +51,10 @@ export class Link extends Token {
 
     plainText() {
         return this.href;
+    }
+
+    getTitles() {
+        return [this.ns, this.title];
     }
 
 }
