@@ -21,17 +21,12 @@ export class Li extends BigToken {
 
     parse(toks) {
         let siblings = [this];
-        console.log(this, toks);
-        try {
-            while (toks[0] instanceof Li && ((toks[0].level === this.level && toks[0].ordered === this.ordered) || toks[0].level > this.level)) {
+        while (toks[0] instanceof Li && ((toks[0].level === this.level && toks[0].ordered === this.ordered) || toks[0].level > this.level)) {
             let tok = toks.shift();
-                if (tok.level === this.level)
+            if (tok.level === this.level)
                 siblings.push(tok);
             else
-                    siblings[siblings.length - 1].child = tok.parse(toks);
-        }
-        } catch (e) {
-            console.log(e);
+                siblings[siblings.length - 1].child = tok.parse(toks);
         }
         return new List(siblings, this.ordered);
     }

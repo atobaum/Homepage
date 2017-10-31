@@ -83,8 +83,25 @@ export class Line extends BigToken {
         super(toks);
     }
 
+    parse(toks) {
+        while (toks[0] && toks[0] instanceof Line) {
+            this.toks = this.toks.concat(toks.shift().toks);
+        }
+        return new Paragraph(this.toks);
+    }
+
     render() {
         return this.renderContent();
+    }
+}
+
+export class Paragraph extends BigToken {
+    constructor(toks) {
+        super(toks);
+    }
+
+    render() {
+        return `<p>${this.renderContent()}</p>`;
     }
 }
 

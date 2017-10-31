@@ -47,21 +47,6 @@ export default class Parser {
         // return [content, env]
     }
 
-    // parseList(toks, env) {
-    //     let list = [],
-    //         curOrdered = toks[0].ordered,
-    //         curLevel = toks[0].level;
-    //
-    //     while (toks[0] && toks[0].type === 'list' && (toks[0].level === curLevel) && (toks[0].ordered === curOrdered)) {
-    //         let tok = toks.shift();
-    //         tok.text = this.inlineParse(tok.toks, env)[0];
-    //         if (toks[0] && toks[0].type === 'list' && toks[0].level > curLevel)
-    //             tok.child = this.parseList(toks, env);
-    //         list.push(tok);
-    //     }
-    //     return list;
-    // }
-
     // parseTable(toks, env) {
     //     let tables = [];
     //     let tok;
@@ -156,34 +141,4 @@ export default class Parser {
     //
     //     return [content, env];
     // };
-
-    // parse(toks, env) {
-    //     let tok;
-    //     let content = '';
-    //     while (tok = toks[0]) {
-    //         switch (tok.type) {
-    //             case 'heading':
-    //                 toks.shift();
-    //                 [tok.text, tok.plainText] = this.inlineParse(tok.toks, env);
-    //                 env.heading = env.heading.addHeading(tok);
-    //                 content += this.renderer.heading(env.heading);
-    //                 break;
-    //             case 'list':
-    //                 content += this.renderer.list(this.parseList(toks, env));
-    //                 break;
-    //                 // case 'table':
-    //                 //     content += this.renderer.table(this.parseTable(toks, env));
-    //                 break;
-    //             case 'quote':
-    //                 content += this.renderer.blockquote(this.parseQuote(toks, env));
-    //                 break;
-    //             default:
-    //                 let temp = this.inlineParse(toks, env)[0];
-    //                 if (temp.length > 0)
-    //                     content += this.renderer.paragraph({text: temp});
-    //         }
-    //     }
-    //     return content;
-    // }
-
 }
