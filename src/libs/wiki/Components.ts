@@ -34,8 +34,7 @@ export abstract class Token {
 }
 
 export abstract class BigToken extends Token {
-    needParse: boolean;
-    private toks: Token[];
+    protected toks: Token[];
 
     abstract render();
 
