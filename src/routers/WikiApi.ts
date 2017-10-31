@@ -8,7 +8,6 @@ import WikiHelper from "../libs/wiki/WikiHelper";
 
 let router = Router();
 router.post('/parse', async (req, res) => {
-    console.log(req.body);
     let page = new Page(req.body.title, true);
     await page.setSrc(req.body.text)
         .catch(e => {

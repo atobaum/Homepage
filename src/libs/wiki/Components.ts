@@ -64,44 +64,10 @@ export abstract class TokenFactory {
     };
 }
 
-export class Footnote extends BigToken {
-    index: number;
-
-    constructor(index: number, inlikeToks: Token[]) {
-        super(inlikeToks);
-        this.index = index;
-    }
-
-    render() {
-        return `<li><a class="wiki_fn" id="fn_${this.index}" href="#rfn_${this.index}">[${this.index}]</a> ${this.renderContent()}</li>`;
-    }
-
-    getRef() {
-        return new RFootnote(this.index, this.plainText());
-    }
-}
-
-export class RFootnote extends Token {
-    private index: number;
-    private _plainText: string;
-    constructor(index: number, plainText: string) {
-        super();
-        this.index = index;
-        this._plainText = plainText;
-    }
-
-    render() {
-        return `<sup id="rfn_${this.index}"><a href="#fn_${this.index}">[${this._plainText}]</a></sup>`;
-    }
-
-    plainText() {
-        return this._plainText;
-    }
-}
-
 export * from './Components/Basic'
 export * from './Components/Table'
 export * from './Components/Link'
 export * from './Components/Math'
 export * from './Components/TOC'
 export * from './Components/List'
+export * from './Components/Footnote'

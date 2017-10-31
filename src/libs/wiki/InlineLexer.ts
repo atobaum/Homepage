@@ -47,7 +47,7 @@ export class InlineLexer extends Lexer {
             return em.makeToken(ETokenType.LINK, [...parsedLink, text]) as Token;
         }],
         [ETokenType.NEWLINE, /^ {2,}$/, cap => new Components.SelfClosingSimpleTag('br', null)],
-        [ETokenType.RFOOTNOTE, /^\(\((.+)\)\)/, (cap, em) => em.makeToken(ETokenType.RFOOTNOTE, this.scan(cap[1])) as Token],
+        [ETokenType.RFOOTNOTE, /^\(\((.+)\)\)/, (cap, em) => em.makeToken(ETokenType.RFOOTNOTE, this.scan(cap[1])) as Token[]],
         [ETokenType.INLINELATEX, /^\$([^\$]+?)\$/, cap => new Components.Math(cap[1], false)],
         [ETokenType.BLOCKLATEX, /^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)],
         // [ETokenType.MACRO, /^{{(.*?)(?:\((.*?)\))?(?: ([^\$\$]*?))?}}/],

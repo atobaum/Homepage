@@ -2,6 +2,7 @@ import * as Components from "./Components";
 import {ETokenType, Footnote, Link, RFootnote, Section, Token} from "./Components";
 import {Env} from "./EnvManager";
 import {TOC} from "./Components/TOC";
+import {Footnotes} from "./Components/Footnote";
 /**
  * Created by Le Reveur on 2017-10-17.
  */
@@ -26,7 +27,6 @@ export class SectionEnv implements Env<Section> {
         return section;
     }
 }
-
 export class LinkEnv implements Env<Link> {
     key = ETokenType.LINK;
 
@@ -68,15 +68,17 @@ export class FootnoteEnv implements Env<RFootnote> {
     fns: Footnote[] = [];
 
     afterScan(toks): Promise<void> {
+        toks.push(new Footnotes(this.fns));
         return null;
     }
 
     makeToken(inlineToks: Token[]): RFootnote {
-        let fn = new Footnote(this.fns.length, inlineToks);
+        let fn = new Footnote(inlineToks, this.fns.length);
         this.fns.push(fn);
-        return fn.getRef();
+        return new RFootnote(fn);
     }
 }
+
 
 export class TitleEnv implements Env<Components.SimpleTag> {
     key: ETokenType = ETokenType.TITLE;
