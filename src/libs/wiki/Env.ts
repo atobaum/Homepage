@@ -62,6 +62,8 @@ export class LinkEnv implements Env<Link> {
     }
 
     async afterScan(toks, conn): Promise<void> {
+        if (!this.links.length)
+            return;
         let titles = this.links.map(link => link.getTitles());
         let nsTitles = titles.map(item => item[0]);
         let pageTitles = titles.map(item => item[1]);
