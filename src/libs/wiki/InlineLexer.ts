@@ -50,8 +50,9 @@ export class InlineLexer extends Lexer {
         [/^\(\((.+)\)\)/, (cap, em) => em.makeToken(ETokenType.RFOOTNOTE, this.scan(cap[1])) as Token[]], //rfootnote
         [/^\$([^\$]+?)\$/, cap => new Components.Math(cap[1], false)], //inlinelatex
         [/^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)], //blocklatex
+        [/^`(.*)`/, cap => new Components.InlineCode(cap[1])], //inline code
         // [ETokenType.MACRO, /^{{(.*?)(?:\((.*?)\))?(?: ([^\$\$]*?))?}}/],
-        [/^.+?(?={{|\\|\$|''|__|\^\^|,,| {2}|\[\[|~~| {2,}|\(\(|\n|$)/, cap => new Components.Text(cap[0])] //text
+        [/^.+?(?={{|\\|\$|''|__|\^\^|,,| {2}|\[\[|~~|`| {2,}|\(\(|\n|$)/, cap => new Components.Text(cap[0])] //text
     ] as [[RegExp, (cap: any, em: any, lexer: any) => Token]];
 
     constructor(envManager: EnvManager) {

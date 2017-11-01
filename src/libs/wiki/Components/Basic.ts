@@ -3,6 +3,8 @@
  */
 import {BigToken, Token} from "../Components";
 import {TOC} from "./TOC";
+
+
 export class Text extends Token {
     private text;
     constructor(text) {

@@ -28,6 +28,7 @@ export default class BlockLexer extends Lexer {
         // [ETokenType.PARAGRAPH, /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/],
         // [ETokenType.MACRO, /^{{(\S*?)(?:\((\S*?)\))?\s+([\s\S]*?)}}/],
         [/^## .*(\r?\n|$)/, () => null], //comment
+        [/^```(.*)(?:\r?\n|$)([\s\S]+?)(?:\r?\n|$)```(\r?\n|$)/, (cap) => new Components.Code(cap[2], cap[1])], //blockcode
         [/^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)], //blocklate
         [/^(.*?)(?:\r?\n|$)/, (cap, _, il) => new Components.Line(il.scan(cap[1]))] //linetext
     ] as [[RegExp, (cap: any, em: any, lexer: any) => Token]];
