@@ -17,20 +17,20 @@ function table(cap, em, il) {
 }
 export default class BlockLexer extends Lexer {
     TokenList = [
-        [ETokenType.SECTION, /^(={2,6}) (.+) ={2,6}\s*(\r?\n|$)/, (cap, em, il) => em.makeToken(ETokenType.SECTION, [cap[1].length - 1, il.scan(cap[2])])],
-        [ETokenType.LI, /^(\s+)([*-]) (.+)(\r?\n|$)/, (cap, _, il) => new Components.Li(il.scan(cap[3]), cap[2] == '-', cap[1].length)],
+        [/^(={2,6}) (.+) ={2,6}\s*(\r?\n|$)/, (cap, em, il) => em.makeToken(ETokenType.SECTION, [cap[1].length - 1, il.scan(cap[2])])], //section
+        [/^(\s+)([*-]) (.+)(\r?\n|$)/, (cap, _, il) => new Components.Li(il.scan(cap[3]), cap[2] == '-', cap[1].length)], //list
         // [ETokenType.INDENT, /^:{1,}(.+)(\r?\n|$)/],
-        [ETokenType.HR, /^-{3,}\s*(\r?\n|$)/, cap => new Components.SelfClosingSimpleTag('hr', null)],
+        [/^-{3,}\s*(\r?\n|$)/, cap => new Components.SelfClosingSimpleTag('hr', null)], //hr
         // [ETokenType.QUOTE, /^>(?:\((.*?)(?:\|(.*?))?\))? (.*?)(\r?\n|$)/],
         // [ETokenType.TEXTBOX, /^/],
-        [ETokenType.TABLE, /^\|\|.*?(\r?\n|$)/, table],
-        [ETokenType.EMPTYLINE, /^(\s*\r?\n)+/, cap => new Components.EmptyLine()],
+        [/^\|\|.*?(\r?\n|$)/, table], //table
+        [/^(\s*\r?\n)+/, cap => new Components.EmptyLine()], //emptyline
         // [ETokenType.PARAGRAPH, /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/],
         // [ETokenType.MACRO, /^{{(\S*?)(?:\((\S*?)\))?\s+([\s\S]*?)}}/],
-        [ETokenType.COMMENT, /^## .*(\r?\n|$)/, () => null],
-        [ETokenType.BLOCKLATEX, /^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)],
-        [ETokenType.LINETEXT, /^(.*?)(?:\r?\n|$)/, (cap, _, il) => new Components.Line(il.scan(cap[1]))]
-    ] as [[ETokenType, RegExp, (cap: any, em: any, lexer: any) => Token]];
+        [/^## .*(\r?\n|$)/, () => null], //comment
+        [/^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)], //blocklate
+        [/^(.*?)(?:\r?\n|$)/, (cap, _, il) => new Components.Line(il.scan(cap[1]))] //linetext
+    ] as [[RegExp, (cap: any, em: any, lexer: any) => Token]];
     constructor(envManager: EnvManager) {
         super(envManager, 'Block', new InlineLexer.InlineLexer(envManager));
     }

@@ -21,15 +21,15 @@ function escape(cap) {
 }
 export class InlineLexer extends Lexer {
     TokenList = [
-        [ETokenType.ESCAPE, /^\\([>\$\\\`'\^_~\(\)*{}\[\]#t])/, escape],
-        [ETokenType.ITALIC, /^''(?!')(?=\S)([\s\S]*?\S)''/, (cap) => new Components.TagDecorator('i', null, new Components.SimpleTag('b', null, cap[1]))],
-        [ETokenType.BOLD, /^'''(?!')(?=\S)([\s\S]*?\S)'''/, cap => new Components.SimpleTag('b', null, cap[1])],
-        [ETokenType.ITALICBOLD, /^'''''(?!')(?=\S)([\s\S]*?\S)'''''/, cap => new Components.SimpleTag('i', null, cap[1])],
-        [ETokenType.UNDERLINE, /^__(.+)__/, cap => new Components.SimpleTag('u', null, cap[1])],
-        [ETokenType.DEL, /^~~(?=\S)([\s\S]*?\S)~~/, cap => new Components.SimpleTag('del', null, cap[1])],
-        [ETokenType.SUP, /^\^\^(.+?)\^\^/, cap => new Components.SimpleTag('sup', null, cap[1])],
-        [ETokenType.SUB, /^,,(.+),,/, cap => new Components.SimpleTag('sub', null, cap[1])],
-        [ETokenType.URLLINK, /^\[\[(?:(.+?):\s)?(https?:\/\/[^\|]+?)(?:\|([^\|]+?))?\]\]/, (cap) => {
+        [/^\\([>\$\\\`'\^_~\(\)*{}\[\]#t])/, escape], //escape
+        [/^''(?!')([\s\S]*?)''/, (cap) => new Components.TagDecorator('i', null, new Components.SimpleTag('b', null, cap[1]))], //italic
+        [/^'''(?!')([\s\S]*?)'''/, cap => new Components.SimpleTag('b', null, cap[1])], //bold
+        [/^'''''(?!')([\s\S]*?)'''''/, cap => new Components.SimpleTag('i', null, cap[1])], //italicbold
+        [/^__(.+)__/, cap => new Components.SimpleTag('u', null, cap[1])], //underline
+        [/^~~(?=\S)([\s\S]*?\S)~~/, cap => new Components.SimpleTag('del', null, cap[1])], //del
+        [/^\^\^(.+?)\^\^/, cap => new Components.SimpleTag('sup', null, cap[1])], //sup
+        [/^,,(.+),,/, cap => new Components.SimpleTag('sub', null, cap[1])], //sub
+        [/^\[\[(?:(.+?):\s)?(https?:\/\/[^\|]+?)(?:\|([^\|]+?))?\]\]/, (cap) => { //urlink
             let linkType;
             switch (cap[1]) {
                 case 'img':
@@ -41,18 +41,18 @@ export class InlineLexer extends Lexer {
             }
             return new Components.ExtLink(linkType, cap[3], cap[2]);
         }],
-        [ETokenType.LINK, /^\[\[([^\]\|]*?)(?:\|([^\]\|]+?))?\]\]/, (cap, em) => {
+        [/^\[\[([^\]\|]*?)(?:\|([^\]\|]+?))?\]\]/, (cap, em) => { //link
             let text = cap[2] || cap[1];
             let parsedLink = linkSyntax.exec(cap[1]).slice(1, 4);
             return em.makeToken(ETokenType.LINK, [...parsedLink, text]) as Token;
         }],
-        [ETokenType.NEWLINE, /^ {2,}$/, cap => new Components.SelfClosingSimpleTag('br', null)],
-        [ETokenType.RFOOTNOTE, /^\(\((.+)\)\)/, (cap, em) => em.makeToken(ETokenType.RFOOTNOTE, this.scan(cap[1])) as Token[]],
-        [ETokenType.INLINELATEX, /^\$([^\$]+?)\$/, cap => new Components.Math(cap[1], false)],
-        [ETokenType.BLOCKLATEX, /^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)],
+        [/^ {2,}$/, cap => new Components.SelfClosingSimpleTag('br', null)], //newline
+        [/^\(\((.+)\)\)/, (cap, em) => em.makeToken(ETokenType.RFOOTNOTE, this.scan(cap[1])) as Token[]], //rfootnote
+        [/^\$([^\$]+?)\$/, cap => new Components.Math(cap[1], false)], //inlinelatex
+        [/^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)], //blocklatex
         // [ETokenType.MACRO, /^{{(.*?)(?:\((.*?)\))?(?: ([^\$\$]*?))?}}/],
-        [ETokenType.TEXT, /^.+?(?={{|\\|\$|''|__|\^\^|,,| {2}|\[\[|~~| {2,}|\(\(|\n|$)/, cap => new Components.Text(cap[0])]
-    ] as [[ETokenType, RegExp, (cap: any, em: any, lexer: any) => Token]];
+        [/^.+?(?={{|\\|\$|''|__|\^\^|,,| {2}|\[\[|~~| {2,}|\(\(|\n|$)/, cap => new Components.Text(cap[0])] //text
+    ] as [[RegExp, (cap: any, em: any, lexer: any) => Token]];
 
     constructor(envManager: EnvManager) {
         super(envManager, "Inline", null);
