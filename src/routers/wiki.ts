@@ -16,7 +16,6 @@ router.get(/\/view\/(.*)/, function (req, res) {
     let userId = req.userId;
     Page.getRenderedPage(title, userId)
         .then((result) => {
-            console.log(result);
             res.render('wiki/viewPage', {page: result});
         })
         .catch(e => {
@@ -29,16 +28,13 @@ router.get(/\/edit\/(.*)/, function (req, res) {
     let userId = req.userId;
     Page.getSrc(title, userId)
         .then(result => {
-            console.log(result);
             res.render('wiki/editPage', {page: result});
         })
         .catch(e => {
-            // console.log(e);
             res.render('error', {error: e})
         });
 });
 router.post(/\/edit\/(.*)/, function (req, res) {
-    console.log(req.body);
     let title = decodeURI(req.params[0]);
     let data = req.body;
     if (!req.user)

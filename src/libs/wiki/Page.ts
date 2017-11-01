@@ -81,8 +81,9 @@ export class Page extends IPage {
     private minor: boolean;
     private user: User;
     private comment: string;
+    private readOnly: boolean;
 
-    constructor(fulltitle: string, isNew: boolean) {
+    constructor(fulltitle: string, isNew: boolean, user: User) {
         super();
         if (!fulltitle) throw new Error("Error: title should be not empty.");
         this.titles = Page.parseTitle(fulltitle);
@@ -90,27 +91,36 @@ export class Page extends IPage {
         this.isNew = isNew;
         this.status = EPageStat.ONLY_TITLE;
         this.PAC = [null, null];
+        if (user) {
+            this.user = user;
+            this.readOnly = false;
+        } else {
+            this.readOnly = true;
+        }
+
+    }
+
+    setUser(user: User) {
+        this.user = user;
     }
 
     static createPageWithId(id: number, user: User): Page {
         if (!id) throw new Error("Error: id should be not empty.");
-        let page = new Page('temp', false);
+        let page = new Page('temp', false, user);
         page.pageId = id;
-        page.user = user;
         page.status = EPageStat.ONLY_ID;
-        page.PAC = [null, null];
         return page;
     }
 
-    static async getRenderedPage(fulltitle, userId) {
-        let page = new Page(fulltitle, false);
+    static async getRenderedPage(fulltitle, user) {
+        let page = new Page(fulltitle, false, user);
         await page.loadPageInfo();
         await page.loadSrc();
         return await page.getRenderedPage();
     }
 
-    static async getSrc(fulltitle, userId) {
-        let page = new Page(fulltitle, false);
+    static async getSrc(fulltitle, user) {
+        let page = new Page(fulltitle, false, user);
         await page.loadPageInfo();
         return await page.loadSrc();
     }

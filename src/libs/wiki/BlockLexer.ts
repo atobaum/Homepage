@@ -22,12 +22,10 @@ export default class BlockLexer extends Lexer {
         // [ETokenType.INDENT, /^:{1,}(.+)(\r?\n|$)/],
         [/^-{3,}\s*(\r?\n|$)/, cap => new Components.SelfClosingSimpleTag('hr', null)], //hr
         // [ETokenType.QUOTE, /^>(?:\((.*?)(?:\|(.*?))?\))? (.*?)(\r?\n|$)/],
-        // [ETokenType.TEXTBOX, /^/],
         [/^\|\|.*?(\r?\n|$)/, table], //table
         [/^(\s*\r?\n)+/, cap => new Components.EmptyLine()], //emptyline
-        // [ETokenType.PARAGRAPH, /^(?:(?:\s*)\n)*([^\n]+?)(\r?\n|$)/],
-        // [ETokenType.MACRO, /^{{(\S*?)(?:\((\S*?)\))?\s+([\s\S]*?)}}/],
-        [/^## .*(\r?\n|$)/, () => null], //comment
+        // [/^{{(\S*?)(?:\((\S*?)\))?\s+([\s\S]*?)}}/],
+        // [/^## .*(\r?\n|$)/, cap=>new Components.Text('123')], //comment
         [/^```(.*)(?:\r?\n|$)([\s\S]+?)(?:\r?\n|$)```(\r?\n|$)/, (cap) => new Components.Code(cap[2], cap[1])], //blockcode
         [/^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)], //blocklate
         [/^(.*?)(?:\r?\n|$)/, (cap, _, il) => new Components.Line(il.scan(cap[1]))] //linetext

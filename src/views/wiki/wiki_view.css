@@ -63,3 +63,8 @@ ul {
 .wiki_nonexisting_page {
     color: #9e1317;
 }
+
+.wiki_content strong {
+    font-size: 1.2em;
+    margin-right: 0.5em;
+}

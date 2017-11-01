@@ -24,7 +24,7 @@ export class InlineLexer extends Lexer {
         [/^\\([>\$\\\`'\^_~\(\)*{}\[\]#t])/, escape], //escape
         [/^''(?!')([\s\S]*?)''/, (cap) => new Components.TagDecorator('i', null, new Components.SimpleTag('b', null, cap[1]))], //italic
         [/^'''(?!')([\s\S]*?)'''/, cap => new Components.SimpleTag('b', null, cap[1])], //bold
-        [/^'''''(?!')([\s\S]*?)'''''/, cap => new Components.SimpleTag('i', null, cap[1])], //italicbold
+        [/^'''''(?!')([\s\S]*?)'''''/, cap => new Components.SimpleTag('strong', null, cap[1])], //italicbold
         [/^__(.+)__/, cap => new Components.SimpleTag('u', null, cap[1])], //underline
         [/^~~(?=\S)([\s\S]*?\S)~~/, cap => new Components.SimpleTag('del', null, cap[1])], //del
         [/^\^\^(.+?)\^\^/, cap => new Components.SimpleTag('sup', null, cap[1])], //sup

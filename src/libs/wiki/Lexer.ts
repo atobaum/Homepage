@@ -28,7 +28,8 @@ abstract class Lexer {
                 for ([syntax, factory] of this.TokenList) {
                     if (cap = syntax.exec(src)) {
                         let temp = factory(cap, this.envManager, this.inlineLexer);
-                        toks.push(temp);
+                        if (temp)
+                            toks.push(temp);
                         src = src.substr(cap[0].length);
                         continue WhileLoop;
                     }
