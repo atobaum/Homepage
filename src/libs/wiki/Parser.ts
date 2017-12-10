@@ -16,7 +16,6 @@ export default class Parser {
         em.addEnv(new Env.LinkEnv(titles[0]));
         em.addEnv(new Env.SectionEnv());
         em.addEnv(new Env.TitleEnv(titles));
-        em.addEnv(new Env.FootnoteEnv());
         let lexer = new BlockLexer(em);
 
         let toks = lexer.scan(src);

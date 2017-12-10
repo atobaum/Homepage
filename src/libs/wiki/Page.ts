@@ -83,7 +83,7 @@ export class Page extends IPage {
     private comment: string;
     private readOnly: boolean;
 
-    constructor(fulltitle: string, isNew: boolean, user: User) {
+    constructor(fulltitle: string, isNew: boolean, user?: User) {
         super();
         if (!fulltitle) throw new Error("Error: title should be not empty.");
         this.titles = Page.parseTitle(fulltitle);

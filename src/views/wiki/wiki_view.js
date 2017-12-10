@@ -75,4 +75,6 @@ $(function(){
             }
         });
     });
+
+    $('.wiki_fn').popup();
 });

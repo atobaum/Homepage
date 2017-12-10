@@ -162,3 +162,13 @@ export class Error extends Token {
         return ''
     }
 }
+
+export class Footnote extends BigToken {
+    constructor(toks) {
+        super(toks);
+    }
+
+    render() {
+        return `<i class="sticky note outline icon wiki_fn" data-html='${this.renderContent()}'></i>`;
+    }
+}
