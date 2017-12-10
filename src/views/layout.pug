@@ -26,18 +26,16 @@ html
 
                 .item.ui.dropdown
                     input#isUser(type="hidden", value=(user == null ? 0 : 1))
-                    i.large.user.icon
+                    - if(user){
+                    .header= user.username
                     .menu
-                        - if(user){
-                        .header= user.username
-                        .ui.divider
                         a.item(href="#") 계정정보
                         a.item(href="/auth/logout") 로그아웃
-
-                        -} else{
-                        //.item 회원가입
+                    - } else {
+                    i.large.user.icon
+                    .menu
                         a.item(href="/login") 로그인
-                        -}
+                    - }
 
         block content
         footer.ui.inverted.vertical.footer.segment(style='text-align: center')
