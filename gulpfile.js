@@ -8,6 +8,7 @@ let del = require('del');
 let nodemon = require('gulp-nodemon');
 let ts = require('gulp-typescript');
 let tsProject = ts.createProject('tsconfig.json');
+let webpack = require('webpack-stream');
 
 gulp.task('start', [], function () {
     return nodemon({
@@ -53,6 +54,12 @@ gulp.task('uglify-css', [], function(){
 gulp.task('copy-pug', function () {
     gulp.src('src/views/**/*.pug')
         .pipe(gulp.dest('dist/views'))
+});
+let webpackConfig = require('./webpack.config');
+gulp.task('webpack', function () {
+    gulp.src(webpackConfig.entry)
+        .pipe(webpack(webpackConfig))
+        .pipe(gulp.dest(webpackConfig.output.path));
 });
 
 function changeDir(evt, from, to) {

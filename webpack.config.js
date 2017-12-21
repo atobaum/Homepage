@@ -5,7 +5,7 @@ module.exports = {
     entry: './src/views/bookshelf/entry.js',
     output: {
         path: path.resolve(__dirname, './public/bookshelf'),
-        publicPath: '/static/bookshelf',
+        // publicPath: '/static/bookshelf',
         filename: 'bookshelf.js'
     },
     module: {
