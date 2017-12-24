@@ -12,7 +12,7 @@
                     a(@click="viewBook(reading.book.isbn13)") {{ reading.book.title }}
                 td {{ reading.book.authors.map(author => author.name + ' ' + author.type).join(', ') }}
                 td
-                    a(@click="viewReading(reading.id)") {{ reading.date[0] }} ~ {{ reading.date[1] }}
+                    router-link(:to="'/reading/'+reading.id") {{ reading.date[0] }} ~ {{ reading.date[1] }}
                 td {{ reading.user }}
 
         tfoot

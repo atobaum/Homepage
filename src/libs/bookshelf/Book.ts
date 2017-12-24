@@ -23,7 +23,7 @@ export class Book {
         this.publisher = publisher;
         this.publishedDate = publichedDate;
         this.isbn13 = isbn13;
-        this.coverURL = coverURL;
+        this.coverURL = coverURL || "https://dummyimage.com/85x125/8f8f8f/fff";
         this.saveType = ESaveType.NEW;
     }
 
@@ -102,6 +102,12 @@ export class Book {
             case ESaveType.EDIT:
         }
     };
+}
+
+export class DummyBook extends Book {
+    constructor() {
+        super("DummyBookTitle", [new Author("DummyAuthor", EAuthorType.AUTHOR)], "DummyPublisher", "0000-00-00", 1234567890123);
+    }
 }
 
 export class DetailBook extends Book {

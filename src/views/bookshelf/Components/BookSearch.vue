@@ -1,25 +1,34 @@
 <template lang="pug">
-    .ui.search.fluid#book-search(v-if='show')
-        .ui.icon.input
-            input.prompt(type="text", placeholder='책 검색...')
-            i.search.icon
-        .results
-            div(style="float:left;")
-                table
-                    tbody
-                        tr
-                            td
-                                img
-                            td
-                                strong 제목
-                                ul
-                                    li 저자
-                                    li 출판사|날짜
+    div
+        .ui.search.fluid(v-show="!isSelected")
+            .ui.icon.input
+                input.prompt(type="text", placeholder='책 검색...')
+                i.search.icon
+            .results
+                div(style="float:left;")
+                    table
+                        tbody
+                            tr
+                                td
+                                    img
+                                td
+                                    strong 제목
+                                    ul
+                                        li 저자
+                                        li 출판사|날짜
+        book-panel(v-if="isSelected", :book="reading.book")
 </template>
 
 <script>
+    import BookPanel from './BookPanel.vue'
     export default {
-        props: ['show'],
+        props: ['reading'],
+        components: {BookPanel},
+        data: () => {
+            return {
+                isSelected: false
+            }
+        },
         mounted: function () {
             let search = this;
             $(this.$el).search({
@@ -39,7 +48,8 @@
                 },
                 searchDelay: 1000,
                 onSelect: function (result) {
-                    search.$emit("book-selected", result);
+                    search.reading.book = result;
+                    search.isSelected = true;
                 },
                 fields: {
                     results: 'result',
@@ -49,11 +59,9 @@
             });
         }
     }
-
 </script>
 
 <style>
-
     .ui.search {
         margin: 15px;
     }

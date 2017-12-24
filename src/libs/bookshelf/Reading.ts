@@ -1,13 +1,11 @@
 import SingletonMysql from "../SingletonMysql";
-import {Book} from "./Book";
+import {Book, DummyBook} from "./Book";
 import User from "../User";
 import {ESaveType} from "../common";
 /**
  * Created by Le Reveur on 2017-10-18.
  */
-export enum ESearchType{
-    RECENT = "recent"
-}
+
 export default class Reading {
     private id: number;
     private date: [string, string];
@@ -58,7 +56,9 @@ export default class Reading {
         }
 
         let temp = new Reading(reading.user,
-            await Book.load(reading.book_id),
+            await Book.load(reading.book_id).catch(e => {
+                return new DummyBook();
+            }),
             reading.date_started,
             reading.date_finished,
             reading.rating,
@@ -67,7 +67,7 @@ export default class Reading {
             reading.is_secret);
         temp.id = reading.id;
         temp.userId = reading.user_id;
-        temp.own = reading.user_id == userId;
+        temp.own = userId && reading.user_id == userId;
         return temp;
     }
 
@@ -96,19 +96,4 @@ export default class Reading {
             return;
         }
     }
-
-    static async searchReading(type: ESearchType, keyword, page: number = 1) {
-        let articlePerPage = 10;
-        let result;
-        switch (type) {
-            case ESearchType.RECENT:
-                let rows = (await SingletonMysql.query('SELECT * FROM readings WHERE deleted = 0 ORDER BY date_started DESC LIMIT ?, ?', [(page - 1) * articlePerPage, articlePerPage]))[0];
-                result = await Promise.all(rows.map(reading => Reading.makeFromDbRow(reading)));
-        }
-
-        let numOfReadings = (await SingletonMysql.query('SELECT count(*) FROM readings'))[0][0]['count(*)'];
-        let pages = Math.ceil(numOfReadings / articlePerPage);
-        return [result, pages]
-    }
-
 }

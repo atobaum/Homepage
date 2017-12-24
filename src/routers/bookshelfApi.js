@@ -212,7 +212,7 @@ var BookshelfRouter = /** @class */ (function () {
         });
         this.router.get('/api/recentreading', function (req, res) {
             var page = req.query.page;
-            Reading_1["default"].searchReading(Reading_1.ESearchType.RECENT, null, page)["catch"](function (e) {
+            Reading_1["default"].recentReadings(Reading_1.ESearchType.RECENT, null, page)["catch"](function (e) {
                 res.json({ok: 0, error: e});
                 console.log(e);
             })

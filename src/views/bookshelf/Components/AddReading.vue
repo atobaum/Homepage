@@ -11,7 +11,7 @@
 <script>
     import BookSearch from "./BookSearch.vue"
     import BookPanel from './BookPanel.vue'
-    import BookForm from './BookForm.vue'
+    import BookForm from './ReadingForm.vue'
     export default{
         data(){
             return {

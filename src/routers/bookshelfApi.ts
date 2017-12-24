@@ -1,12 +1,10 @@
 "use strict";
-/**
- * @todo reading edit
- */
 import {Router} from "express";
 import DaumBook from "../libs/bookshelf/DaumBook";
-import Reading, {ESearchType} from "../libs/bookshelf/Reading";
+import Reading from "../libs/bookshelf/Reading";
 import {Book} from "../libs/bookshelf/Book";
 import {ESaveType} from "../libs/common";
+import Search from "../libs/bookshelf/BookshelfSearch";
 
 export default class BookshelfApiRouter {
     private daum: DaumBook;
@@ -26,40 +24,48 @@ export default class BookshelfApiRouter {
         this.router.get('/reading/:id', function (req, res) {
             Reading.load(req.params.id, req.userId)
                 .catch(e => res.json({ok: 0, error: e}))
-                .then(reading => res.json({ok: 1, reading: reading}));
+                .then(reading => res.json({ok: 1, result: reading}));
         });
 
         this.router.post('/reading', function (req, res) {
-            let reading = req.body;
+            let reading = JSON.parse(req.body.data);
             switch (req.query.action.toLowerCase()) {
                 case 'edit':
-                    if (!reading.userId || reading.userId !== req.user.getId())
-                        res.status(403).json({ok: 0, error: new Error("Wrong User.")});
-                    else {
-                        (new Reading(req.user, null,
+                    if (reading.userId && reading.userId == req.user.getId()) {
+                        let newreading = new Reading(req.user, null,
                             reading.date[0], checkString(reading.date[1]),
                             reading.rating, checkString(reading.comment), checkString(reading.link),
-                            reading.is_secret == '1', ESaveType.EDIT)).setId(reading.id)
+                            reading.is_secret == '1', ESaveType.EDIT);
+
+                        newreading.setId(reading.id)
                             .save()
-                            .catch(e => res.status(400).json({ok: 0, error: e}))
+                            .catch(e => {
+                                console.log(e);
+                                res.status(400).json({ok: 0, error: e})
+                            })
                             .then(() => res.json({ok: 1}));
+                    } else {
+                        res.status(403).json({ok: 0, error: new Error("Wrong User.")});
                     }
                     break;
                 case 'new':
                     console.log('new', reading);
-                    let book;
                     try {
-                        book = Book.createFromJSON(reading.book);
+                        let book = Book.createFromJSON(reading.book);
+                        reading = new Reading(req.user, book,
+                            reading.date[0], checkString(reading.date[1]),
+                            reading.rating, checkString(reading.comment), checkString(reading.link),
+                            reading.is_secret == '1', ESaveType.NEW);
                     } catch (e) {
-                        res.json({ok: 0, error: e});
+                        res.json({ok: 0, error: e.stack});
+                        console.log(e);
                         return;
                     }
-                    (new Reading(req.user, book,
-                        reading.date[0], checkString(reading.date[1]),
-                        reading.rating, checkString(reading.comment), checkString(reading.link),
-                        reading.is_secret == '1', ESaveType.NEW))
-                        .save()
-                        .catch(e => res.status(400).json({ok: 0, error: e}))
+                    reading.save()
+                        .catch(e => {
+                            res.status(400).json({ok: 0, error: e.stack});
+                            console.log(e)
+                        })
                         .then(() => res.json({ok: 1}));
                     break;
             }
@@ -74,17 +80,30 @@ export default class BookshelfApiRouter {
         });
 
         this.router.get('/recentreading', (req, res) => {
-            let page = req.query.page;
-            Reading.searchReading(ESearchType.RECENT, null, page)
+            let readingsPerPage = 10;
+            let page = (parseInt(req.query.page) - 1) * readingsPerPage;
+            Search.recentReadings(page, readingsPerPage)
                 .catch(e => {
                     res.json({ok: 0, error: e});
                 })
                 .then(result => {
-                    res.json({ok: 1, result: result})
+                    result[1] = Math.ceil(result[1] / readingsPerPage);
+                    res.json({ok: 1, result: result});
+                });
+        });
+
+        this.router.get('/currentreading', (req, res) => {
+            Search.unfinishedReadings(req.user)
+                .catch(e => {
+                    res.json({ok: 0, error: e.stack});
+                })
+                .then(result => {
+                    res.json({ok: 1, result: result});
                 });
         });
     }
 }
+
 function checkString(str) {
     return str ? str : null;
 }
