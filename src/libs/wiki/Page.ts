@@ -1,6 +1,6 @@
-import SingletonMysql from "../SingletonMysql";
+import SingletonMysql from "../common/SingletonMysql";
 import Parser from "./Parser";
-import User from "../User";
+import User from "../common/User";
 /**
  * Created by Le Reveur on 2017-10-15.
  */

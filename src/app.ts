@@ -5,9 +5,9 @@ if (!process.env.NODE_ENV) {
 }
 //process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'development' ) ? 'development' : 'production';
 import * as express from "express";
-import SingletonMysql from "./libs/SingletonMysql";
+import SingletonMysql from "./libs/common/SingletonMysql";
 //session setup
-import User from "./libs/User";
+import User from "./libs/common/User";
 import ApiRouter from "./routers/api";
 
 let path = require('path');

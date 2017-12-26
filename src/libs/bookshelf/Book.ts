@@ -1,4 +1,4 @@
-import SingletonMysql from "../SingletonMysql";
+import SingletonMysql from "../common/SingletonMysql";
 import {Author, EAuthorType} from "./Author";
 import {ESaveType} from "../common";
 /**

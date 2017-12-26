@@ -1,6 +1,6 @@
-import SingletonMysql from "../SingletonMysql";
+import SingletonMysql from "../common/SingletonMysql";
 import {Book, DummyBook} from "./Book";
-import User from "../User";
+import User from "../common/User";
 import {ESaveType} from "../common";
 /**
  * Created by Le Reveur on 2017-10-18.

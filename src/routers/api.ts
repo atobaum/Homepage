@@ -2,7 +2,7 @@
  * Created by Le Reveur on 2017-10-21.
  */
 import {Router} from "express";
-import User from "../libs/User";
+import User from "../libs/common/User";
 
 export default class ApiRouter {
     private router: Router;

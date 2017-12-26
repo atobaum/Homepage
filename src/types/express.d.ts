@@ -1,4 +1,4 @@
-import User from "../libs/User";
+import User from "../libs/common/User";
 /**
  * Created by Le Reveur on 2017-10-28.
  */

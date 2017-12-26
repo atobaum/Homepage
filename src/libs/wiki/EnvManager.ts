@@ -1,5 +1,5 @@
 import {ETokenType, Token} from "./Components";
-import SingletonMysql from "../SingletonMysql";
+import SingletonMysql from "../common/SingletonMysql";
 /**
  * Created by Le Reveur on 2017-10-16.
  */

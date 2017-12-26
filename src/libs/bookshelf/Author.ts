@@ -1,7 +1,7 @@
 /**
  * Created by Le Reveur on 2017-10-18.
  */
-import SingletonMysql from "../SingletonMysql";
+import SingletonMysql from "../common/SingletonMysql";
 
 export enum EAuthorType{
     AUTHOR = "지음", TRANSLATOR = "번역", SUPERVISOR = "감수", ILLUSTRATOR = "그림", PHOTO = "사진", EDITOR = "감수"
