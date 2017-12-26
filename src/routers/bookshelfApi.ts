@@ -40,8 +40,7 @@ export default class BookshelfApiRouter {
                         newreading.setId(reading.id)
                             .save()
                             .catch(e => {
-                                console.log(e);
-                                res.status(400).json({ok: 0, error: e})
+                                res.status(400).json({ok: 0, error: e.stack})
                             })
                             .then(() => res.json({ok: 1}));
                     } else {
@@ -49,7 +48,6 @@ export default class BookshelfApiRouter {
                     }
                     break;
                 case 'new':
-                    console.log('new', reading);
                     try {
                         let book = Book.createFromJSON(reading.book);
                         reading = new Reading(req.user, book,
@@ -58,16 +56,30 @@ export default class BookshelfApiRouter {
                             reading.is_secret == '1', ESaveType.NEW);
                     } catch (e) {
                         res.json({ok: 0, error: e.stack});
-                        console.log(e);
                         return;
                     }
                     reading.save()
                         .catch(e => {
                             res.status(400).json({ok: 0, error: e.stack});
-                            console.log(e)
                         })
                         .then(() => res.json({ok: 1}));
                     break;
+            }
+        });
+        this.router.delete('/reading', (req, res) => {
+            try {
+                let id = parseInt(req.query.id);
+                if (!id)
+                    throw new Error("id is not a nunber: " + req.query.id);
+                (Reading.load(id, req.userId))
+                    .then(reading => {
+                        return reading.delete();
+                    })
+                    .then(() => {
+                        res.json({ok: 1});
+                    })
+            } catch (e) {
+                res.status(400).json({ok: 0, error: e.stack});
             }
         });
 
@@ -93,13 +105,16 @@ export default class BookshelfApiRouter {
         });
 
         this.router.get('/currentreading', (req, res) => {
-            Search.unfinishedReadings(req.user)
-                .catch(e => {
-                    res.json({ok: 0, error: e.stack});
-                })
-                .then(result => {
-                    res.json({ok: 1, result: result});
-                });
+            if (req.user)
+                Search.unfinishedReadings(req.user)
+                    .then(result => {
+                        res.json({ok: 1, result: result});
+                    })
+                    .catch(e => {
+                        res.json({ok: 0, error: e.stack});
+                    });
+            else
+                res.json({ok: 1, result: []});
         });
     }
 }

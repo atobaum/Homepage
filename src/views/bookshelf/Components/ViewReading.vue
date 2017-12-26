@@ -3,9 +3,9 @@
         book-panel(:book="reading && reading.book")
         book-form(:reading="reading", :edit="edit", :submit="submit")
             .ui.buttons(v-if="reading && reading.own")
+                button.ui.button.negative(type='button') 삭제
                 button.ui.button.positive(v-if="edit", type='button') 완료
                 button.ui.button.yellow(v-else, type='button', @click="edit=true") 수정
-                button.ui.button.negative(type='button') 삭제
             i.ui.close.icon(@click="reset(); $emit('resetAcc')")
 </template>
 

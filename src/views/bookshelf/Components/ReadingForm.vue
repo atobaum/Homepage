@@ -14,7 +14,7 @@
         .field
             label 후기
             textarea(name='comment', v-model='reading.comment', :readonly="!edit")
-        #is_secret.inline.field(style="display:none")
+        .inline.field(style="display:none")
             .ui.toggle.checkbox
                 input(type="checkbox", tabindex="0", :readonly="!edit")
                 label 비밀

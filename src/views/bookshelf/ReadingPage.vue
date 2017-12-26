@@ -1,10 +1,11 @@
 <template lang="pug">
     .div
-        book-panel(:book="reading && reading.book")
+        book-panel(v-if="reading.book", :book="reading.book")
         reading-form(:edit="edit", :reading="reading")
-            div(v-if="reading && reading.own")
+            .ui.buttons(v-if="reading && reading.own")
                 .ui.orange.button(v-if="!edit", @click="edit=true") 수정
                 .ui.positive.button(v-else, @click="submit") 저장
+                .ui.negative.button(@click="deleteReading") 삭제
 
 </template>
 <script>
@@ -27,15 +28,30 @@
                             router.go(-1);
                         } else {
                             console.log("Error while submit reading: ", data.error);
-                            console.log(data);
                         }
                     })
                     .fail((jqXHR, textStatus, errorThrown) => {
                         console.log('Error occurred: ', textStatus, errorThrown);
                     })
+            },
+            deleteReading: function () {
+                if (confirm('기록을 삭제할까요?')) {
+                    let router = this.$router;
+                    $.ajax({
+                        url: '/api/bookshelf/reading?id=' + this.reading.id,
+                        type: 'DELETE'
+                    })
+                        .done(data => {
+                            router.go(-1);
+                        })
+                        .fail((jqXHR, textStatus, errorThrown) => {
+                            console.log('Error occurred: ', textStatus, errorThrown);
+                        })
+
+                }
             }
         },
-        mounted: function () {
+        created: function () {
             let thisCom = this;
             $.get('/api/bookshelf/reading/' + this.$route.params.id)
                 .done(data => {
