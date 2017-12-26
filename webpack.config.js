@@ -40,7 +40,12 @@ module.exports = {
     performance: {
         hints: false
     },
-    devtool: '#eval-source-map'
+    devtool: '#eval-source-map',
+    devServer: {
+        proxy: {
+            '/api': 'http://localhost:3000'
+        }
+    }
 };
 
 if (process.env.NODE_ENV === 'production') {
