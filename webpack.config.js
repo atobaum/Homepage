@@ -4,7 +4,7 @@ var webpack = require('webpack');
 module.exports = {
     entry: './src/views/bookshelf/entry.js',
     output: {
-        path: path.resolve(__dirname, './public/bookshelf'),
+        path: path.resolve(__dirname, './public'),
         // publicPath: '/static/bookshelf',
         filename: 'bookshelf.js'
     },
