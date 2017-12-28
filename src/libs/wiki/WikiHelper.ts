@@ -1,5 +1,5 @@
-import PageFactory from "./PageFactory";
 import SingletonMysql from "../common/SingletonMysql";
+import {IPage} from "./Page";
 /**
  * Created by Le Reveur on 2017-10-17.
  */
@@ -12,7 +12,7 @@ export default class WikiHelper {
      * @param title
      */
     static searchTitles(title) {
-        let parsedTitle = PageFactory.parseTitle(title);
+        let parsedTitle = IPage.parseTitle(title);
         return SingletonMysql.query('SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%' + parsedTitle[0] + '%" AND page_title LIKE "' + parsedTitle[1] + '%" AND deleted = 0 LIMIT 7')
             .then(([rows]) => {
                 return rows.map((item) => {

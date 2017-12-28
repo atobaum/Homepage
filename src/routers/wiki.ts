@@ -1,5 +1,5 @@
 "use strict";
-import {Page} from "../libs/wiki/Page";
+import {NewPage, OldPage, Page} from "../libs/wiki/Page";
 import {Router} from "express";
 
 let router = Router();
@@ -8,45 +8,62 @@ router.get('/', (req, res) => {
 });
 
 router.get(/\/search\/(.*)/, function (req, res) {
-    res.render('noPage', {title: decodeURI(req.params[0]),});
+    res.render('wiki/noPage', {title: decodeURI(req.params[0]),});
 });
 
-router.get(/\/view\/(.*)/, function (req, res) {
+router.get(/\/view\/(.*)/, async (req, res) => {
     let title = decodeURI(req.params[0]);
-    let userId = req.userId;
-    Page.getRenderedPage(title, userId)
-        .then((result) => {
-            res.render('wiki/viewPage', {page: result});
-        })
-        .catch(e => {
-            res.render('error', {error: e});
-        });
+    let user = req.user;
+    try {
+        let page = await Page.load(title);
+        if (page instanceof NewPage)
+            res.redirect('/wiki/search/' + title);
+        else if (page instanceof OldPage) {
+            await page.getSrc(user);
+            await page.getRen(user);
+            res.render('wiki/viewPage', {page: page});
+        }
+    } catch (e) {
+        res.render('error', {error: e.stack});
+    }
 });
 
-router.get(/\/edit\/(.*)/, function (req, res) {
+router.get(/\/edit\/(.*)/, async (req, res) => {
     let title = decodeURI(req.params[0]);
-    let userId = req.userId;
-    Page.getSrc(title, userId)
-        .then(result => {
-            res.render('wiki/editPage', {page: result});
-        })
-        .catch(e => {
-            res.render('error', {error: e})
-        });
+    let user = req.user;
+    try {
+        let page = await Page.load(title);
+        if (page instanceof NewPage)
+            res.render('wiki/editPage', {page: {fulltitle: title, isNew: true, readOnly: !user}});
+        else if (page instanceof OldPage) {
+            await page.getSrc(user);
+            res.render('wiki/editPage', {page: page});
+        }
+    } catch (e) {
+        res.render('error', {error: e.stack});
+    }
 });
-router.post(/\/edit\/(.*)/, function (req, res) {
-    let title = decodeURI(req.params[0]);
+
+router.post(/\/edit\/(.*)/, async (req, res) => {
     let data = req.body;
     if (!req.user)
         res.render("error", {error: new Error('Login first.')});
     else {
-        Page.edit(data, req.user)
-            .catch(e => {
-                res.render('error', {error: e});
-            })
-            .then(() => {
-                res.redirect('/wiki/view/' + encodeURI(title));
-            });
+        let page = await Page.load(data.title);
+        page.setSrc(data.src);
+        page.save(req.user).then(() => {
+            res.redirect('/wiki/view/' + data.title);
+        }).catch(e => {
+            res.render("error", {error: e});
+        })
+
+        // Page.edit(data, req.user)
+        //     .catch(e => {
+        //         res.render('error', {error: e});
+        //     })
+        //     .then(() => {
+        //         res.redirect('/wiki/view/' + encodeURI(title));
+        //     });
         // data.userText = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
         // wiki.editPage(data, userId)
         //     .then(() => {

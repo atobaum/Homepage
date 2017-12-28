@@ -3,20 +3,19 @@
  */
 
 import {Router} from "express";
-import {Page} from "../libs/wiki/Page";
+import {TempPage} from "../libs/wiki/Page";
 import WikiHelper from "../libs/wiki/WikiHelper";
 
 let router = Router();
 router.post('/parse', async (req, res) => {
-    let page = new Page(req.body.title, true);
-    await page.setSrc(req.body.text)
-        .catch(e => {
-            res.json(e)
-        });
-    page.render()
-        .then(result => {
-            res.json(result);
-        });
+    console.log(req.body);
+    let page = new TempPage(req.body.title);
+    page.setSrc(req.body.text);
+    page.getRen(null).then((ren) => {
+        res.json({ok: 1, result: ren});
+    }).catch((e) => {
+        res.json({ok: 0, error: e.stack});
+    });
 });
 
 router.get('/titleSearch', (req, res) => {

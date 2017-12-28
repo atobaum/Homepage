@@ -56,17 +56,18 @@ app.use((req: express.Request, res, next) => {
 });
 
 //Router setup
-app.get('/bookshelf', (req, res) => res.render('bookshelf/main'));
 let api = new ApiRouter();
 api.use('/bookshelf', (new (require('./routers/bookshelfApi').default)(config.bookshelf)).getRouter());
 api.use('/wiki', require('./routers/WikiApi').default);
 app.use('/api', api.getRouter());
 
-app.use('/wiki', require('./routers/wiki').default);
-
 app.get('/', function (req, res) {
     res.render('index');
 });
+app.use('/wiki', require('./routers/wiki').default);
+app.get('/bookshelf', (req, res) => res.render('bookshelf/main'));
+app.get('/note', (req, res) => res.render('note/main'));
+
 app.get('/login', function (req, res) {
     res.render('login');
 });

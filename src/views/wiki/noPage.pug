@@ -4,6 +4,7 @@ block head2
     title #{title} - Wiki
 
 block content
-    h1= title
-    p 해당 페이지 없음.
-    a(href="/wiki/edit/" + encodeURI(title) + '?noPage=1') 문서 만들기
+    .ui.container.segment
+        h1= title
+        p 해당 페이지 없음.
+        a(href="/wiki/edit/" + encodeURI(title) + '?new=1') 문서 만들기

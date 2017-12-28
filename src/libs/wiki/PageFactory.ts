@@ -4,32 +4,48 @@
 export {IPage} from './Page'
 
 export default class PageFactory {
-    /**
-     *
-     * @param fulltitle
-     * @returns {[string,string]} [ns, title]
-     */
-    static parseTitle(fulltitle: string): [string, string] {
-        let regexTitle = /^(?:(.*?):)?(.+?)$/;
-        let parsedTitle = regexTitle.exec(fulltitle);
-        let ns;
-        switch (parsedTitle[1]) {
-            case undefined:
-            case '':
-                ns = 'Main';
-                break;
-            case '개인':
-                ns = 'Private';
-                break;
-            case '분류':
-                ns = 'Category';
-                break;
-            case '위키':
-                ns = 'Wiki';
-                break;
-            default:
-                ns = parsedTitle[1];
-        }
-        return [ns, parsedTitle[2]];
+    static async getSrc(fulltitle, user) {
+        let page = new Page(fulltitle, false, user);
+        await page.loadPageInfo();
+        return await page.loadSrc();
     }
+
+    static async edit(data, user) {
+        if (!data.id)
+            throw new Error('Error: required in function "edit" id');
+        let page = Page.createPageWithId(parseInt(data.id), user);
+        await page.loadPageInfo();
+        page.srcStr = data.src;
+        page.status = EPageStat.SET_SRC;
+        page.minor = !data.major;
+        page.comment = data.comment;
+        await page.save();
+        return;
+    }
+
+    static loadSrc(): Promise<any> {
+        let tmp = this;
+        return SingletonMysql.queries(async conn => {
+            let rows, row;
+            row = (await conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [this.pageId, this.revId]))[0][0];
+            if (!row)
+                throw new Error('Invalid page id and rev_id: ' + this.pageId + ' , ' + this.revId + ' , ' + "title: " + this.titles);
+            this.srcStr = row.text;
+            this.minor = row.minor;
+            // this.userId = row.user_id;
+            // this.userText = row.userText;
+            // this.comment = row.comment;
+            // this.created = row.created;
+            this.status = EPageStat.GET_SRC;
+            return this;
+        });
+    }
+
+    static async getRenderedPage(fulltitle, user) {
+        let page = new Page(fulltitle, false, user);
+        await page.loadPageInfo();
+        await page.loadSrc();
+        return await page.getRenderedPage();
+    }
+
 }

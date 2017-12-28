@@ -2,7 +2,7 @@ extends layout
 
 block head2
     title #{page.fulltitle} - Wiki
-    meta(name="wiki_title" content=page[0])
+    meta(name="wiki_title" content=page.fulltitle)
     link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css")
     link(rel="stylesheet" href='/static/css/wiki/wiki_view.css')
     script(src="/static/js/wiki/wiki_view.js")
