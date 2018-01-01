@@ -59,6 +59,7 @@ app.use((req: express.Request, res, next) => {
 let api = new ApiRouter();
 api.use('/bookshelf', (new (require('./routers/bookshelfApi').default)(config.bookshelf)).getRouter());
 api.use('/wiki', require('./routers/WikiApi').default);
+api.use('/note', require('./routers/noteApi').default);
 app.use('/api', api.getRouter());
 
 app.get('/', function (req, res) {
