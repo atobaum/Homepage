@@ -16,6 +16,9 @@ block content
             - if (user && user.admin){
             a.item#btn_etc 기타
             - }
+        .ui.labels
+            each tag in page.tags
+                a.ui.tag.label= tag
         .wiki_content.language-javascript !{page.renStr}
     .ui.modal#modal_etc
         i.close.icon
