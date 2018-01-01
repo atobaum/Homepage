@@ -15,7 +15,7 @@ $(function(){
            window.location.href = "/wiki/view/"+encodeURI(formatTitle($('input.prompt').val()));
        }
    });
-   $('.ui.search').search({
+    $('#wiki_searchbar').search({
        apiSettings: {
            url: '/api/wiki/titleSearch?q={query}'
        },

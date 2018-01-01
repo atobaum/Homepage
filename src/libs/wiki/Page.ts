@@ -11,14 +11,16 @@ export enum EAccessControl {
 export abstract class IPage {
     protected renStr: string;
 
-    protected constructor(fulltitle: string) {
+    protected constructor(fulltitle: string, tags?: [string]) {
         if (!fulltitle) throw new Error("Error: title should be not empty.");
         this.titles = IPage.parseTitle(fulltitle);
         this.fulltitle = (this.titles[0] === 'Main' || this.titles[0] == null ? this.titles[1] : this.titles.join(':'));
+        this.tags = tags;
     }
 
     protected fulltitle: string;
     protected titles: [string, string];
+    protected tags: [string];
     protected srcStr: string;
 
     getFulltitle(): string {
@@ -45,7 +47,7 @@ export abstract class IPage {
 
     abstract save(user: User): Promise<IPage>;
 
-    protected static parseTitle(fulltitle: string): [string, string] {
+    public static parseTitle(fulltitle: string): [string, string] {
         let regexTitle = /^(?:(.*?):)?(.+?)$/;
         let parsedTitle = regexTitle.exec(fulltitle);
         let ns;
@@ -75,8 +77,8 @@ export class TempPage extends IPage {
         return Promise.reject(new Error("Temporary page cannot saved."));
     }
 
-    constructor(fulltitle) {
-        super(fulltitle);
+    constructor(fulltitle, tags?) {
+        super(fulltitle, tags);
     }
 
     async getSrc(user: User): Promise<string> {
@@ -90,16 +92,17 @@ export class TempPage extends IPage {
 export abstract class Page extends IPage {
     protected PAC: [number, number];
     protected nsId: number;
-    protected pageId: number;
+    public pageId: number;
     protected revId: number;
     protected cached: boolean;
     protected minor: boolean;
     protected comment: string;
 
-    constructor(fulltitle: string) {
-        super(fulltitle);
+    constructor(fulltitle: string, tags?) {
+        super(fulltitle, tags);
         this.PAC = [null, null];
         this.minor = false;
+        this.tags = [] as [string];
     }
 
     protected saveRevision(conn, user) {
@@ -118,6 +121,27 @@ export abstract class Page extends IPage {
             });
         else
             return SingletonMysql.query("INSERT INTO revision SET ?", [revision]);
+    }
+
+    protected async saveTags(conn): Promise<boolean> {
+        if (!this.pageId)
+            throw new Error('Page id is ' + this.pageId + ' in "saveTags".');
+        let [rows] = await conn.query('SELECT * FROM wiki_tags WHERE wiki_id=?', [this.pageId]);
+        let oldTags = rows.map((row) => {
+            row.name = row.name.toLowerCase();
+            return row;
+        });
+        let newTags = this.tags.map(a => a.toLowerCase());
+        [rows] = await conn.query('SELECT * FROM tag WHERE name IN (?)', [newTags]);
+        let existingTags: string[] = rows.map(tag => tag.name);
+        let toDelete = oldTags.filter((tag) => newTags.indexOf(tag.name) >= 0);
+        let toSave: string[] = this.tags.filter(tag => oldTags.indexOf(tag.toLowerCase()) >= 0);
+        let toCreate: string[] = toSave.filter(tag => existingTags.indexOf(tag.toLowerCase()) < 0);
+
+        await conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN ?", [this.pageId, toDelete]);
+        await conn.query("INSERT INTO tag (name) VALUES ? ", [toCreate.map(str => [str])]);
+        await conn.query("INSERT INTO tag_ti_wiki (tag_id, wiki_id) VALUES ? ", [toSave.map(str => [str, this.pageId])]);
+        return true;
     }
 
     static async load(fulltitle): Promise<Page> {
@@ -154,7 +178,7 @@ export abstract class Page extends IPage {
         })
     }
 
-    checkAC(user: User, type: EAccessControl) {
+    checkAC(user: User, type: EAccessControl): Promise<boolean> {
         if ((this.PAC[1] && this.PAC[1] & type) || (!this.PAC[1] && this.PAC[0] & type)) {
             if (user)
                 return Promise.resolve(true);
@@ -165,6 +189,7 @@ export abstract class Page extends IPage {
             return Promise.resolve(false);
     };
 }
+
 export class NewPage extends Page {
     async getSrc(user: User): Promise<string> {
         if (this.srcStr)
@@ -174,7 +199,7 @@ export class NewPage extends Page {
     }
 
     constructor(fulltitles, data) {
-        super(fulltitles);
+        super(fulltitles, data.tags);
         this.PAC[0] = data.ns_PAC;
         this.nsId = data.ns_id;
         this.titles[0] = data.ns_title;
@@ -185,23 +210,25 @@ export class NewPage extends Page {
             throw new Error("Source is not set.");
         else {
             return SingletonMysql.transaction(async conn => {
-                this.checkAC(user, EAccessControl.CREATE);
-                let [rows] = await conn.query('SELECT * FROM namespace WHERE ns_title = ?', [this.titles[0]]);
-                if (rows.length === 0)
-                    throw new Error("Namespace '" + this.titles[0] + "' doesn't exist.");
-                if (!(rows[0].ns_PAC & EAccessControl.CREATE))
-                    throw new Error("Access denied.");
+                if (this.checkAC(user, EAccessControl.CREATE)) {
+                    let [rows] = await conn.query('SELECT * FROM namespace WHERE ns_title = ?', [this.titles[0]]);
+                    if (rows.length === 0)
+                        throw new Error("Namespace '" + this.titles[0] + "' doesn't exist.");
+                    if (!(rows[0].ns_PAC & EAccessControl.CREATE))
+                        throw new Error("Access denied.");
 
-                this.nsId = rows[0].ns_id;
-                let page = {
-                    ns_id: this.nsId,
-                    page_title: this.titles[1]
-                };
-                [rows] = await conn.query('INSERT INTO page SET ?', [page]);
-                this.pageId = rows.insertId;
-                this.revId = 0;
+                    this.nsId = rows[0].ns_id;
+                    let page = {
+                        ns_id: this.nsId,
+                        page_title: this.titles[1]
+                    };
+                    [rows] = await conn.query('INSERT INTO page SET ?', [page]);
+                    this.pageId = rows.insertId;
+                    this.revId = 0;
 
-                return await this.saveRevision(conn, user);
+                    return await this.saveRevision(conn, user);
+                } else
+                    throw new Error('You have not enough AC to create new page.');
             });
         }
     }
@@ -211,7 +238,7 @@ export class OldPage extends Page {
     private edited: boolean;
 
     constructor(fulltitles, data) {
-        super(fulltitles);
+        super(fulltitles, data.tags);
         this.PAC = [data.ns_PAC, data.page_PAC];
         this.nsId = data.ns_id;
         this.pageId = data.page_id;
@@ -239,10 +266,15 @@ export class OldPage extends Page {
     }
 
     save(user): Promise<IPage> {
-        if (this.srcStr)
-            return this.saveRevision(null, user).then(() => this);
-        else
+        if (!this.srcStr)
             throw new Error("Source is not set");
+        else if (this.checkAC(user, EAccessControl.UPDATE))
+            throw new Error('You have not enough AC to edit new page.');
+        else
+            return SingletonMysql.transaction(conn => {
+                this.saveTags(conn);
+                return this.saveRevision(conn, user).then(() => this);
+            });
     }
 }
 

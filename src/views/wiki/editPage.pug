@@ -6,55 +6,7 @@ block head2
     link(rel="stylesheet" href='/static/css/wiki/wiki_view.css')
 
 block content
-    .ui.container
-        h1
-            a(href="/wiki/view/" + page.fulltitle)= page.fulltitle
-            - var editType = page.isNew ? " (새 문서 만들기)" : " (R"+page.revId+" 수정)";
-            small !{editType}
-        form.ui.form#edit_form(method="POST" action="/wiki/edit/" + encodeURI(page.fulltitle) onsubmit="return check_edit_form();")
-            input(type="hidden" name="title" value=page.fulltitle)
-            input(type="hidden" name="id" value=page.pageId)
-
-            .ui.top.attached.tabular.menu
-                a.item.active(data-tab="edit") 편집
-                a.item(data-tab="preview") 미리보기
-            .ui.bottom.attached.tab.segment.active(data-tab="edit")
-                textarea.ui.textarea(rows=25 name="src" readonly=page.readOnly) !{page.srcStr}
-            .ui.bottom.attached.tab.segment(data-tab="preview")
-                .wiki_content.language-javascript.preview
-            - if(!page.readOnly){
-            .fields
-                .ui.field.small.input.ten.wide
-                    input(type="text" name="comment" placeholder="Comment...")
-                .ui.checkbox.field.two.wide
-                    input#btn_major_edit(name='major', type="checkbox")
-                    label(for='btn_major_edit') Major
-                button.right.ui.primary.button(type='submit') 제출
-            - }
-
-    script.
-        function check_edit_form() {
-            $('#edit_form input[name="major"]').val(($('#btn_major_edit').parent().checkbox('is checked') ? 1 : 0));
-            return true;
-        }
-        $(function () {
-            $('.tabular.menu .item').tab({
-                cache: false
-            });
-            $('.tabular.menu a.item[data-tab="preview"]').click(function () {
-                $('.ui.dimmer').dimmer('show');
-                $.post({
-                    url: '/api/wiki/parse',
-                    data: {text: $('.tab textarea').val(), title: $('#edit_form input[name="title"]').val()},
-                    success: function (res) {
-                        $('.preview').html(res.result);
-                        $('.wiki-syntaxhl code').each(function (i, elem) {
-                            Prism.highlightElement(elem)
-                        })
-                    },
-                    error: function (xhr, status, error) {
-                        console.log(xhr.responseText);
-                    }
-                })
-            });
-        });
+    input#wiki_title(type='hidden', value=page.fulltitle)
+    #app
+    //script(src="/static/wiki/edit.js")
+    script(src="http://localhost:8080/wiki/edit.js")

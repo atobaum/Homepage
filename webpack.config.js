@@ -2,11 +2,14 @@ var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
-    entry: './src/views/bookshelf/entry.js',
+    entry: {
+        bookshelf: './src/views/bookshelf/entry.js',
+        'wiki/edit': './src/views/wiki/entry_edit.js'
+    },
     output: {
         path: path.resolve(__dirname, './public'),
         // publicPath: '/static/bookshelf',
-        filename: 'bookshelf.js'
+        filename: '[name].js'
     },
     module: {
         rules: [
