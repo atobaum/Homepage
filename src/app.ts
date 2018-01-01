@@ -49,9 +49,7 @@ app.use((req: express.Request, res, next) => {
         res.locals.user = req.session.user;
         req.userId = req.session.user.id;
         next();
-    } else if (req.method == "POST")
-        res.render("error", {error: new Error("로그인 하세요.")});
-    else
+    } else
         next();
 });
 

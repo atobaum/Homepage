@@ -31,8 +31,13 @@
         methods: {
             submit: function () {
                 let t = this;
-                $.post('/api/wiki/edit', this.page)
+                $.post({
+                    url: '/api/wiki/edit',
+                    data: {data: JSON.stringify(this.page)},
+                    dataType: 'json'
+                })
                     .done(data => {
+                        console.log(data);
                         if (data.ok === 1) {
                             window.location.href = '/wiki/view/' + t.page.fulltitle;
                         } else {

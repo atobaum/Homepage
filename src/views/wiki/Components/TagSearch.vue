@@ -15,7 +15,7 @@
         methods: {
             addTag: function (tag) {
                 if (this.tags.indexOf(tag) < 0)
-                    this.tags.push(tag);
+                    this.tags.push(tag.trim());
             },
             deleteTag: function (idx) {
                 this.tags.splice(idx, 1);

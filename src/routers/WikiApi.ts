@@ -8,7 +8,6 @@ import WikiHelper from "../libs/wiki/WikiHelper";
 
 let router = Router();
 router.post('/parse', async (req, res) => {
-    console.log(req.body);
     let page = new TempPage(req.body.title);
     page.setSrc(req.body.text);
     page.getRen(null).then((ren) => {
@@ -43,6 +42,24 @@ router.get('/src', async (req, res) => {
         res.json({ok: 0, error: e.stack});
     }
 
+});
+
+router.post('/edit', async (req, res) => {
+    let data = JSON.parse(req.body.data);
+    if (!req.user)
+        res.json({ok: 0, error: (new Error('Login first.')).stack});
+    else {
+        try {
+            let page = await Page.load(data.fulltitle);
+            page.setSrc(data.srcStr);
+            page.setTags(data.tags);
+            page.save(req.user).then(() => {
+                res.json({ok: 1});
+            })
+        } catch (e) {
+            res.json({ok: 0, error: e.stack});
+        }
+    }
 });
 
 export default router;

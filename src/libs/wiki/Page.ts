@@ -32,6 +32,11 @@ export abstract class IPage {
         return true;
     };
 
+    setTags(tags): boolean {
+        this.tags = tags;
+        return true;
+    }
+
     getRen(user: User): Promise<string> {
         if (!this.srcStr)
             throw new Error("Source is not set");
@@ -98,11 +103,11 @@ export abstract class Page extends IPage {
     protected minor: boolean;
     protected comment: string;
 
-    constructor(fulltitle: string, tags?) {
+    constructor(fulltitle: string, tags = [] as [string]) {
         super(fulltitle, tags);
         this.PAC = [null, null];
         this.minor = false;
-        this.tags = [] as [string];
+        this.tags = tags;
     }
 
     protected saveRevision(conn, user) {
@@ -131,21 +136,33 @@ export abstract class Page extends IPage {
             row.name = row.name.toLowerCase();
             return row;
         });
+        let oldTagsNames = oldTags.map(tag => tag.name);
         let newTags = this.tags.map(a => a.toLowerCase());
-        [rows] = await conn.query('SELECT * FROM tag WHERE name IN (?)', [newTags]);
-        let existingTags: string[] = rows.map(tag => tag.name);
-        let toDelete = oldTags.filter((tag) => newTags.indexOf(tag.name) >= 0);
-        let toSave: string[] = this.tags.filter(tag => oldTags.indexOf(tag.toLowerCase()) >= 0);
+        if (newTags.length) {
+            [rows] = await conn.query('SELECT * FROM tag WHERE name IN (?)', [newTags]);
+            var existingTags: string[] = rows.map(tag => tag.name);
+        }
+        let toDelete = oldTags.filter((tag) => newTags.indexOf(tag.name) < 0);
+        let toSave: string[] = this.tags.filter(tag => oldTagsNames.indexOf(tag.toLowerCase()) < 0);
         let toCreate: string[] = toSave.filter(tag => existingTags.indexOf(tag.toLowerCase()) < 0);
 
-        await conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN ?", [this.pageId, toDelete]);
-        await conn.query("INSERT INTO tag (name) VALUES ? ", [toCreate.map(str => [str])]);
-        await conn.query("INSERT INTO tag_ti_wiki (tag_id, wiki_id) VALUES ? ", [toSave.map(str => [str, this.pageId])]);
+        console.log(newTags, oldTags);
+        console.log(existingTags);
+        console.log(toDelete, toCreate, toSave);
+
+        if (toDelete.length)
+            await conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN (?)", [this.pageId, toDelete.map(tag => tag.id)]);
+        if (toCreate.length)
+            await conn.query("INSERT INTO tag (name) VALUES ? ", [toCreate.map(str => [str])]);
+        if (toSave.length) {
+            [rows] = await conn.query('SELECT * FROM tag WHERE name IN (?)', [toSave]);
+            await conn.query("INSERT INTO tag_to_wiki (tag_id, wiki_id) VALUES ? ", [rows.map(row => [row.id, this.pageId])]);
+        }
         return true;
     }
 
     static async load(fulltitle): Promise<Page> {
-        if (!fulltitle) throw new Error("Error: title should be not empty.");
+        if (!fulltitle) throw new Error("Title should be not empty. In load of class Page");
         let titles = IPage.parseTitle(fulltitle);
         let res = await SingletonMysql.query("SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?", titles);
         let rows = res[0];
@@ -157,8 +174,13 @@ export abstract class Page extends IPage {
             else
                 return new NewPage(fulltitle, rows[0]);
         }
-        else
-            return new OldPage(fulltitle, rows[0]);
+        else {
+            let data = rows[0];
+            res = await SingletonMysql.query('SELECT * FROM wiki_tags WHERE wiki_id=?', [data.page_id]);
+            rows = res[0];
+            data.tags = rows.map(row => row.name);
+            return new OldPage(fulltitle, data);
+        }
     }
 
     loadSrc(): Promise<any> {
@@ -268,12 +290,13 @@ export class OldPage extends Page {
     save(user): Promise<IPage> {
         if (!this.srcStr)
             throw new Error("Source is not set");
-        else if (this.checkAC(user, EAccessControl.UPDATE))
+        else if (!this.checkAC(user, EAccessControl.UPDATE))
             throw new Error('You have not enough AC to edit new page.');
         else
-            return SingletonMysql.transaction(conn => {
-                this.saveTags(conn);
-                return this.saveRevision(conn, user).then(() => this);
+            return SingletonMysql.transaction(async conn => {
+                await this.saveTags(conn);
+                await this.saveRevision(conn, user);
+                return this;
             });
     }
 }
