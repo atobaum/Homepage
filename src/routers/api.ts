@@ -3,6 +3,7 @@
  */
 import {Router} from "express";
 import User from "../libs/common/User";
+import SingletonMysql from "../libs/common/SingletonMysql";
 
 export default class ApiRouter {
     private router: Router;
@@ -24,6 +25,14 @@ export default class ApiRouter {
                 .catch(e => {
                     res.json({ok: e.code, error: e});
                 });
+        });
+
+        this.router.get('/search/tag', (req, res) => {
+            SingletonMysql.query('SELECT name, tagging_count as count FROM tag WHERE name LIKE ' + SingletonMysql.escape(req.query.q + '%'))
+                .then(([rows]) => {
+                    res.json({ok: 1, result: rows})
+                })
+                .catch(e => res.json({ok: 0, error: e.stack}));
         });
     }
 
