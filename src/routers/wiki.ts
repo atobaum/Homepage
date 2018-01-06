@@ -25,7 +25,7 @@ router.get(/\/view\/(.*)/, async (req, res) => {
             res.render('wiki/viewPage', {page: page});
         }
     } catch (e) {
-        res.render('error', {error: e.stack});
+        res.render('error', {error: e});
     }
 });
 

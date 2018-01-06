@@ -1,26 +1,30 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
+const SingletonMysql_1 = require("../common/SingletonMysql");
 class EnvManager {
     constructor() {
         this.envList = new Map();
+        this.priority = [];
     }
     addEnv(env) {
         this.envList.set(env.key, env);
+        this.priority.push(env);
     }
-    afterScan() {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield Promise.all(Array.from(this.envList.values()).map(env => env.afterScan())).catch(e => {
-                throw e;
-            });
-        });
+
+    afterScan(toks) {
+        return SingletonMysql_1.default.queries(conn => {
+            let promise = [];
+            for (let i = 0; i < this.priority.length; i++) {
+                promise.push(this.priority[i].afterScan(toks, conn));
+            }
+            return Promise.all(promise);
+        }).then(() => null);
+    }
+
+    save() {
+        return SingletonMysql_1.default.queries(conn => {
+            return Promise.all(this.priority.map(env => env.save(conn)));
+        }).then(() => null);
     }
     makeToken(key, argv) {
         return this.envList.get(key).makeToken(argv);

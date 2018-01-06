@@ -1,23 +1,54 @@
-var request = require('request');
-var querystring = require('querystring');
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+        return new (P || (P = Promise))(function (resolve, reject) {
+            function fulfilled(value) {
+                try {
+                    step(generator.next(value));
+                } catch (e) {
+                    reject(e);
+                }
+            }
 
+            function rejected(value) {
+                try {
+                    step(generator["throw"](value));
+                } catch (e) {
+                    reject(e);
+                }
+            }
+
+            function step(result) {
+                result.done ? resolve(result.value) : new P(function (resolve) {
+                    resolve(result.value);
+                }).then(fulfilled, rejected);
+            }
+
+            step((generator = generator.apply(thisArg, _arguments || [])).next());
+        });
+    };
+Object.defineProperty(exports, "__esModule", {value: true});
+const request = require("request-promise-native");
+const Book_1 = require("./Book");
 /** @module aladin
  * @author Hanjitori
- * @param {object} config - configure object of aladin api.
+ * @constructor{string} TTBKey- TTBKey of aladin api.
  * @version 20170322
  */
-module.exports = function (config) {
-    this.TTBKey = config.TTBKey;
-    this.host = 'http://www.aladin.co.kr/ttb/api/';
-    this.parseAuthors = function (strAuthors) {
-        var result = [];
-        var authors = strAuthors.split(', ');
-        var typeRegex = /(?:\s)(\S+?)$/;
+class Aladin {
+    constructor(TTBKey) {
+        this.TTBKey = TTBKey;
+    }
+
+    parseAuthors(strAuthors) {
+        let result = [];
+        let authors = strAuthors.split(', ');
+        let typeRegex = /(?:\s)(\S+?)$/;
         authors.forEach(function (strAuthor) {
-            var type = typeRegex.exec(strAuthor);
-            if (!type) throw new Error('Error at 9283');
+            let type = typeRegex.exec(strAuthor);
+            if (!type)
+                throw new Error('Error at 9283');
             type = type[1];
-            var names = strAuthor.substr(0, strAuthor.length - type.length - 1).split('.');
+            let names = strAuthor.substr(0, strAuthor.length - type.length - 1).split('.');
             switch (type) {
                 case '지음':
                     type = 'author';
@@ -40,83 +71,65 @@ module.exports = function (config) {
                 default:
                     throw new Error('지원하지 않는 저자 타입: ' + type);
             }
-            for (var i in names) {
+            for (let i in names) {
                 result.push({name: names[i], type: type});
             }
         });
         return result;
-    };
+    }
+    ;
 
-    /**
-     * get book information.
-     * @function bookInfo
-     * @param {(string|int)} isbn
-     * @param {function} callback - run after processing is finished with book info.
-     * @property {object} book - book info.
-     * @property {string} book.title
-     * @property {string} book.subtitle
-     * @property {string} book.page
-     * @property {object[]} book.authors
-     * @property {string} book.authors[].name
-     * @property {string} book.authors[].type
-     * @property {string} book.publisher
-     * @property {string} book.publishedDate
-     * @property {string} book.isbn13
-     * @property {string} book.coverURL
-     */
-    this.bookInfo = function (isbn, callback) {
-        var thisClass = this;
-        var queryOption = {
-            output: 'js',
-            ttbkey: this.TTBKey,
-            itemIdType: "ISBN13",
-            ItemId: isbn,
-            Version: 20131101
-        };
-
-        var query = this.host + "ItemLookUp.aspx?";
-        query += querystring.stringify(queryOption);
-        request(query, function (error, res, body) {
-            if (!error && res.statusCode == 200) {
-                var item = JSON.parse(body);
+    bookInfo(isbn) {
+        return __awaiter(this, void 0, void 0, function*() {
+            let queryOption = {
+                uri: Aladin.host + "ItemLookUp.aspx",
+                qs: {
+                    output: 'js',
+                    ttbkey: this.TTBKey,
+                    itemIdType: "ISBN13",
+                    ItemId: isbn,
+                    Version: 20131101
+                },
+                json: true
+            };
+            try {
+                let item = yield request(queryOption);
                 if (item.errorCode) {
-                    callback(new Error(item.errorMessage));
-                    return;
+                    return new Error(item.errorMessage);
                 }
-                item = item.item[0];
-                var result = {
+                item = item[0];
+                let result = {
                     title: item.title,
                     publisher: item.publisher,
                     published_date: item.pubDate,
                     isbn13: item.isbn13,
                     cover_URL: item.cover
                 };
-
                 try {
-                    var authors = thisClass.parseAuthors(item.author);
+                    let authors = this.parseAuthors(item.author);
                     result.authors = authors;
-                } catch (e) {
+                }
+                catch (e) {
                     result.authorsText = item.author;
                 }
-
                 if (item.subInfo) {
                     result.subtitle = item.subInfo.subTitle;
                     result.original_title = item.subInfo.originalTitle;
                     result.pages = item.subInfo.itemPage;
                 }
-                callback(null, result);
-            } else {
-                callback(error);
+                return result;
+            }
+            catch (e) {
+                throw e;
             }
         });
-    };
-
+    }
+    ;
     /**
      * search books from aladin and arrange.
      * @function search
      * @param {string} type - It could be one of Keyword, Title, Author, Publisher
      * @param {string} keyword - search keyword.
-     * @param {function} callback - run callback(books) after query.
      * @property {object[]} books - book info.
      * @property {string} books[].title
      * @property {string} books[].author
@@ -124,38 +137,35 @@ module.exports = function (config) {
      * @property {string} books[].isbn13
      * @property {string} books[].coverURL
      */
-    this.search = function (type, keyword, callback) {
-        var queryOption = {
-            output: 'js',
-            Version: '20131101',
-            Cover: 'Small',
-            MaxResults: 10,
-            SearchTarget: 'Book',
-            ttbkey: this.TTBKey,
-            QueryType: type,
-            Query: keyword
-        };
-        var query = this.host + "ItemSearch.aspx?";
-        query += querystring.stringify(queryOption);
-        request(query, function (error, res, body) {
-            if (!error && res.statusCode == 200) {
-                var data = JSON.parse(body);
-                var result = [];
-                for (var i in data.item) {
-                    var item = data.item[i];
-                    result.push({
-                        title: item.title,
-                        author: item.author.split(',')[0],
-                        published_date: item.pubDate,
-                        publisher: item.publisher,
-                        isbn13: item.isbn13,
-                        cover_URL: item.cover
-                    });
-                }
-                callback(null, result);
-            } else {
-                callback(error);
-            }
+    search(type, keyword) {
+        return __awaiter(this, void 0, void 0, function*() {
+            let queryOption = {
+                uri: Aladin.host + "ItemSearch.aspx",
+                qs: {
+                    output: 'js',
+                    Version: '20131101',
+                    Cover: 'Small',
+                    MaxResults: 10,
+                    SearchTarget: 'Book',
+                    ttbkey: this.TTBKey,
+                    QueryType: type,
+                    Query: keyword
+                },
+                json: true
+            };
+            let data = (yield request(queryOption)).item;
+            return data.map(item => {
+                let authors = item.author.split(',').map(str => {
+                    let [_, name, type] = /^(.*) (.*?)$/.exec(str);
+                    console.log(name, type);
+                    return [name, type];
+                });
+                return new Book_1.Book(item.title, authors, item.publisher, item.pubDate, item.isbn13, item.cover);
+            });
         });
-    };
-};
+    }
+    ;
+}
+Aladin.host = 'http://www.aladin.co.kr/ttb/api/';
+exports.default = Aladin;
+

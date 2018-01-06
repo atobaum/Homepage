@@ -5,19 +5,23 @@ if (!process.env.NODE_ENV) {
     console.log('NODE_ENV is undefined. Set to development.');
 }
 //process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'development' ) ? 'development' : 'production';
-let express = require('express');
-//var path = require('path');
+const express = require("express");
+const SingletonMysql_1 = require("./libs/common/SingletonMysql");
+//session setup
+const User_1 = require("./libs/common/User");
+const api_1 = require("./routers/api");
+let path = require('path');
 let favicon = require('serve-favicon');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
 let config = require('./config');
 let app = express();
 // view engine setup
-app.set('views', __dirname + '/views');
+app.set('views', __dirname + path.sep + 'views');
 app.set('view engine', 'pug');
 // middleware setup
 // app.use(favicon(__dirname + '/../views/' + 'favicon.ico'));
-app.use(express.static(__dirname + '/../public'));
+app.use('/static', express.static(__dirname + '/../public'));
 if (process.env.NODE_ENV === 'development') {
     let logger = require('morgan');
     app.use(logger('dev'));
@@ -25,50 +29,45 @@ if (process.env.NODE_ENV === 'development') {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-//session setup
-const SingletonMysql_1 = require("./libs/SingletonMysql");
-//Router setup
-// let bookshelf = require('../routers/bookshelf');
-// app.use('/bookshelf', bookshelf);
-const wiki_1 = require("./routers/wiki");
-SingletonMysql_1.SingletonMysql.init(config.db);
+SingletonMysql_1.default.init(config.db);
 let session = require('express-session');
 let MySQLStore = require('express-mysql-session')(session);
-let sessionStore = new MySQLStore({}, SingletonMysql_1.SingletonMysql.getPool());
+let sessionStore = new MySQLStore({}, SingletonMysql_1.default.getPool().pool);
 app.use(session({
     secret: 'fdkjl%31nc124*|c',
     resave: false,
     saveUninitialized: true,
     store: sessionStore
 }));
-app.use('/wiki', (new wiki_1.WikiRouter()).getRouter());
-app.get('/', function (req, res) {
-    res.render('index', { session: req.session });
+app.use((req, res, next) => {
+    if (req.session.user) {
+        req.user = new User_1.default(req.session.user.id, req.session.user.username, req.session.user.adim);
+        res.locals.user = req.session.user;
+        req.userId = req.session.user.id;
+        next();
+    }
+    else
+        next();
 });
+//Router setup
+let api = new api_1.default();
+api.use('/bookshelf', (new (require('./routers/bookshelfApi').default)(config.bookshelf)).getRouter());
+api.use('/wiki', require('./routers/WikiApi').default);
+api.use('/note', require('./routers/noteApi').default);
+app.use('/api', api.getRouter());
+app.get('/', function (req, res) {
+    res.redirect('/wiki/view/index');
+});
+app.use('/wiki', require('./routers/wiki').default);
+app.get('/bookshelf', (req, res) => res.render('bookshelf/main'));
+app.get('/note', (req, res) => res.render('note/main'));
 app.get('/login', function (req, res) {
-    res.render('login', { session: req.session });
+    res.render('login');
 });
 app.get('/auth/logout', function (req, res) {
     req.session.destroy();
     res.redirect(req.header('Referer'));
 });
-// app.get('/api/auth/login', function (req, res) {
-//     wiki.login(req.query.id, req.query.password)
-//         .then(([result, user]) => {
-//             if (result == 1) {
-//                 let sess = req.session;
-//                 sess.userId = user.user_id;
-//                 sess.userNickname = user.nickname;
-//                 sess.userAdmin = user.admin;
-//                 if (req.query.autoLogin == "true")
-//                     sess.cookie.maxAge = 1000 * 60 * 60 * 24 * 7; //7 days
-//             }
-//             res.json({ok: result});
-//         })
-//         .catch(e => {
-//             res.json({ok: 0, error: err});
-//         });
-// });
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     let err = new Error('Not Found');

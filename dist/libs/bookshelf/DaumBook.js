@@ -47,7 +47,6 @@ class Aladin {
     constructor(apikey) {
         this.apikey = apikey;
     }
-
     search(query, searchType = ESearchType.ALL) {
         return __awaiter(this, void 0, void 0, function*() {
             let queryOption = {
@@ -76,10 +75,9 @@ class Aladin {
         });
     }
     ;
-
     searchByISBN(isbn13) {
         return this.search(isbn13, ESearchType.ISBN);
     }
 }
 exports.default = Aladin;
-
+;
