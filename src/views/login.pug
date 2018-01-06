@@ -5,15 +5,16 @@ block head
     script(src="/static/js/login.js")
 
 block content
-    form.ui.form.container(onsubmit="return login()")
-        .field
-            label ID
-            input#login_id(placeholder='ID' autofocus)
-        .field
-            label 비밀번호
-            input#login_passwd(type="password" placeholder='비밀번호')
-        .inline.field
-            .ui.checkbox
-                input#login_auto(type="checkbox" tabindex="0")
-                label 로그인 유지
-        button.ui.button 로그인
+    .ui.container.segment
+        form.ui.form(onsubmit="return login()")
+            .field
+                label ID
+                input#login_id(placeholder='ID' autofocus)
+            .field
+                label 비밀번호
+                input#login_passwd(type="password" placeholder='비밀번호')
+            .inline.field
+                .ui.checkbox
+                    input#login_auto(type="checkbox" tabindex="0")
+                    label 로그인 유지
+            button.ui.button 로그인

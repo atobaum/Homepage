@@ -61,7 +61,7 @@ api.use('/note', require('./routers/noteApi').default);
 app.use('/api', api.getRouter());
 
 app.get('/', function (req, res) {
-    res.render('index');
+    res.redirect('/wiki/view/index');
 });
 app.use('/wiki', require('./routers/wiki').default);
 app.get('/bookshelf', (req, res) => res.render('bookshelf/main'));

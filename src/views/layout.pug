@@ -17,7 +17,6 @@ html
 
     body
         nav.ui.top.inverted.navbar.menu
-            a.brand.item(href="/") Home
             a.item(href="/bookshelf") 책장
             a.item(href="/wiki") Wiki
             a.item(href="/note") Note
@@ -25,18 +24,17 @@ html
             .right.menu
                 block rightNav
 
+                - if(user){
                 .item.ui.dropdown
                     input#isUser(type="hidden", value=(user == null ? 0 : 1))
-                    - if(user){
                     .header= user.username
                     .menu
                         a.item(href="#") 계정정보
                         a.item(href="/auth/logout") 로그아웃
-                    - } else {
-                    i.large.user.icon
-                    .menu
-                        a.item(href="/login") 로그인
-                    - }
+                - } else {
+                a(href="/login" style="margin:5px")
+                    i.big.inverted.link.sign.in.icon
+                - }
 
         block content
         script.
