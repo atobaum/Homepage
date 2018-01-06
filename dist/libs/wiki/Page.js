@@ -8,380 +8,323 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const SingletonMysql_1 = require("../common/SingletonMysql");
+const Parser_1 = require("./Parser");
 /**
  * Created by Le Reveur on 2017-10-15.
  */
-class Page {
-    constructor(fulltitle) {
+var EAccessControl;
+(function (EAccessControl) {
+    EAccessControl[EAccessControl["CREATE"] = 8] = "CREATE";
+    EAccessControl[EAccessControl["READ"] = 4] = "READ";
+    EAccessControl[EAccessControl["UPDATE"] = 2] = "UPDATE";
+    EAccessControl[EAccessControl["DELETE"] = 1] = "DELETE";
+})(EAccessControl = exports.EAccessControl || (exports.EAccessControl = {}));
+class IPage {
+    constructor(fulltitle, tags) {
         if (!fulltitle)
             throw new Error("Error: title should be not empty.");
+        this.titles = IPage.parseTitle(fulltitle);
+        this.fulltitle = (this.titles[0] === 'Main' || this.titles[0] == null ? this.titles[1] : this.titles.join(':'));
+        this.tags = tags;
     }
+
+    getFulltitle() {
+        return this.fulltitle;
+    }
+    ;
+
+    setSrc(src) {
+        this.srcStr = src;
+        return true;
+    }
+    ;
+
+    setTags(tags) {
+        this.tags = tags;
+        return true;
+    }
+
+    getRen(user) {
+        if (!this.srcStr)
+            throw new Error("Source is not set");
+        else {
+            return Parser_1.default.render(this.titles, this.srcStr).then(ren => {
+                this.renStr = ren;
+                return ren;
+            });
+        }
+    }
+    ;
     static parseTitle(fulltitle) {
+        let regexTitle = /^(?:(.*?):)?(.+?)$/;
+        let parsedTitle = regexTitle.exec(fulltitle);
+        let ns;
+        switch (parsedTitle[1]) {
+            case undefined:
+            case '':
+                ns = 'Main';
+                break;
+            case '개인':
+                ns = 'Private';
+                break;
+            case '분류':
+                ns = 'Category';
+                break;
+            case '위키':
+                ns = 'Wiki';
+                break;
+            default:
+                ns = parsedTitle[1];
+        }
+        return [ns, parsedTitle[2]];
     }
-    clearCache() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return;
-        });
+}
+exports.IPage = IPage;
+class TempPage extends IPage {
+    save(user) {
+        return Promise.reject(new Error("Temporary page cannot saved."));
     }
-    save() {
+
+    constructor(fulltitle, tags) {
+        super(fulltitle, tags);
+    }
+
+    getSrc(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            return;
+            if (this.srcStr)
+                return this.srcStr;
+            else
+                throw new Error("Source is not set.");
         });
     }
 }
+exports.TempPage = TempPage;
+class Page extends IPage {
+    constructor(fulltitle, tags = []) {
+        super(fulltitle, tags);
+        this.PAC = [null, null];
+        this.major = false;
+        this.tags = tags;
+    }
+
+    saveRevision(conn, user) {
+        let revision = {
+            page_id: this.pageId,
+            rev_id: this.revId + 1,
+            user_id: user.getId(),
+            user_text: user.getUsername(),
+            text: this.srcStr,
+            major: this.major,
+            tags: this.tags.join(',')
+        };
+        if (conn)
+            return conn.query("INSERT INTO revision SET ?", [revision]);
+        else
+            return SingletonMysql_1.default.query("INSERT INTO revision SET ?", [revision]);
+    }
+
+    saveTags(conn) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.pageId)
+                throw new Error('Page id is ' + this.pageId + ' in "saveTags".');
+            let [rows] = yield conn.query('SELECT * FROM wiki_tags WHERE wiki_id=?', [this.pageId]);
+            let oldTags = rows.map((row) => {
+                row.name = row.name.toLowerCase();
+                return row;
+            });
+            let oldTagsNames = oldTags.map(tag => tag.name);
+            let newTags = this.tags.map(a => a.toLowerCase());
+            if (newTags.length) {
+                [rows] = yield conn.query('SELECT * FROM tag WHERE name IN (?)', [newTags]);
+                var existingTags = rows.map(tag => tag.name);
+            }
+            let toDelete = oldTags.filter((tag) => newTags.indexOf(tag.name) < 0);
+            let toSave = this.tags.filter(tag => oldTagsNames.indexOf(tag.toLowerCase()) < 0);
+            let toCreate = toSave.filter(tag => existingTags.indexOf(tag.toLowerCase()) < 0);
+            // console.log(newTags, oldTags);
+            // console.log(existingTags);
+            // console.log(toDelete, toCreate, toSave);
+            if (toDelete.length)
+                yield conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN (?)", [this.pageId, toDelete.map(tag => tag.tag_id)]);
+            if (toCreate.length)
+                yield conn.query("INSERT INTO tag (name) VALUES ? ", [toCreate.map(str => [str])]);
+            if (toSave.length) {
+                [rows] = yield conn.query('SELECT * FROM tag WHERE name IN (?)', [toSave]);
+                yield conn.query("INSERT INTO tag_to_wiki (tag_id, wiki_id) VALUES ? ", [rows.map(row => [row.id, this.pageId])]);
+            }
+            return true;
+        });
+    }
+
+    static load(fulltitle) {
+        return __awaiter(this, void 0, void 0, function*() {
+            if (!fulltitle)
+                throw new Error("Title should be not empty. In load of class Page");
+            let titles = IPage.parseTitle(fulltitle);
+            let res = yield SingletonMysql_1.default.query("SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?", titles);
+            let rows = res[0];
+            if (rows.length === 0) {
+                res = yield SingletonMysql_1.default.query("SELECT * FROM namespace WHERE ns_title = ?", [titles[0]]);
+                rows = res[0];
+                if (rows.length === 0)
+                    throw new Error("Non exist namespace: " + titles[0]);
+                else
+                    return new NewPage(fulltitle, rows[0]);
+            }
+            else {
+                let data = rows[0];
+                res = yield SingletonMysql_1.default.query('SELECT * FROM wiki_tags WHERE wiki_id=?', [data.page_id]);
+                rows = res[0];
+                data.tags = rows.map(row => row.name);
+                return new OldPage(fulltitle, data);
+            }
+        });
+    }
+
+    loadSrc() {
+        let tmp = this;
+        return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function*() {
+            let rows, row;
+            row = (yield conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [this.pageId, this.revId]))[0][0];
+            if (!row)
+                throw new Error('Invalid page id and rev_id: ' + this.pageId + ' , ' + this.revId + ' , ' + "title: " + this.titles);
+            this.srcStr = row.text;
+            this.major = row.major;
+            // this.userId = row.user_id;
+            // this.userText = row.userText;
+            // this.comment = row.comment;
+            // this.created = row.created;
+            return this;
+        }));
+    }
+
+    checkAC(user, type) {
+        if ((this.PAC[1] && this.PAC[1] & type) || (!this.PAC[1] && this.PAC[0] & type)) {
+            if (user)
+                return Promise.resolve(true);
+            else {
+                return Promise.resolve((type & EAccessControl.READ) != 0);
+            }
+        }
+        else
+            return Promise.resolve(false);
+    }
+    ;
+}
 exports.Page = Page;
-//     /**
-//      * @function
-//      * @param{number} nsId
-//      * @param{number} pageId
-//      * @param{number} userId
-//      * @param{number} type - create(8), read(4), update(2), delete(1)
-//      * @param nsPAC
-//      * @param pagePAC
-//      * @property result - true if you can access.
-//      */
-//     checkAC(nsId, pageId, userId, type, nsPAC, pagePAC) {
-//         if ((pagePAC && pagePAC & type) || (!pagePAC && nsPAC & type)) return Promise.resolve(true);
-//         else if (!userId) return Promise.resolve(false);
-//         else return this.makeWork2(async conn => {
-//                 let query = "SELECT AC FROM ACL WHERE user_id = ? and (ns_id = ? OR page_id = ?)";
-//                 let rows = await conn.query(query, [userId, nsId, pageId]).catch(e => {
-//                     throw e
-//                 });
-//                 if (rows.length === 0) return false;
-//                 else {
-//                     for (let i = 0; i < rows.length; i++) {
-//                         if (rows[i].AC & type) {
-//                             return true;
-//                         }
-//                     }
-//                     return false;
-//                 }
-//             });
-//     };
-//     /**
-//      *
-//      * @param title
-//      * @returns page{Promise} - A promise object that gives the page. If namespace doesn't exist, page.noPage = 1. If namespace exists but page is not, page.noPage = 2. Otherwise, page.noPage = undefined.
-//      */
-//     getPageInfo(title) {
-//         let parsedTitle = Wiki.parseTitle(title);
-//         return this.makeWork(async (conn)=>{
-//             let query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
-//             let rows = await conn.query(query, [parsedTitle[0], parsedTitle[1]]).catch(e => {throw e});
-//             let result;
-//             if(rows.length === 0){
-//                 query = "SELECT * FROM namespace WHERE ns_title = ?";
-//                 rows = await conn.query(query, [parsedTitle[0]]).catch(e => {
-//                     throw e
-//                 });
-//                 if (rows.length === 0) result = {ns_title: parsedTitle[0], page_title: parsedTitle[1], noPage: 1};
-//                 else {
-//                     result = rows[0];
-//                     result.page_title = parsedTitle[1];
-//                     result.noPage = 2;
-//                 }
-//             } else {
-//                 result = rows[0];
-//             }
-//             result.title = (result.ns_title === "Main" ? '' : result.ns_title + ':') + result.page_title;
-//             return result;
-//         })();
-//     }
-//
-//     /**
-//      *
-//      * @param conn
-//      * @param title
-//      * @returns page{Promise} - A promise object that gives the page. If namespace doesn't exist, page.noPage = 1. If namespace exists but page is not, page.noPage = 2. Otherwise, page.noPage = undefined.
-//      */
-//     async getPageInfoConn(conn, title) {
-//         let parsedTitle = Wiki.parseTitle(title);
-//         let query = "SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?";
-//         let rows = await conn.query(query, [parsedTitle[0], parsedTitle[1]]).catch(e => {
-//             throw e
-//         });
-//         let result;
-//         if (rows.length === 0) {
-//             query = "SELECT * FROM namespace WHERE ns_title = ?";
-//             rows = await conn.query(query, [parsedTitle[0]]).catch(e => {
-//                 throw e
-//             });
-//             if (rows.length === 0) result = {ns_title: parsedTitle[0], page_title: parsedTitle[1], noPage: 1};
-//             else {
-//                 result = rows[0];
-//                 result.page_title = parsedTitle[1];
-//                 result.noPage = 2;
-//             }
-//         } else {
-//             result = rows[0];
-//         }
-//         result.title = (result.ns_title === "Main" ? '' : result.ns_title + ':') + result.page_title;
-//         return result;
-//     }
-//
-//     updatePageCache(pageInfo) {
-//         return this.makeWork2(async (conn) => {
-//             if (pageInfo.ns_title === 'Category')
-//                 await conn.query('INSERT INTO category (page_id, cat_title) VALUES (?, ?) ON DUPLICATE KEY UPDATE cat_title = ?', [pageInfo.page_id, pageInfo.page_title, pageInfo.page_title]).catch(e => {
-//                     throw e;
-//                 });
-//
-//             let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
-//             let rows = await conn.query(query, [pageInfo.page_id, pageInfo.rev_id]).catch(e => {
-//                 throw e;
-//             });
-//             if (rows.length === 0) throw new Error('Wrong Page Id: ' + pageInfo.page_id + ', Rev Id: ' + pageInfo.rev_id);
-//             let row = rows[0];
-//
-//             let [content, additional] = await this.parser.out(row.text, pageInfo.ns_title, pageInfo.page_title).catch(e => e);
-//
-//             if (additional.category.length === 0)
-//                 additional.category.push('미분류');
-//             await this.updateCategory(conn, pageInfo.page_id, additional.category, pageInfo.ns_title === 'Category' ? 0 : 1);
-//             if(pageInfo.cached === 0)
-//                 query = "INSERT INTO caching (page_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content=?";
-//             await conn.query(query, [pageInfo.page_id, content, content]).catch(e => {
-//                 throw e
-//             });
-//             return content;
-//         });
-//     }
-//
-//     /**
-//      *
-//      * @param title
-//      * @param userId
-//      * @property page.title
-//      * @property page.touched
-//      * @property page.text
-//      */
-//     async getRawPage(title, userId) {
-//         let pageInfo = await this.getPageInfo(title);
-//         if (pageInfo.deleted) {
-//             let error = new Error('Page is deleted.');
-//             error.name = "DELETED_PAGE";
-//             throw error;
-//         }
-//         if (pageInfo.noPage) {//no page
-//             return pageInfo;
-//         } else if (!(await this.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4, pageInfo.ns_PAC, pageInfo.page_PAC).catch(e => {throw e}))) { //can read
-//             return {noPrivilege: true, title: title};
-//         }
-//
-//         //read page
-//         let query = "SELECT text FROM revision WHERE page_id = ? AND rev_id = ?";
-//         let [row] = await this.makeWork(async conn => {
-//             return await conn.query(query, [pageInfo.page_id, pageInfo.rev_id]).catch(e => {
-//                 throw e
-//             });
-//         })().catch(e => {
-//             throw e;
-//         });
-//         pageInfo.text = row.text;
-//         pageInfo.readOnly = !(await this.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 2, pageInfo.ns_PAC, pageInfo.page_PAC).catch(e => {throw e;}));
-//
-//         delete pageInfo.ns_id;
-//         delete pageInfo.page_id;
-//         delete pageInfo.ns_PAC;
-//         delete pageInfo.page_PAC;
-//         delete pageInfo.cached;
-//         delete pageInfo.rev_counter;
-//         return pageInfo;
-//     }
-//
-//     async getParsedPage(title, userId, updateCache) {
-//         let pageInfo = await this.getPageInfo(title);
-//         if (pageInfo.deleted) {
-//             let error = new Error('Page is deleted.');
-//             error.name = "DELETED_PAGE";
-//             throw error;
-//         }
-//         if (pageInfo.noPage) {//no page
-//             return pageInfo;
-//         } else if (!(await this.checkAC(pageInfo.ns_id, pageInfo.page_id, userId, 4, pageInfo.ns_PAC, pageInfo.page_PAC).catch(e => {throw e}))) { //can read
-//             return {noPrivilege: true, title: title};
-//         }
-//
-//         //read page
-//         let parsedPage = null;
-//         if (pageInfo.redirect) {
-//             return {redirectFrom: pageInfo.title, redirectTo: pageInfo.redirect};
-//         } else if (pageInfo.cached === 1 && !updateCache) {
-//             parsedPage = await this.makeWork2(async (conn) => {
-//                 let query = "SELECT content FROM caching WHERE page_id = ?";
-//                 let [parsedPage] = await conn.query(query, [pageInfo.page_id]).catch(e => {
-//                     throw e;
-//                 });
-//                 if (parsedPage === undefined) throw new Error('fatal error: cache data doen\'t exists for page_id=' + pageInfo.page_id);
-//                 return parsedPage.content;
-//             }).catch(e => {throw e;});
-//         } else {
-//             parsedPage = await this.updatePageCache(pageInfo)
-//                 .catch(e => {throw e});
-//         }
-//
-//         return {
-//             title: pageInfo.title,
-//             touched: pageInfo.touched,
-//             parsedContent: parsedPage
-//         }
-//     }
-//
-//     /**
-//      * @function editPage - Edit page or Create page if not exists.
-//      * @param{Object} page
-//      * @param{String} page.title - Page title, include namespace.
-//      * @param{String} page.userText - User text. Username or ip.
-//      * @param{String} page.text - wiki text.
-//      * @param{number} userId
-//      */
-//     editPage(page, userId) {
-//         let thisClass = this;
-//         return this.makeTransaction(async conn => {
-//             let data = await this.getPageInfo(page.title);
-//             if (data.noPage === 1) {//no namespace
-//                 return data;
-//             } else if (data.noPage === 2) { //check access control and make page if page doesn't exists but not namespace.
-//                 if (await thisClass.checkAC(data.ns_id, null, userId, 8, data.ns_PAC, null)) {
-//                     let query = "INSERT INTO page (ns_id, page_title, user_ID, user_text) VALUES (?, ?, ?, ?)";
-//                     await conn.query(query, [data.ns_id, data.page_title, userId, page.userText]).catch(err => {
-//                         throw err;
-//                     });
-//                 } else {
-//                     let error = new Error('You have no privilege for this page.');
-//                     error.name = "NO_PRIVILEGE";
-//                     throw error;
-//                 }
-//             }
-//
-//             //get page_id
-//             let query = 'SELECT page_id, rev_id, rev_counter, page_PAC FROM page WHERE ns_id=? and page_title=?';
-//             let rows = await conn.query(query, [data.ns_id, data.page_title]).catch(e => {
-//                 throw e;
-//             });
-//             data.page_id = rows[0].page_id;
-//             data.rev_id = rows[0].rev_counter + 1;
-//             data.parent_id = rows[0].rev_id;
-//             let page_PAC = rows[0].page_PAC;
-//
-//             //check access control
-//             if (!(await thisClass.checkAC(data.ns_id, data.page_id, userId, 2, data.ns_PAC, page_PAC))) {
-//                 let error = new Error('You have no privilege for this page.');
-//                 error.name = "NO_PRIVILEGE";
-//                 throw error;
-//             }
-//
-//             //add revision
-//             let revision = {
-//                 page_id: data.page_id,
-//                 rev_id: data.rev_id,
-//                 user_id: userId,
-//                 user_text: page.userText,
-//                 text: page.text,
-//                 parent_id: data.parent_id,
-//                 minor: parseInt(page.major) ^ 1,
-//                 comment: page.comment
-//             };
-//
-//             if (!(revision.rev_id === 1 || revision.rev_id === 2)) {
-//                 await conn.query('UPDATE revision SET ? WHERE page_id = ? AND rev_id = ?', [{
-//                     user_id: userId,
-//                     user_text: page.userText,
-//                     text: page.text,
-//                     comment: page.comment
-//                 },
-//                     data.page_id,
-//                     data.rev_id - 1,
-//                 ]).catch(e => {
-//                     throw e;
-//                 });
-//
-//                 if (revision.minor === 0)
-//                     return await conn.query("INSERT INTO revision SET ?", [revision]);
-//             } else
-//                 return await conn.query("INSERT INTO revision SET ?", [revision]);
-//         })();
-//     }
-//
-//     deletePage(title, userId, callback) {
-//
-//     }
-//
-//     /**
-//      *
-//      * @param conn
-//      * @param page_id
-//      * @param categories
-//      * @param type{number} - 0: subcategory, 1: page, 2:file
-//      * @returns {*}
-//      */
-//     updateCategory(conn, page_id, categories, type = 1) {
-//         return this.makeTransaction(async conn => {
-//             let query = "DELETE FROM categorylink WHERE \`to\` = ?";
-//             await conn.query(query, [page_id]).catch(e => {
-//                 throw e
-//             });
-//             if (categories.length === 0) return;
-//
-//             query = "SELECT page_id, cat_title FROM category WHERE " +
-//                 categories.map(title => 'cat_title = ' + conn.escape(title)).join(' OR ');
-//             let rows = await conn.query(query).catch(e => {
-//                 throw e
-//             });
-//             if (rows.length === 0) return categories;
-//             query = "INSERT INTO categorylink (\`from\`, \`to\`, \`type\`) VALUES ?";
-//             await conn.query(query, [rows.map(row => [row.page_id, page_id, type])]).catch(e => {
-//                 throw e
-//             });
-//
-//             let lowercaseCat = categories.map(title => title.toLowerCase());
-//             rows.forEach(row => {
-//                 let i = lowercaseCat.indexOf(row.cat_title.toLowerCase());
-//                 if (i >= 0) {
-//                     categories.splice(i, 1);
-//                     lowercaseCat.splice(i, 1);
-//                 }
-//             });
-//             return categories;
-//         })();
-//     }
-//
-//     clearCache(pageTitle) {
-//         return this.makeWork2(async conn=>{
-//             let pageInfo = await this.getPageInfoConn(conn, pageTitle).catch(e => {
-//                 throw e;
-//             });
-//
-//             await conn.query('DELETE FROM caching WHERE page_id = ?', [pageInfo.page_id]).catch(e => {
-//                 throw e
-//             });
-//             return 1;
-//         });
-//     }
-//
-//     changeTitle(oldTitle, newTitle) {
-//         return this.makeWork2(async conn => {
-//             let pageInfo = await this.getPageInfoConn(conn, oldTitle).catch(e => {
-//                 throw e;
-//             });
-//             let result = await conn.query('UPDATE page SET page_title=? WHERE page_id = ?', [newTitle, pageInfo.page_id]).catch(e => {
-//                 throw e
-//             });
-//             if (result.affectedRows === 1) return pageInfo.ns_title + ':' + newTitle;
-//             else return null;
-//         });
-//     }
-//
-//     checkAdmin(userId){
-//         if (!userId) return Promise.resolve(false);
-//         return this.makeWork2(async conn=> {
-//             let users = await conn.query('SELECT admin FROM user WHERE user_id = ?', [userId]).catch(e => {
-//                 throw e
-//             });
-//             if (users.length === 0) throw new Error("Wrong User Id");
-//             else if (users[0].admin === 1) return true;
-//             else return false;
-//         });
-//     }
-// }
+class NewPage extends Page {
+    getSrc(user) {
+        return __awaiter(this, void 0, void 0, function*() {
+            if (this.srcStr)
+                return this.srcStr;
+            else
+                throw new Error("Source is not set.");
+        });
+    }
+
+    constructor(fulltitles, data) {
+        super(fulltitles, data.tags);
+        this.PAC[0] = data.ns_PAC;
+        this.nsId = data.ns_id;
+        this.titles[0] = data.ns_title;
+    }
+
+    save(user) {
+        return __awaiter(this, void 0, void 0, function*() {
+            if (!this.srcStr)
+                throw new Error("Source is not set.");
+            else {
+                return SingletonMysql_1.default.transaction((conn) => __awaiter(this, void 0, void 0, function*() {
+                    if (this.checkAC(user, EAccessControl.CREATE)) {
+                        let [rows] = yield conn.query('SELECT * FROM namespace WHERE ns_title = ?', [this.titles[0]]);
+                        if (rows.length === 0)
+                            throw new Error("Namespace '" + this.titles[0] + "' doesn't exist.");
+                        if (!(rows[0].ns_PAC & EAccessControl.CREATE))
+                            throw new Error("Access denied.");
+                        this.nsId = rows[0].ns_id;
+                        let page = {
+                            ns_id: this.nsId,
+                            page_title: this.titles[1]
+                        };
+                        [rows] = yield conn.query('INSERT INTO page SET ?', [page]);
+                        this.pageId = rows.insertId;
+                        this.revId = 0;
+                        return yield this.saveRevision(conn, user);
+                    }
+                    else
+                        throw new Error('You have not enough AC to create new page.');
+                }));
+            }
+        });
+    }
+}
+exports.NewPage = NewPage;
+class OldPage extends Page {
+    constructor(fulltitles, data) {
+        super(fulltitles, data.tags);
+        this.PAC = [data.ns_PAC, data.page_PAC];
+        this.nsId = data.ns_id;
+        this.pageId = data.page_id;
+        this.revId = data.rev_id;
+        this.cached = data.cached;
+        this.titles = [data.ns_title, data.page_title];
+        this.edited = false;
+    }
+
+    setSrc(str) {
+        this.srcStr = str;
+        this.edited = true;
+        return true;
+    }
+
+    getSrc(user) {
+        return __awaiter(this, void 0, void 0, function*() {
+            this.checkAC(user, EAccessControl.READ);
+            if (this.srcStr)
+                return this.srcStr;
+            else {
+                let rows = yield SingletonMysql_1.default.query('SELECT * FROM revision WHERE page_id = ? AND rev_id = ?', [this.pageId, this.revId]);
+                this.srcStr = rows[0][0].text;
+                return this.srcStr;
+            }
+        });
+    }
+
+    save(user) {
+        if (!this.srcStr)
+            throw new Error("Source is not set");
+        else if (!this.checkAC(user, EAccessControl.UPDATE))
+            throw new Error('You have not enough AC to edit new page.');
+        else
+            return SingletonMysql_1.default.transaction((conn) => __awaiter(this, void 0, void 0, function*() {
+                yield this.saveTags(conn);
+                yield this.saveRevision(conn, user);
+                return this;
+            }));
+    }
+}
+exports.OldPage = OldPage;
+class Revision {
+    constructor() {
+    }
+    ;
+
+    static load(conn, pageId, revId) {
+        return __awaiter(this, void 0, void 0, function*() {
+            let [rows] = yield conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [pageId, revId]);
+            if (rows.length === 0)
+                throw new Error("Non-exists revision: page " + pageId + ", rev: " + revId);
+            let row = rows[0];
+            let rev = new Revision();
+            rev.pageId = pageId;
+            rev.revId = revId;
+            rev.text = row.text;
+            rev.userId = row.user_id;
+            rev.userText = row.user_text;
+            rev.major = row.major;
+            rev.created = row.created;
+            rev.deleted = row.deleted;
+        });
+    }
+}

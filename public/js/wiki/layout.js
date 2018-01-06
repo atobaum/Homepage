@@ -1,1 +1,31 @@
-function formatTitle(e){var i=/(?:^(.*?):)?(.*?)$/.exec(e);return i[2]=i[2]||"Index",(i[1]?i[1]+":":"")+i[2]}$(function(){$("input.prompt").keypress(function(e){13!=event.which&&13!=event.keyCode||(window.location.href="/wiki/view/"+encodeURI(formatTitle($("input.prompt").val())))}),$(".ui.search").search({apiSettings:{url:"/wiki/api/titleSearch?q={query}"},fields:{results:"result"},onSelect:function(e){window.location.href="/wiki/view/"+encodeURI(formatTitle(e.title))},searchDelay:500})});
+/**
+ * Created by Le Reveur on 2017-05-12.
+ */
+
+function formatTitle(title) {
+    var parsedTitle = /(?:^(.*?):)?(.*?)$/.exec(title);
+    parsedTitle[2] = parsedTitle[2] || "Index";
+    return (parsedTitle[1] ? parsedTitle[1] + ":" : "") + parsedTitle[2];
+}
+
+$(function () {
+    $('input.prompt')
+        .keypress(function (evt) {
+            if (event.which == 13 || event.keyCode == 13) {
+                window.location.href = "/wiki/view/" + encodeURI(formatTitle($('input.prompt').val()));
+            }
+        });
+    $('#wiki_searchbar').search({
+        apiSettings: {
+            url: '/api/wiki/titleSearch?q={query}'
+        },
+        fields: {
+            results: 'result'
+        },
+        onSelect: function (result) {
+            window.location.href = "/wiki/view/" + encodeURI(formatTitle(result.title));
+        },
+        searchDelay: 500
+    });
+
+});

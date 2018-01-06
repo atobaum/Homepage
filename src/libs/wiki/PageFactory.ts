@@ -2,6 +2,7 @@
  * Created by Le Reveur on 2017-10-28.
  */
 import SingletonMysql from "../common/SingletonMysql";
+import {Page} from "./Page";
 export {IPage} from './Page'
 
 export default class PageFactory {
@@ -47,5 +48,4 @@ export default class PageFactory {
         await page.loadSrc();
         return await page.getRenderedPage();
     }
-
 }

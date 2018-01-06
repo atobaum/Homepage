@@ -1,6 +1,33 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", {value: true});
+const SingletonMysql_1 = require("../common/SingletonMysql");
+const Page_1 = require("./Page");
 /**
  * Created by Le Reveur on 2017-10-17.
  */
+class WikiHelper {
+    constructor() {
+    }
+
+    /**
+     * @async
+     * @param title
+     */
+    static searchTitles(title) {
+        let parsedTitle = Page_1.IPage.parseTitle(title);
+        return SingletonMysql_1.default.query('SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%' + parsedTitle[0] + '%" AND page_title LIKE "' + parsedTitle[1] + '%" AND deleted = 0 LIMIT 7')
+            .then(([rows]) => {
+                return rows.map((item) => {
+                    let title = (item.ns_title === 'Main' ? '' : item.ns_title + ':') + item.page_title;
+                    return {
+                        title: title,
+                        url: '/wiki/view/' + title
+                    };
+                });
+            });
+    }
+}
+exports.default = WikiHelper;
 //     getPageList(catTitle) {
 //         return this.makeWork2(async conn => {
 //             let query = 'SELECT page_id, cat_title, num_page, num_subcat, num_file FROM category WHERE cat_title = ?';
@@ -60,17 +87,3 @@
 //             callback(err);
 //         })
 //     }
-//     searchTitles(title) {
-//         let parsedTitle = Wiki.parseTitle(title);
-//         return this.makeWork(async (conn)=>{
-//             let query = 'SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%' + parsedTitle[0] + '%" AND page_title LIKE "' + parsedTitle[1] + '%" AND deleted = 0 LIMIT 7';
-//             let res = await conn.query(query).catch(e=>{throw e;});
-//             return res.map((item) => {
-//                 let title = (item.ns_title === 'Main' ? '' : item.ns_title+':') + item.page_title;
-//                 return {
-//                     title: title,
-//                     url: '/wiki/view/' + title
-//                 };
-//             });
-//         })();
-//     } 

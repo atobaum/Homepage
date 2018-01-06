@@ -8,42 +8,37 @@ html
     //- iOS Safari
     meta(name="apple-mobile-web-app-status-bar-style" content="#44ff5d")
     head
-        link(rel='stylesheet', href='/css/style.css')
+        link(rel='stylesheet', href='/static/css/style.css')
         script(src="https://code.jquery.com/jquery-3.1.1.min.js", integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=", crossorigin="anonymous")
-        link(rel='stylesheet', href='/semantic/semantic.min.css')
-        script(src="/semantic/semantic.min.js")
+        script(src="/static/js/vue.js")
+
+        link(rel='stylesheet', href='/static/semantic/semantic.min.css')
+        script(src="/static/semantic/semantic.min.js")
         block head
 
     body
         nav.ui.top.inverted.navbar.menu
-            a.brand.item(href="/") Home
+            a.item(href="/") Home
             a.item(href="/bookshelf") 책장
             a.item(href="/wiki") Wiki
+            a.item(href="/note") Note
+            a.item(href="/wiki/view/Wiki:About") About
             .right.menu
                 block rightNav
 
+                - if(user){
                 .item.ui.dropdown
-                    i.large.user.icon
+                    input#isUser(type="hidden", value=(user == null ? 0 : 1))
+                    .header= user.username
                     .menu
-                        - if(session && session.userNickname){
-                        .header= session.userNickname
-                        .ui.divider
                         a.item(href="#") 계정정보
                         a.item(href="/auth/logout") 로그아웃
+                - } else {
+                a(href="/login" style="margin:5px")
+                    i.big.inverted.link.sign.in.icon
+                - }
 
-                        -} else{
-                        .item 회원가입
-                        a.item(href="/login") 로그인
-                        -}
-
-        .ui.container.segment
-            block content
-
-
-        footer.ui.inverted.vertical.footer.segment(style='text-align: center')
-            p.
-                hanjitori.com | #[a(href='mailto:lereveurdesetoiles@gmail.com') Contact]
-            p CopyLeft (c) 2017 Hanjitori All Right No Reserved
+        block content
         script.
             $('.ui.sidebar').sidebar('setting', 'transition', 'push');
             $('#sidebar_button').click(function () {

@@ -27,22 +27,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         });
     };
 Object.defineProperty(exports, "__esModule", {value: true});
+const Components = require("./Components");
 const Components_1 = require("./Components");
+const TOC_1 = require("./Components/TOC");
 /**
  * Created by Le Reveur on 2017-10-17.
  */
 class SectionEnv {
     constructor() {
         this.key = Components_1.ETokenType.SECTION;
+        this.toc = new TOC_1.TOC(null, null);
     }
 
-    afterScan() {
-
+    afterScan(toks) {
+        toks.unshift(this.toc.root);
+        return;
     }
-
     makeToken([level, toks]) {
-        return new Components_1.Section(level, toks);
+        let section = new Components_1.Section(toks);
+        this.toc = this.toc.addSection(level, section);
+        return section;
     }
+
+    save(conn) {
+    }
+    ;
 }
 exports.SectionEnv = SectionEnv;
 class LinkEnv {
@@ -51,13 +60,6 @@ class LinkEnv {
         this.ns = ns;
         this.links = [];
     }
-
-    afterScan() {
-        return __awaiter(this, void 0, void 0, function*() {
-            return undefined;
-        });
-    }
-
     makeToken([ns, title, anchor, text]) {
         title = title || 'Index';
         let href;
@@ -79,25 +81,46 @@ class LinkEnv {
         this.links.push(link);
         return link;
     }
-}
-exports.LinkEnv = LinkEnv;
-// export class TOCEnv implements Env<Section>{
-//
-// }
-class FootnoteEnv {
-    constructor() {
-        this.key = Components_1.ETokenType.RFOOTNOTE;
-        this.fns = [];
+
+    afterScan(toks, conn) {
+        return __awaiter(this, void 0, void 0, function*() {
+            if (!this.links.length)
+                return;
+            let titles = this.links.map(link => link.getTitles());
+            let nsTitles = titles.map(item => item[0]);
+            let pageTitles = titles.map(item => item[1]);
+            let [rows] = yield conn.query("SELECT ns_title, page_title FROM fullpage WHERE ns_title IN (?) AND page_title IN (?)", [nsTitles, pageTitles]);
+            rows = rows.map(item => (item.ns_title + ":" + item.page_title).toLowerCase());
+            this.links.forEach(item => {
+                if (rows.includes(item.getTitles().join(":").toLowerCase()))
+                    item.isExist = true;
+            });
+            return null;
+        });
     }
 
-    afterScan() {
+    save(conn) {
+    }
+    ;
+}
+exports.LinkEnv = LinkEnv;
+class TitleEnv {
+    constructor(titles) {
+        this.key = Components_1.ETokenType.TITLE;
+        this.fulltitle = `${(titles[0] !== 'Main' ? titles[0] + ':' : '') + titles[1]}`;
+    }
+
+    afterScan(toks) {
+        toks.unshift(new Components.SimpleTag('h1', 'class="wiki_title"', this.fulltitle));
         return null;
     }
 
-    makeToken(inlineToks) {
-        let fn = new Components_1.Footnote(this.fns.length, inlineToks);
-        this.fns.push(fn);
-        return fn.getRef();
+    save(conn) {
+    }
+    ;
+
+    makeToken(args) {
+        return new Components.SimpleTag('h1', 'class="wiki_title"', this.fulltitle);
     }
 }
-exports.FootnoteEnv = FootnoteEnv;
+exports.TitleEnv = TitleEnv;

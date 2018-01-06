@@ -4,66 +4,90 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * Created by Le Reveur on 2017-10-16.
  */
 const Components_1 = require("../Components");
-class Text extends Components_1.InlineToken {
+class Text extends Components_1.Token {
     constructor(text) {
-        super([text]);
+        super();
+        this.text = text;
     }
     render() {
-        return this.params[0];
+        return this.text;
     }
     plainText() {
-        return this.params[0];
+        return this.text;
     }
 }
 exports.Text = Text;
-class SelfClosingSimpleTag extends Components_1.InlineToken {
+class SelfClosingSimpleTag extends Components_1.Token {
     constructor(tag, param) {
-        super([tag, param]);
+        super();
+        this.tag = tag;
+        this.param = param;
     }
     render() {
-        return `<${this.params[0]}${this.params[1] ? ' ' + this.params[1] : ''}>`;
+        return `<${this.tag}${this.param ? ' ' + this.param : ''}>`;
     }
     plainText() {
         return '';
     }
 }
 exports.SelfClosingSimpleTag = SelfClosingSimpleTag;
-class SimpleTag extends Components_1.InlineToken {
+class SimpleTag extends Components_1.Token {
     constructor(tag, param, text) {
-        super([tag, param, text]);
+        super();
+        this.tag = tag;
+        this.param = param;
+        this.text = text;
     }
     plainText() {
-        return this.params[2];
+        return this.text;
     }
     ;
     render() {
-        return `<${this.params[0]}${this.params[1] ? ' ' + this.params[1] : ''}>${this.params[2]}</${this.params[0]}>`;
+        return `<${this.tag}${this.param ? ' ' + this.param : ''}>${this.text}</${this.tag}>`;
     }
 }
 exports.SimpleTag = SimpleTag;
-class TagDecorator extends Components_1.InlineToken {
+class TagDecorator extends Components_1.Token {
     constructor(tag, param, innerTok) {
-        super([tag, param]);
+        super();
+        this.tag = tag;
+        this.param = param;
         this.innerTok = innerTok;
     }
     plainText() {
         return this.innerTok.plainText();
     }
     render() {
-        return `<${this.params[0]}${this.params[1] ? ' ' + this.params[1] : ''}>${this.innerTok.render()}</${this.params[0]}>`;
+        return `<${this.tag}${this.param ? ' ' + this.param : ''}>${this.innerTok.render()}</${this.tag}>`;
     }
 }
 exports.TagDecorator = TagDecorator;
-class Line extends Components_1.BlockToken {
+class Line extends Components_1.BigToken {
     constructor(toks) {
         super(toks);
+    }
+
+    parse(toks) {
+        while (toks[0] && toks[0] instanceof Line) {
+            this.toks = this.toks.concat(toks.shift().toks);
+        }
+        return new Paragraph(this.toks);
     }
     render() {
         return this.renderContent();
     }
 }
 exports.Line = Line;
-class EmptyLine extends Components_1.Macro {
+class Paragraph extends Components_1.BigToken {
+    constructor(toks) {
+        super(toks);
+    }
+
+    render() {
+        return `<p>${this.renderContent()}</p>`;
+    }
+}
+class EmptyLine extends Components_1.Token {
     render() {
         return '';
     }
@@ -72,35 +96,51 @@ class EmptyLine extends Components_1.Macro {
     }
 }
 exports.EmptyLine = EmptyLine;
-class Section extends Components_1.BlockToken {
-    constructor(index, toks) {
+class Section extends Components_1.BigToken {
+    constructor(toks) {
         super(toks);
-        this.index = index;
+    }
+
+    set toc(toc) {
+        this._toc = toc;
     }
     render() {
-        let formattedLevel = this.index.join('_');
+        let indexList = this._toc.indexList;
+        let formattedLevel = indexList.join('_');
         return '<h'
-            + this.index.length
+            + indexList.length
             + ' class="ui dividing header" id="'
             + "h_" + formattedLevel
             + '">'
-            + `<a href="#rh_${formattedLevel}">${this.index.join('.')}</a> `
+            + `<a href="#rh_${formattedLevel}">${indexList.join('.')}</a> `
             + this.renderContent()
             + '</h'
-            + this.index.length
+            + indexList.length
             + '>';
     }
 }
 exports.Section = Section;
-class Error extends Components_1.InlineToken {
+class Error extends Components_1.Token {
     constructor(title, text) {
-        super([title, text]);
+        super();
+        this.title = title;
+        this.text = text;
     }
     render() {
-        return `<div class="ui negative message"><div class="header">${this.params[0]}</div><p>${this.params[1]}</p></div>`;
+        return `<div class="ui negative message"><div class="header">${this.title}</div><p>${this.text}</p></div>`;
     }
     plainText() {
         return '';
     }
 }
 exports.Error = Error;
+class Footnote extends Components_1.BigToken {
+    constructor(toks) {
+        super(toks);
+    }
+
+    render() {
+        return `<i class="sticky note outline icon wiki_fn" data-html='${this.renderContent()}'></i>`;
+    }
+}
+exports.Footnote = Footnote;
