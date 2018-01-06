@@ -10,6 +10,7 @@ html
     head
         link(rel='stylesheet', href='/static/css/style.css')
         script(src="https://code.jquery.com/jquery-3.1.1.min.js", integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=", crossorigin="anonymous")
+        script(src="/static/js/vue.js")
 
         link(rel='stylesheet', href='/static/semantic/semantic.min.css')
         script(src="/static/semantic/semantic.min.js")
@@ -17,6 +18,7 @@ html
 
     body
         nav.ui.top.inverted.navbar.menu
+            a.item(href="/") Home
             a.item(href="/bookshelf") 책장
             a.item(href="/wiki") Wiki
             a.item(href="/note") Note

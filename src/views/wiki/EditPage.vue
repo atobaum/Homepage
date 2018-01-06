@@ -1,5 +1,5 @@
 <template lang="pug">
-    .ui.container
+    .ui.container.segment
         h1
             a(:href="'/wiki/view/'+page.fulltitle") {{ page.fulltitle }}
             small {{ page.revId ? " (R"+page.revId+" 수정)" : " (새 문서 만들기)" }}

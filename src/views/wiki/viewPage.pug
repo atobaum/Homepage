@@ -14,7 +14,7 @@ block content
             a.item(href='/wiki/history/' + page.fulltitle) 역사
             a.item(href='/wiki/xref/' + page.fulltitle) 역링크
             - if (user && user.admin){
-            a.item#btn_etc 기타
+            a.item#btn_etc 관리
             - }
         .ui.labels
             each tag in page.tags

@@ -3,6 +3,7 @@
  */
 "use strict";
 
+let mysql = require('mysql');
 let mysql2 = require('mysql2/promise');
 export default class SingletonMysql {
     private constructor() {
@@ -25,6 +26,10 @@ export default class SingletonMysql {
     public static getPool() {
         SingletonMysql.checkInit();
         return SingletonMysql.pool;
+    }
+
+    public static escape(str) {
+        return mysql.escape(str);
     }
 
     /**
