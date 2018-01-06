@@ -10,7 +10,7 @@
             .ui.bottom.attached.tab.segment.active(data-tab="edit")
                 textarea.ui.textarea(rows=25 name="src", :readonly="page.readOnly", v-model="page.srcStr")
             .ui.bottom.attached.tab.segment(data-tab="preview")
-                .wiki_content.language-javascript.preview
+                .wiki_content.wiki_preview.language-javascript
             div(v-if="!page.readOnly")
                 tag-search(:tags="page.tags")
             .fields(v-if="!page.readOnly")
@@ -71,7 +71,7 @@
                 $('.ui.dimmer').dimmer('show');
                 $.post('/api/wiki/parse', {text: t.page.srcStr, title: t.page.fulltitle})
                     .done((res) => {
-                        $('.preview').html(res.result);
+                        $('.wiki_preview').html(res.result);
                         $('.wiki-syntaxhl code').each(function (i, elem) {
                             Prism.highlightElement(elem)
                         })

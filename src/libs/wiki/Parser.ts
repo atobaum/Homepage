@@ -21,9 +21,8 @@ export default class Parser {
         let toks = lexer.scan(src);
         await em.afterScan(toks);
 
-        //parse
-        let toks2 = [];
-        let tok;
+        let toks2 = []; //parsed tokens
+        let tok; //iterator variable
         while (tok = toks.shift())
             toks2.push(tok.parse(toks));
 
@@ -76,16 +75,5 @@ export default class Parser {
     //         default:
     //             return this.renderer.error({name: "Macro Error", text: 'Macro ' + tok.macro + " doesn't supported."});
     //     }
-    // }
-
-    // parseQuote(toks, env) {
-    //     let tok = toks.shift();
-    //     let title = tok.title;
-    //     let text = this.inlineParse(tok.toks, env)[0];
-    //     let ref = tok.ref;
-    //     while (toks[0] && toks[0].type === 'quote') {
-    //         text += ' ' + this.inlineParse(toks.shift().toks, env)[0];
-    //     }
-    //     return {title: title, ref: ref, text: text};
     // }
 }

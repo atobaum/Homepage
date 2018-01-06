@@ -58,12 +58,6 @@ export abstract class BigToken extends Token {
     }
 }
 
-export abstract class TokenFactory {
-    static scan(src: string) {
-        throw new Error('Implement scan');
-    };
-}
-
 export * from './Components/Basic'
 export * from './Components/Table'
 export * from './Components/Link'
@@ -71,3 +65,4 @@ export * from './Components/Math'
 export * from './Components/TOC'
 export * from './Components/List'
 export * from './Components/Syntax'
+export * from './Components/Quote'

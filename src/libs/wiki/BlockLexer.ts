@@ -21,13 +21,13 @@ export default class BlockLexer extends Lexer {
         [/^(\s+)([*-]) (.+)(\r?\n|$)/, (cap, _, il) => new Components.Li(il.scan(cap[3]), cap[2] == '-', cap[1].length)], //list
         // [ETokenType.INDENT, /^:{1,}(.+)(\r?\n|$)/],
         [/^-{3,}\s*(\r?\n|$)/, cap => new Components.SelfClosingSimpleTag('hr', null)], //hr
-        // [ETokenType.QUOTE, /^>(?:\((.*?)(?:\|(.*?))?\))? (.*?)(\r?\n|$)/],
         [/^\|\|.*?(\r?\n|$)/, table], //table
         [/^(\s*\r?\n)+/, cap => new Components.EmptyLine()], //emptyline
         // [/^{{(\S*?)(?:\((\S*?)\))?\s+([\s\S]*?)}}/],
         // [/^## .*(\r?\n|$)/, cap=>new Components.Text('123')], //comment
         [/^```(.*)(?:\r?\n|$)([\s\S]+?)(?:\r?\n|$)```(\r?\n|$)/, (cap) => new Components.Code(cap[2], cap[1])], //blockcode
-        [/^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)], //blocklate
+        [/^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)], //blocklatex,
+        [/^> (.*)(\r?\n|$)/, (cap, _, il) => new Components.Quote(il.scan(cap[1]))], //blockquote
         [/^(.*?)(?:\r?\n|$)/, (cap, _, il) => new Components.Line(il.scan(cap[1]))] //linetext
     ] as [[RegExp, (cap: any, em: any, lexer: any) => Token]];
     constructor(envManager: EnvManager) {

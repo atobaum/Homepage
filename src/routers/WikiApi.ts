@@ -13,7 +13,7 @@ router.post('/parse', async (req, res) => {
     page.getRen(null).then((ren) => {
         res.json({ok: 1, result: ren});
     }).catch((e) => {
-        res.json({ok: 0, error: e.stack});
+        res.status(500).json({ok: 0, error: e.stack});
     });
 });
 

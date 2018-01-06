@@ -53,8 +53,11 @@ export class TOC extends Token {
         let result;
         if (this.isRoot && !this.children)
             return '';
-        else if (this.isRoot && this.children.length >= 2)
-            result = '<div class="ui segment compact wiki_toc"><ol>';
+        else if (this.isRoot)
+            if (this.children.length < 2)
+                return '';
+            else
+                result = '<div class="ui segment compact wiki_toc"><ol>';
         else {
             result = `<li id="rh_${this.indexList.join('_')}">${this.indexList.join('.')} <a  href="#h_${this.indexList.join('_')}">${this.section.plainText()}</a>`
         }

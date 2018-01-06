@@ -16,8 +16,9 @@ router.get(/\/view\/(.*)/, async (req, res) => {
     let user = req.user;
     try {
         let page = await Page.load(title);
-        if (page instanceof NewPage)
+        if (page instanceof NewPage) {
             res.redirect('/wiki/search/' + title);
+        }
         else if (page instanceof OldPage) {
             await page.getSrc(user);
             await page.getRen(user);
