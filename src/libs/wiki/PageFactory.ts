@@ -1,6 +1,7 @@
 /**
  * Created by Le Reveur on 2017-10-28.
  */
+import SingletonMysql from "../common/SingletonMysql";
 export {IPage} from './Page'
 
 export default class PageFactory {
@@ -17,8 +18,7 @@ export default class PageFactory {
         await page.loadPageInfo();
         page.srcStr = data.src;
         page.status = EPageStat.SET_SRC;
-        page.minor = !data.major;
-        page.comment = data.comment;
+        page.major = data.major;
         await page.save();
         return;
     }
@@ -31,7 +31,7 @@ export default class PageFactory {
             if (!row)
                 throw new Error('Invalid page id and rev_id: ' + this.pageId + ' , ' + this.revId + ' , ' + "title: " + this.titles);
             this.srcStr = row.text;
-            this.minor = row.minor;
+            this.major = row.major;
             // this.userId = row.user_id;
             // this.userText = row.userText;
             // this.comment = row.comment;

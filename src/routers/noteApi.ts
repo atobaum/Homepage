@@ -1,43 +1,29 @@
 "use strict";
 import {Router} from "express";
 
-export default class NoteApiRouter {
-    constructor(config) {
-        this.router = Router();
-        this.routes();
-    }
+let router = Router();
+router.get('/list/:page', (req, res) => {
 
-    getRouter() {
-        return this.router;
-    }
+});
 
-    private routes() {
-        this.router.get('/list/:page', (req, res) => {
+router.get('/v/:id', (req, res) => {
 
-        });
+});
 
-        this.router.get('/v/:id', (req, res) => {
+router.get('/search', (req, res) => {
 
-        });
+});
 
-        this.router.get('/search', (req, res) => {
+router.post('/write', (req, res) => {
 
-        });
+});
 
-        this.router.post('/write', (req, res) => {
+router.post('/edit', (req, res) => {
 
-        });
+});
 
-        this.router.post('/edit', (req, res) => {
+router.post('/delete', (req, res) => {
 
-        });
+});
 
-        this.router.post('/delete', (req, res) => {
-
-        });
-    }
-}
-
-function checkString(str) {
-    return str ? str : null;
-}
+export default router;

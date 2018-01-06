@@ -10,7 +10,6 @@ export default class Reading {
     private id: number;
     private date: [string, string];
     private rating: number;
-    private comment: string;
     private link: string;
     private isSecret: boolean;
     private book: Book;
@@ -19,13 +18,12 @@ export default class Reading {
     private saveType: ESaveType;
     private own: boolean;
 
-    constructor(user, book: Book, startDate, finishedDate, rating, comment, link, isSecret, saveType: ESaveType = ESaveType.NEW) {
+    constructor(user, book: Book, startDate, finishedDate, rating, link, isSecret, saveType: ESaveType = ESaveType.NEW) {
         if (saveType === ESaveType.NEW && book == null)
             throw new Error("book required when construct Reading instance in New mode");
         this.book = book;
         this.date = [startDate, finishedDate];
         this.rating = rating;
-        this.comment = comment;
         this.link = link;
         this.isSecret = isSecret == '1';
         this.user = user;

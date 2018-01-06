@@ -34,7 +34,7 @@ export default class BookshelfApiRouter {
                     if (reading.userId && reading.userId == req.user.getId()) {
                         let newreading = new Reading(req.user, null,
                             reading.date[0], checkString(reading.date[1]),
-                            reading.rating, checkString(reading.comment), checkString(reading.link),
+                            reading.rating, checkString(reading.link),
                             reading.is_secret == '1', ESaveType.EDIT);
 
                         newreading.setId(reading.id)
@@ -52,7 +52,7 @@ export default class BookshelfApiRouter {
                         let book = Book.createFromJSON(reading.book);
                         reading = new Reading(req.user, book,
                             reading.date[0], checkString(reading.date[1]),
-                            reading.rating, checkString(reading.comment), checkString(reading.link),
+                            reading.rating, checkString(reading.link),
                             reading.is_secret == '1', ESaveType.NEW);
                     } catch (e) {
                         res.json({ok: 0, error: e.stack});

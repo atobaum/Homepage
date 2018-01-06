@@ -100,13 +100,12 @@ export abstract class Page extends IPage {
     public pageId: number;
     protected revId: number;
     protected cached: boolean;
-    protected minor: boolean;
-    protected comment: string;
+    protected major: boolean;
 
     constructor(fulltitle: string, tags = [] as [string]) {
         super(fulltitle, tags);
         this.PAC = [null, null];
-        this.minor = false;
+        this.major = false;
         this.tags = tags;
     }
 
@@ -117,13 +116,11 @@ export abstract class Page extends IPage {
             user_id: user.getId(),
             user_text: user.getUsername(),
             text: this.srcStr,
-            minor: this.minor,
-            comment: this.comment
+            major: this.major,
+            tags: this.tags.join(',')
         };
         if (conn)
-            return conn.query("INSERT INTO revision SET ?", [revision]).catch(e => {
-                console.log(e)
-            });
+            return conn.query("INSERT INTO revision SET ?", [revision]);
         else
             return SingletonMysql.query("INSERT INTO revision SET ?", [revision]);
     }
@@ -146,12 +143,12 @@ export abstract class Page extends IPage {
         let toSave: string[] = this.tags.filter(tag => oldTagsNames.indexOf(tag.toLowerCase()) < 0);
         let toCreate: string[] = toSave.filter(tag => existingTags.indexOf(tag.toLowerCase()) < 0);
 
-        console.log(newTags, oldTags);
-        console.log(existingTags);
-        console.log(toDelete, toCreate, toSave);
+        // console.log(newTags, oldTags);
+        // console.log(existingTags);
+        // console.log(toDelete, toCreate, toSave);
 
         if (toDelete.length)
-            await conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN (?)", [this.pageId, toDelete.map(tag => tag.id)]);
+            await conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN (?)", [this.pageId, toDelete.map(tag => tag.tag_id)]);
         if (toCreate.length)
             await conn.query("INSERT INTO tag (name) VALUES ? ", [toCreate.map(str => [str])]);
         if (toSave.length) {
@@ -191,7 +188,7 @@ export abstract class Page extends IPage {
             if (!row)
                 throw new Error('Invalid page id and rev_id: ' + this.pageId + ' , ' + this.revId + ' , ' + "title: " + this.titles);
             this.srcStr = row.text;
-            this.minor = row.minor;
+            this.major = row.major;
             // this.userId = row.user_id;
             // this.userText = row.userText;
             // this.comment = row.comment;
@@ -307,8 +304,7 @@ class Revision {
     text: string;
     userId: number;
     userText: string;
-    comment: string;
-    minor: boolean;
+    major: boolean;
     created: string;
     deleted: boolean;
 
@@ -326,8 +322,7 @@ class Revision {
         rev.text = row.text;
         rev.userId = row.user_id;
         rev.userText = row.user_text;
-        rev.comment = row.comment;
-        rev.minor = row.minor;
+        rev.major = row.major;
         rev.created = row.created;
         rev.deleted = row.deleted;
     }
