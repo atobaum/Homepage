@@ -58,7 +58,6 @@ class Author {
             return (yield SingletonMysql_1.default.query('SELECT * FROM people WHERE ? LIKE "' + keyword + '%"', [type]))[0];
         });
     }
-
     save(bookId) {
         let type;
         switch (this.type) {

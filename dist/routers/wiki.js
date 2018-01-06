@@ -56,19 +56,7 @@ router.get(/\/view\/(.*)/, (req, res) => __awaiter(this, void 0, void 0, functio
 }));
 router.get(/\/edit\/(.*)/, (req, res) => __awaiter(this, void 0, void 0, function*() {
     let title = decodeURI(req.params[0]);
-    let user = req.user;
-    try {
-        let page = yield Page_1.Page.load(title);
-        if (page instanceof Page_1.NewPage)
-            res.render('wiki/editPage', {page: {fulltitle: title, isNew: true, readOnly: !user}});
-        else if (page instanceof Page_1.OldPage) {
-            yield page.getSrc(user);
-            res.render('wiki/editPage', {page: page});
-        }
-    }
-    catch (e) {
-        res.render('error', {error: e.stack});
-    }
+    res.render('wiki/editPage', {page: {fulltitle: title}});
 }));
 router.post(/\/edit\/(.*)/, (req, res) => __awaiter(this, void 0, void 0, function*() {
     let data = req.body;

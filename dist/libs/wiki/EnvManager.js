@@ -10,7 +10,6 @@ class EnvManager {
         this.envList.set(env.key, env);
         this.priority.push(env);
     }
-
     afterScan(toks) {
         return SingletonMysql_1.default.queries(conn => {
             let promise = [];
@@ -20,7 +19,6 @@ class EnvManager {
             return Promise.all(promise);
         }).then(() => null);
     }
-
     save() {
         return SingletonMysql_1.default.queries(conn => {
             return Promise.all(this.priority.map(env => env.save(conn)));

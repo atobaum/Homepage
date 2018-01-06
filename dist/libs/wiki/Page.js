@@ -28,23 +28,19 @@ class IPage {
         this.fulltitle = (this.titles[0] === 'Main' || this.titles[0] == null ? this.titles[1] : this.titles.join(':'));
         this.tags = tags;
     }
-
     getFulltitle() {
         return this.fulltitle;
     }
     ;
-
     setSrc(src) {
         this.srcStr = src;
         return true;
     }
     ;
-
     setTags(tags) {
         this.tags = tags;
         return true;
     }
-
     getRen(user) {
         if (!this.srcStr)
             throw new Error("Source is not set");
@@ -85,11 +81,9 @@ class TempPage extends IPage {
     save(user) {
         return Promise.reject(new Error("Temporary page cannot saved."));
     }
-
     constructor(fulltitle, tags) {
         super(fulltitle, tags);
     }
-
     getSrc(user) {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.srcStr)
@@ -107,7 +101,6 @@ class Page extends IPage {
         this.major = false;
         this.tags = tags;
     }
-
     saveRevision(conn, user) {
         let revision = {
             page_id: this.pageId,
@@ -123,7 +116,6 @@ class Page extends IPage {
         else
             return SingletonMysql_1.default.query("INSERT INTO revision SET ?", [revision]);
     }
-
     saveTags(conn) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.pageId)
@@ -156,7 +148,6 @@ class Page extends IPage {
             return true;
         });
     }
-
     static load(fulltitle) {
         return __awaiter(this, void 0, void 0, function*() {
             if (!fulltitle)
@@ -181,7 +172,6 @@ class Page extends IPage {
             }
         });
     }
-
     loadSrc() {
         let tmp = this;
         return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function*() {
@@ -198,7 +188,6 @@ class Page extends IPage {
             return this;
         }));
     }
-
     checkAC(user, type) {
         if ((this.PAC[1] && this.PAC[1] & type) || (!this.PAC[1] && this.PAC[0] & type)) {
             if (user)
@@ -223,13 +212,12 @@ class NewPage extends Page {
         });
     }
 
-    constructor(fulltitles, data) {
-        super(fulltitles, data.tags);
+    constructor(fulltitle, data) {
+        super(fulltitle);
         this.PAC[0] = data.ns_PAC;
         this.nsId = data.ns_id;
         this.titles[0] = data.ns_title;
     }
-
     save(user) {
         return __awaiter(this, void 0, void 0, function*() {
             if (!this.srcStr)
@@ -271,13 +259,11 @@ class OldPage extends Page {
         this.titles = [data.ns_title, data.page_title];
         this.edited = false;
     }
-
     setSrc(str) {
         this.srcStr = str;
         this.edited = true;
         return true;
     }
-
     getSrc(user) {
         return __awaiter(this, void 0, void 0, function*() {
             this.checkAC(user, EAccessControl.READ);
@@ -290,7 +276,6 @@ class OldPage extends Page {
             }
         });
     }
-
     save(user) {
         if (!this.srcStr)
             throw new Error("Source is not set");
@@ -309,7 +294,6 @@ class Revision {
     constructor() {
     }
     ;
-
     static load(conn, pageId, revId) {
         return __awaiter(this, void 0, void 0, function*() {
             let [rows] = yield conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [pageId, revId]);

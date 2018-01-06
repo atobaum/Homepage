@@ -11,7 +11,6 @@ class ApiRouter {
         this.router = express_1.Router();
         this.routes();
     }
-
     routes() {
         this.router.get('/auth/login', (req, res) => {
             User_1.default.login(req.query.id, req.query.password)
@@ -33,11 +32,9 @@ class ApiRouter {
                 .catch(e => res.json({ok: 0, error: e.stack}));
         });
     }
-
     use(path, router) {
         this.router.use(path, router);
     }
-
     getRouter() {
         return this.router;
     }

@@ -10,11 +10,9 @@ class Code extends Components_1.Token {
         this.lang = lang;
         this.text = text;
     }
-
     render() {
         return `<pre class="wiki-syntaxhl line-numbers language-${this.lang}"><code>${escapeHTML(this.text)}</code></pre>`;
     }
-
     plainText() {
         return this.text;
     }
@@ -25,11 +23,9 @@ class InlineCode extends Components_1.Token {
         super();
         this.text = text;
     }
-
     render() {
         return `<code>${escapeHTML(this.text)}</code>`;
     }
-
     plainText() {
         return this.text;
     }

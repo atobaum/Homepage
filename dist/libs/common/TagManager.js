@@ -9,7 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 class TagManager {
-    constructor() { }
+    constructor() {
+    }
     static search(name) {
         return __awaiter(this, void 0, void 0, function* () {
             throw new Error('not yet');

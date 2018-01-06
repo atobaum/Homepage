@@ -34,7 +34,6 @@ class Tag {
         this.name = name;
         this.count = count;
     }
-
     static loadFromDb(data) {
         return new Tag(data.id, data.name, data.tagging_count);
     }
@@ -50,21 +49,18 @@ class TagManager {
             }
         });
     }
-
     static search(name) {
         return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function*() {
             let [rows] = yield conn.query('SELECT * FROM tag WHERE name="%' + conn.escape(name) + '"');
             return rows.map(row => Tag.loadFromDb(row));
         }));
     }
-
     static create(conn, name) {
         return __awaiter(this, void 0, void 0, function*() {
             let [rows] = yield SingletonMysql_1.default.query("INSERT INTO tag SET ?", {name: name});
             return Tag.loadFromDb({name: name, id: rows.insertId, count: 0});
         });
     }
-
     static updateWiki(wiki) {
         let wikiId = wiki.pageId;
         SingletonMysql_1.default.queries(conn => {

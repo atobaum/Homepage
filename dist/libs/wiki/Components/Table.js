@@ -22,7 +22,6 @@ class TRow extends Components_1.BigToken {
         super(cells);
         this.head = cells[0].head;
     }
-
     parse(toks) {
         let table = [this];
         while (toks[0] instanceof TRow) {

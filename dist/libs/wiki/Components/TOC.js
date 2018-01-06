@@ -14,39 +14,33 @@ class TOC extends Components_1.Token {
         }
         this.children = [];
     }
-
     get indexList() {
         if (this.parent === null)
             return [];
         else
             return [...this.parent.indexList, this.index];
     }
-
     get root() {
         if (this.isRoot)
             return this;
         else
             return this.parent.root;
     }
-
     get isRoot() {
         return this.parent === null;
     }
-
     addChild(section) {
         let childToc = new TOC(section, this);
         childToc.index = this.children.length;
         this.children.push(childToc);
         return childToc;
     }
-
     addSection(level, section) {
         if (this.indexList.length < level)
             return this.addChild(section);
         else
             return this.parent.addSection(level, section);
     }
-
     render() {
         let result;
         if (this.isRoot && !this.children)
@@ -72,7 +66,6 @@ class TOC extends Components_1.Token {
         result += (this.isRoot ? '</ol></div>' : '</li>');
         return result;
     }
-
     plainText() {
         return '[TOC]';
     }

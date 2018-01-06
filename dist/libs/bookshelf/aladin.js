@@ -38,7 +38,6 @@ class Aladin {
     constructor(TTBKey) {
         this.TTBKey = TTBKey;
     }
-
     parseAuthors(strAuthors) {
         let result = [];
         let authors = strAuthors.split(', ');
@@ -78,7 +77,6 @@ class Aladin {
         return result;
     }
     ;
-
     bookInfo(isbn) {
         return __awaiter(this, void 0, void 0, function*() {
             let queryOption = {

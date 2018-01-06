@@ -66,7 +66,6 @@ class Line extends Components_1.BigToken {
     constructor(toks) {
         super(toks);
     }
-
     parse(toks) {
         while (toks[0] && toks[0] instanceof Line) {
             this.toks = this.toks.concat(toks.shift().toks);
@@ -82,7 +81,6 @@ class Paragraph extends Components_1.BigToken {
     constructor(toks) {
         super(toks);
     }
-
     render() {
         return `<p>${this.renderContent()}</p>`;
     }
@@ -100,7 +98,6 @@ class Section extends Components_1.BigToken {
     constructor(toks) {
         super(toks);
     }
-
     set toc(toc) {
         this._toc = toc;
     }
@@ -138,7 +135,6 @@ class Footnote extends Components_1.BigToken {
     constructor(toks) {
         super(toks);
     }
-
     render() {
         return `<i class="sticky note outline icon wiki_fn" data-html='${this.renderContent()}'></i>`;
     }

@@ -217,8 +217,8 @@ export class NewPage extends Page {
             throw new Error("Source is not set.");
     }
 
-    constructor(fulltitles, data) {
-        super(fulltitles, data.tags);
+    constructor(fulltitle, data) {
+        super(fulltitle);
         this.PAC[0] = data.ns_PAC;
         this.nsId = data.ns_id;
         this.titles[0] = data.ns_title;

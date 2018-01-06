@@ -36,28 +36,23 @@ class SingletonMysql {
     constructor() {
     }
     ;
-
     static checkInit() {
         if (SingletonMysql.pool === null)
             throw new Error("Error: initiate pool first. Use SingletonMysql.init(config)");
     }
-
     static init(config) {
         if (SingletonMysql.pool)
             throw new Error("Error: already initiated. use SingletonMysql.getPool().");
         else
             SingletonMysql.pool = mysql2.createPool(config);
     }
-
     static getPool() {
         SingletonMysql.checkInit();
         return SingletonMysql.pool;
     }
-
     static escape(str) {
         return mysql.escape(str);
     }
-
     /**
      * @async
      * @returns {Promise<IConnection>}
@@ -66,7 +61,6 @@ class SingletonMysql {
         SingletonMysql.checkInit();
         return SingletonMysql.pool.getConnection();
     }
-
     /**
      *
      * @async
@@ -76,7 +70,6 @@ class SingletonMysql {
     static query(query, params) {
         return SingletonMysql.getPool().query(query, params);
     }
-
     static queries(work) {
         return __awaiter(this, void 0, void 0, function*() {
             let conn, result;
@@ -93,7 +86,6 @@ class SingletonMysql {
             return result;
         });
     }
-
     static transaction(work) {
         return __awaiter(this, void 0, void 0, function*() {
             let conn = yield SingletonMysql.getConn();

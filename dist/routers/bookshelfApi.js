@@ -12,11 +12,9 @@ class BookshelfApiRouter {
         this.daum = new DaumBook_1.default(config.daumApiKey);
         this.routes();
     }
-
     getRouter() {
         return this.router;
     }
-
     routes() {
         this.router.get('/reading/:id', function (req, res) {
             Reading_1.default.load(req.params.id, req.userId)

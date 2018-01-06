@@ -8,7 +8,6 @@ const Page_1 = require("./Page");
 class WikiHelper {
     constructor() {
     }
-
     /**
      * @async
      * @param title

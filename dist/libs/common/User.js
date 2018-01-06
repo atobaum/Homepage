@@ -10,35 +10,29 @@ class User {
         this.username = username;
         this.admin = admin;
     }
-
     getId() {
         return this.id;
     }
-
     getUsername() {
         return this.username;
     }
-
     // createUser(user, callback) {
     // this.conn.query("INSERT INTO user (username, nickname, password, email) VALUES (?, ?, PASSWORD(?), ?)", [user.username, user.nickname, user.password, user.email], callback);
     // }
     updateUser() {
     }
-
     static checkUsername(username) {
         return SingletonMysql_1.default.queries(conn => {
             return conn.query("SELECT user_id FROM user WHERE user_id=?", [username])
                 .then(res => res[0].length !== 0);
         });
     }
-
     static checkNickname(username) {
         return SingletonMysql_1.default.queries(conn => {
             return conn.query("SELECT user_id FROM user WHERE nickname=?", [username])
                 .then(res => res[0].length !== 0);
         });
     }
-
     static login(username, password) {
         return SingletonMysql_1.default.query("SELECT user_id, nickname, admin, password = PASSWORD(?) as correct FROM user WHERE username = ?", [password, username])
             .then(res => {

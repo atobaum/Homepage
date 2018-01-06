@@ -33,7 +33,7 @@ router.get('/src', async (req, res) => {
     try {
         let page = await Page.load(title);
         if (page instanceof NewPage)
-            res.json({ok: 1, result: {fulltitle: title, isNew: true, readOnly: !user}});
+            res.json({ok: 1, result: {fulltitle: title, isNew: true, readOnly: !user, tags: []}});
         else if (page instanceof OldPage) {
             await page.getSrc(user);
             res.json({ok: 1, result: page});

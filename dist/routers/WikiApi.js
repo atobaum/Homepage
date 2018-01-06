@@ -58,7 +58,7 @@ router.get('/src', (req, res) => __awaiter(this, void 0, void 0, function*() {
     try {
         let page = yield Page_1.Page.load(title);
         if (page instanceof Page_1.NewPage)
-            res.json({ok: 1, result: {fulltitle: title, isNew: true, readOnly: !user}});
+            res.json({ok: 1, result: {fulltitle: title, isNew: true, readOnly: !user, tags: []}});
         else if (page instanceof Page_1.OldPage) {
             yield page.getSrc(user);
             res.json({ok: 1, result: page});

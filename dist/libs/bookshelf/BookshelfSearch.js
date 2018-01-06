@@ -35,7 +35,6 @@ const Reading_1 = require("./Reading");
 class BookshelfSearch {
     constructor() {
     }
-
     /**
      *
      * @param start
@@ -50,7 +49,6 @@ class BookshelfSearch {
             return [result, totalReadings];
         });
     }
-
     static unfinishedReadings(user) {
         return __awaiter(this, void 0, void 0, function*() {
             console.log(user);

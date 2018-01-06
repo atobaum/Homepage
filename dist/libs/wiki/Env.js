@@ -38,17 +38,15 @@ class SectionEnv {
         this.key = Components_1.ETokenType.SECTION;
         this.toc = new TOC_1.TOC(null, null);
     }
-
     afterScan(toks) {
         toks.unshift(this.toc.root);
-        return;
+
     }
     makeToken([level, toks]) {
         let section = new Components_1.Section(toks);
         this.toc = this.toc.addSection(level, section);
         return section;
     }
-
     save(conn) {
     }
     ;
@@ -81,7 +79,6 @@ class LinkEnv {
         this.links.push(link);
         return link;
     }
-
     afterScan(toks, conn) {
         return __awaiter(this, void 0, void 0, function*() {
             if (!this.links.length)
@@ -98,7 +95,6 @@ class LinkEnv {
             return null;
         });
     }
-
     save(conn) {
     }
     ;
@@ -109,16 +105,13 @@ class TitleEnv {
         this.key = Components_1.ETokenType.TITLE;
         this.fulltitle = `${(titles[0] !== 'Main' ? titles[0] + ':' : '') + titles[1]}`;
     }
-
     afterScan(toks) {
         toks.unshift(new Components.SimpleTag('h1', 'class="wiki_title"', this.fulltitle));
         return null;
     }
-
     save(conn) {
     }
     ;
-
     makeToken(args) {
         return new Components.SimpleTag('h1', 'class="wiki_title"', this.fulltitle);
     }

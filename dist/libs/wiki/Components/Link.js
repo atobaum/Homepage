@@ -43,7 +43,6 @@ class Link extends Components_1.Token {
     plainText() {
         return this.href;
     }
-
     getTitles() {
         return [this.ns, this.title];
     }

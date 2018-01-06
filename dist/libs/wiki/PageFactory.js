@@ -31,31 +31,30 @@ Object.defineProperty(exports, "__esModule", {value: true});
  * Created by Le Reveur on 2017-10-28.
  */
 const SingletonMysql_1 = require("../common/SingletonMysql");
-var Page_1 = require("./Page");
-exports.IPage = Page_1.IPage;
+const Page_1 = require("./Page");
+var Page_2 = require("./Page");
+exports.IPage = Page_2.IPage;
 class PageFactory {
     static getSrc(fulltitle, user) {
         return __awaiter(this, void 0, void 0, function*() {
-            let page = new Page(fulltitle, false, user);
+            let page = new Page_1.Page(fulltitle, false, user);
             yield page.loadPageInfo();
             return yield page.loadSrc();
         });
     }
-
     static edit(data, user) {
         return __awaiter(this, void 0, void 0, function*() {
             if (!data.id)
                 throw new Error('Error: required in function "edit" id');
-            let page = Page.createPageWithId(parseInt(data.id), user);
+            let page = Page_1.Page.createPageWithId(parseInt(data.id), user);
             yield page.loadPageInfo();
             page.srcStr = data.src;
             page.status = EPageStat.SET_SRC;
             page.major = data.major;
             yield page.save();
-            return;
+
         });
     }
-
     static loadSrc() {
         let tmp = this;
         return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function*() {
@@ -73,10 +72,9 @@ class PageFactory {
             return this;
         }));
     }
-
     static getRenderedPage(fulltitle, user) {
         return __awaiter(this, void 0, void 0, function*() {
-            let page = new Page(fulltitle, false, user);
+            let page = new Page_1.Page(fulltitle, false, user);
             yield page.loadPageInfo();
             yield page.loadSrc();
             return yield page.getRenderedPage();

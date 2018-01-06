@@ -10,7 +10,6 @@ class Lexer {
         this.name = name;
         this.inlineLexer = inlineLexer;
     }
-
     scan(src) {
         let cap;
         let type;

@@ -8,14 +8,12 @@ class Quote extends Components_1.BigToken {
     constructor(toks) {
         super(toks);
     }
-
     parse(toks) {
         if (toks[0] && toks[0] instanceof Quote) {
             this.toks = this.toks.concat(toks.shift().toks);
             return this;
         }
     }
-
     render() {
         return "<blockquote>" + this.renderContent() + "</blockquote>";
     }

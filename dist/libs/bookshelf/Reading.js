@@ -51,7 +51,6 @@ class Reading {
         this.id = id;
         return this;
     }
-
     static load(id, userId) {
         return __awaiter(this, void 0, void 0, function*() {
             let rows = (yield SingletonMysql_1.default.query('SELECT * FROM readings WHERE id = ?', [id]))[0];
@@ -63,7 +62,6 @@ class Reading {
         });
     }
     ;
-
     static makeFromDbRow(reading, userId) {
         return __awaiter(this, void 0, void 0, function*() {
             if (reading.deleted == 1)
@@ -80,11 +78,9 @@ class Reading {
             return temp;
         });
     }
-
     delete() {
         return SingletonMysql_1.default.query('UPDATE readings SET deleted=1 WHERE id=?', [this.id]);
     }
-
     save() {
         return __awaiter(this, void 0, void 0, function*() {
             let data = {
@@ -100,11 +96,11 @@ class Reading {
                 data.book_id = this.book.getIsbn13();
                 data.user_id = this.user.getId();
                 yield SingletonMysql_1.default.query('INSERT INTO readings SET ?', [data]);
-                return;
+
             }
             else if (this.saveType === common_1.ESaveType.EDIT) {
                 yield SingletonMysql_1.default.query('UPDATE readings SET ? WHERE id=? AND user_id=?', [data, this.id, this.user.getId()]);
-                return;
+
             }
         });
     }

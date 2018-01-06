@@ -14,8 +14,6 @@
             div(v-if="!page.readOnly")
                 tag-search(:tags="page.tags")
             .fields(v-if="!page.readOnly")
-                .ui.field.small.input.ten.wide
-                    input(type="text" v-model="page.comment" placeholder="Comment...")
                 button.right.ui.primary.button(type='submit', @click="submit()") 제출
 </template>
 <script>
@@ -37,7 +35,6 @@
                     dataType: 'json'
                 })
                     .done(data => {
-                        console.log(data);
                         if (data.ok === 1) {
                             window.location.href = '/wiki/view/' + t.page.fulltitle;
                         } else {

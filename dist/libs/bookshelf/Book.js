@@ -79,7 +79,6 @@ class Book {
             }
         }));
     }
-
     getIsbn13() {
         return this.isbn13;
     }
@@ -130,7 +129,6 @@ class DetailBook extends Book {
     getBookInfo() {
         throw new Error();
     }
-
     static createFromBook(book) {
     }
 }

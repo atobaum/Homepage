@@ -31,18 +31,7 @@ router.get(/\/view\/(.*)/, async (req, res) => {
 
 router.get(/\/edit\/(.*)/, async (req, res) => {
     let title = decodeURI(req.params[0]);
-    let user = req.user;
-    try {
-        let page = await Page.load(title);
-        if (page instanceof NewPage)
-            res.render('wiki/editPage', {page: {fulltitle: title, isNew: true, readOnly: !user}});
-        else if (page instanceof OldPage) {
-            await page.getSrc(user);
-            res.render('wiki/editPage', {page: page});
-        }
-    } catch (e) {
-        res.render('error', {error: e.stack});
-    }
+    res.render('wiki/editPage', {page: {fulltitle: title}});
 });
 
 router.post(/\/edit\/(.*)/, async (req, res) => {

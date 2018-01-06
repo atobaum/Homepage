@@ -36,7 +36,6 @@ const Env = require("./Env");
 class Parser {
     constructor() {
     }
-
     static render(titles, src, as = false) {
         return __awaiter(this, void 0, void 0, function*() {
             let em = new EnvManager_1.EnvManager();
