@@ -78,7 +78,6 @@ export default class Reading {
             date_started: this.date[0],
             date_finished: this.date[1],
             rating: this.rating,
-            comment: this.comment,
             link: this.link,
             user: this.user.getUsername(),
             is_secret: this.isSecret
