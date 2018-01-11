@@ -229,7 +229,7 @@ export class NewPage extends Page {
             throw new Error("Source is not set.");
         else {
             return SingletonMysql.transaction(async conn => {
-                if (this.checkAC(user, EAccessControl.CREATE)) {
+                if (await this.checkAC(user, EAccessControl.CREATE)) {
                     let [rows] = await conn.query('SELECT * FROM namespace WHERE ns_title = ?', [this.titles[0]]);
                     if (rows.length === 0)
                         throw new Error("Namespace '" + this.titles[0] + "' doesn't exist.");
@@ -245,6 +245,7 @@ export class NewPage extends Page {
                     this.pageId = rows.insertId;
                     this.revId = 0;
 
+                    await this.saveTags(conn);
                     return await this.saveRevision(conn, user);
                 } else
                     throw new Error('You have not enough AC to create new page.');
@@ -255,6 +256,7 @@ export class NewPage extends Page {
 
 export class OldPage extends Page {
     private edited: boolean;
+    private readOnly: boolean;
 
     constructor(fulltitles, data) {
         super(fulltitles, data.tags);
@@ -265,6 +267,7 @@ export class OldPage extends Page {
         this.cached = data.cached;
         this.titles = [data.ns_title, data.page_title];
         this.edited = false;
+        this.readOnly = true;
     }
 
     setSrc(str) {
@@ -274,7 +277,9 @@ export class OldPage extends Page {
     }
 
     async getSrc(user: User): Promise<string> {
-        this.checkAC(user, EAccessControl.READ);
+        if (!(await this.checkAC(user, EAccessControl.READ)))
+            throw new Error("You cannot read page.");
+        this.readOnly = !(await this.checkAC(user, EAccessControl.UPDATE));
         if (this.srcStr)
             return this.srcStr;
         else {
@@ -287,13 +292,15 @@ export class OldPage extends Page {
     save(user): Promise<IPage> {
         if (!this.srcStr)
             throw new Error("Source is not set");
-        else if (!this.checkAC(user, EAccessControl.UPDATE))
-            throw new Error('You have not enough AC to edit new page.');
         else
             return SingletonMysql.transaction(async conn => {
-                await this.saveTags(conn);
-                await this.saveRevision(conn, user);
-                return this;
+                if (!(await this.checkAC(user, EAccessControl.UPDATE)))
+                    throw new Error('You have not enough AC to edit new page.');
+                else {
+                    await this.saveTags(conn);
+                    await this.saveRevision(conn, user);
+                    return this;
+                }
             });
     }
 }

@@ -76,5 +76,7 @@ $(function(){
         });
     });
 
-    $('.wiki_fn').popup();
+    $('.wiki_fn').popup({
+        hoverable: true
+    });
 });

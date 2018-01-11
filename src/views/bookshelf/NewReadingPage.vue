@@ -3,7 +3,7 @@
         .ui.error.message(v-if="noBookError")
             .header 책을 선택하세요.
         book-search(:reading="reading")
-        reading-form(:edit="true", :reading = "reading", :submit = "submit")
+        reading-form(:edit="true", :reading = "reading", :submit = "submit", isNew="true")
             button.ui.positive.button(type="submit") 저장
 
 </template>

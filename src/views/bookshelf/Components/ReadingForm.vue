@@ -18,7 +18,7 @@
             .ui.toggle.checkbox
                 input(type="checkbox", tabindex="0", :readonly="!edit")
                 label 비밀
-        .field
+        .field(v-if="!isNew")
             label 읽은 사람
             a {{ reading && reading.user }}
         slot
@@ -49,7 +49,7 @@
                 return false;
             })
         },
-        props: ['user', 'reading', 'edit', 'submit'],
+        props: ['user', 'reading', 'edit', 'submit', 'isNew'],
         components: {StarRating: StarRating}
     }
 </script>
