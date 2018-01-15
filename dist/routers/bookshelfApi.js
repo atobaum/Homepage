@@ -26,7 +26,7 @@ class BookshelfApiRouter {
             switch (req.query.action.toLowerCase()) {
                 case 'edit':
                     if (reading.userId && reading.userId == req.user.getId()) {
-                        let newreading = new Reading_1.default(req.user, null, reading.date[0], checkString(reading.date[1]), reading.rating, checkString(reading.link), reading.is_secret == '1', common_1.ESaveType.EDIT);
+                        let newreading = new Reading_1.default(req.user, null, reading.date[0], checkString(reading.date[1]), reading.rating, reading.comment, reading.is_secret == '1', checkString(reading.link), common_1.ESaveType.EDIT);
                         newreading.setId(reading.id)
                             .save()
                             .catch(e => {
@@ -41,7 +41,7 @@ class BookshelfApiRouter {
                 case 'new':
                     try {
                         let book = Book_1.Book.createFromJSON(reading.book);
-                        reading = new Reading_1.default(req.user, book, reading.date[0], checkString(reading.date[1]), reading.rating, checkString(reading.link), reading.is_secret == '1', common_1.ESaveType.NEW);
+                        reading = new Reading_1.default(req.user, book, reading.date[0], checkString(reading.date[1]), reading.rating, reading.comment, reading.is_secret == '1', checkString(reading.link), common_1.ESaveType.NEW);
                     }
                     catch (e) {
                         res.json({ok: 0, error: e.stack});

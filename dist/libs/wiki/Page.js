@@ -211,7 +211,6 @@ class NewPage extends Page {
                 throw new Error("Source is not set.");
         });
     }
-
     constructor(fulltitle, data) {
         super(fulltitle);
         this.PAC[0] = data.ns_PAC;
@@ -224,7 +223,7 @@ class NewPage extends Page {
                 throw new Error("Source is not set.");
             else {
                 return SingletonMysql_1.default.transaction((conn) => __awaiter(this, void 0, void 0, function*() {
-                    if (this.checkAC(user, EAccessControl.CREATE)) {
+                    if (yield this.checkAC(user, EAccessControl.CREATE)) {
                         let [rows] = yield conn.query('SELECT * FROM namespace WHERE ns_title = ?', [this.titles[0]]);
                         if (rows.length === 0)
                             throw new Error("Namespace '" + this.titles[0] + "' doesn't exist.");
@@ -238,6 +237,7 @@ class NewPage extends Page {
                         [rows] = yield conn.query('INSERT INTO page SET ?', [page]);
                         this.pageId = rows.insertId;
                         this.revId = 0;
+                        yield this.saveTags(conn);
                         return yield this.saveRevision(conn, user);
                     }
                     else
@@ -258,6 +258,7 @@ class OldPage extends Page {
         this.cached = data.cached;
         this.titles = [data.ns_title, data.page_title];
         this.edited = false;
+        this.readOnly = true;
     }
     setSrc(str) {
         this.srcStr = str;
@@ -266,7 +267,9 @@ class OldPage extends Page {
     }
     getSrc(user) {
         return __awaiter(this, void 0, void 0, function*() {
-            this.checkAC(user, EAccessControl.READ);
+            if (!(yield this.checkAC(user, EAccessControl.READ)))
+                throw new Error("You cannot read page.");
+            this.readOnly = !(yield this.checkAC(user, EAccessControl.UPDATE));
             if (this.srcStr)
                 return this.srcStr;
             else {
@@ -279,13 +282,15 @@ class OldPage extends Page {
     save(user) {
         if (!this.srcStr)
             throw new Error("Source is not set");
-        else if (!this.checkAC(user, EAccessControl.UPDATE))
-            throw new Error('You have not enough AC to edit new page.');
         else
             return SingletonMysql_1.default.transaction((conn) => __awaiter(this, void 0, void 0, function*() {
-                yield this.saveTags(conn);
-                yield this.saveRevision(conn, user);
-                return this;
+                if (!(yield this.checkAC(user, EAccessControl.UPDATE)))
+                    throw new Error('You have not enough AC to edit new page.');
+                else {
+                    yield this.saveTags(conn);
+                    yield this.saveRevision(conn, user);
+                    return this;
+                }
             }));
     }
 }

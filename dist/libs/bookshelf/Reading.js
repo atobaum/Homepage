@@ -34,14 +34,15 @@ const common_1 = require("../common");
  * Created by Le Reveur on 2017-10-18.
  */
 class Reading {
-    constructor(user, book, startDate, finishedDate, rating, link, isSecret, saveType = common_1.ESaveType.NEW) {
+    constructor(user, book, startDate, finishedDate, rating, comment, isSecret, link, saveType = common_1.ESaveType.NEW) {
         if (saveType === common_1.ESaveType.NEW && book == null)
             throw new Error("book required when construct Reading instance in New mode");
         this.book = book;
         this.date = [startDate, finishedDate];
         this.rating = rating;
+        this.comment = comment;
         this.link = link;
-        this.isSecret = isSecret == '1';
+        this.isSecret = isSecret;
         this.user = user;
         this.saveType = saveType;
     }
@@ -87,6 +88,7 @@ class Reading {
                 date_started: this.date[0],
                 date_finished: this.date[1],
                 rating: this.rating,
+                comment: this.comment,
                 link: this.link,
                 user: this.user.getUsername(),
                 is_secret: this.isSecret

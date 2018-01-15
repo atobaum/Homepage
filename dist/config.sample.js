@@ -12,6 +12,9 @@ module.exports = {
         connectionLimit: 5,
         connectTimeout: 5000
     },
+    session: {
+        secret: '123142132'
+    },
     bookshelf: {
         aladinApiKey: '1234',
         daumApiKey: '1234'

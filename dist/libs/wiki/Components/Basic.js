@@ -136,7 +136,7 @@ class Footnote extends Components_1.BigToken {
         super(toks);
     }
     render() {
-        return `<i class="sticky note outline icon wiki_fn" data-html='${this.renderContent()}'></i>`;
+        return `<span><i class="talk outline icon wiki_fn" data-html='${this.renderContent()}'></i></span>`;
     }
 }
 exports.Footnote = Footnote;

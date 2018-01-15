@@ -34,7 +34,7 @@ let session = require('express-session');
 let MySQLStore = require('express-mysql-session')(session);
 let sessionStore = new MySQLStore({}, SingletonMysql_1.default.getPool().pool);
 app.use(session({
-    secret: 'fdkjl%31nc124*|c',
+    secret: config.session.secret,
     resave: false,
     saveUninitialized: true,
     store: sessionStore
