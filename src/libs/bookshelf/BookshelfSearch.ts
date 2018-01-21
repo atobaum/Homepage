@@ -24,7 +24,6 @@ export default class BookshelfSearch {
     }
 
     static async unfinishedReadings(user: User) {
-        console.log(user);
         let rows = (await SingletonMysql.query('SELECT * FROM readings WHERE user_id = ? AND date_finished IS NULL AND deleted = 0 ORDER BY date_started', [user.getId()]))[0];
         let result = await Promise.all(rows.map(reading => Reading.makeFromDbRow(reading)));
         return result;

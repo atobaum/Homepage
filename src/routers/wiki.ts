@@ -1,5 +1,5 @@
 "use strict";
-import {NewPage, OldPage, Page} from "../libs/wiki/Page";
+import {NewPage, OldPage, Page, WikiError} from "../libs/wiki/Page";
 import {Router} from "express";
 
 let router = Router();
@@ -25,7 +25,10 @@ router.get(/\/view\/(.*)/, async (req, res) => {
             res.render('wiki/viewPage', {page: page});
         }
     } catch (e) {
-        res.render('error', {error: e});
+        if (e instanceof WikiError)
+            res.render("wiki/noPrivilege", {error: e});
+        else
+            res.render('error', {error: e});
     }
 });
 
@@ -44,24 +47,11 @@ router.post(/\/edit\/(.*)/, async (req, res) => {
         page.save(req.user).then(() => {
             res.redirect('/wiki/view/' + data.title);
         }).catch(e => {
-            res.render("error", {error: e});
+            if (e instanceof WikiError)
+                res.render('wiki/noPrivilege', {error: e});
+            else
+                res.render("error", {error: e});
         })
-
-        // Page.edit(data, req.user)
-        //     .catch(e => {
-        //         res.render('error', {error: e});
-        //     })
-        //     .then(() => {
-        //         res.redirect('/wiki/view/' + encodeURI(title));
-        //     });
-        // data.userText = data.user || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-        // wiki.editPage(data, userId)
-        //     .then(() => {
-        //     }).catch(e => {
-        //     if (e.name === "NO_PRIVILEGE") {
-        //         res.render('noPrivilege', {wikiTitle: title, priType: 2, });
-        //     } else res.render('error', {error: e, });
-        // });
     }
 });
 //

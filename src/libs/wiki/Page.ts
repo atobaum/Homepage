@@ -4,6 +4,16 @@ import User from "../common/User";
 /**
  * Created by Le Reveur on 2017-10-15.
  */
+export class WikiError extends Error {
+    title: string;
+    AC: EAccessControl;
+
+    constructor(title: string, AC: EAccessControl) {
+        super();
+        this.title = title;
+        this.AC = AC;
+    }
+}
 export enum EAccessControl {
     CREATE = 8, READ = 4, UPDATE = 2, DELETE = 1
 }
@@ -198,7 +208,9 @@ export abstract class Page extends IPage {
     }
 
     checkAC(user: User, type: EAccessControl): Promise<boolean> {
-        if ((this.PAC[1] && this.PAC[1] & type) || (!this.PAC[1] && this.PAC[0] & type)) {
+        if (user && user.getAdmin())
+            return Promise.resolve(true);
+        else if ((this.PAC[1] && this.PAC[1] & type) || (!this.PAC[1] && this.PAC[0] & type)) {
             if (user)
                 return Promise.resolve(true);
             else {
@@ -248,7 +260,7 @@ export class NewPage extends Page {
                     await this.saveTags(conn);
                     return await this.saveRevision(conn, user);
                 } else
-                    throw new Error('You have not enough AC to create new page.');
+                    throw new WikiError(this.fulltitle, EAccessControl.CREATE);
             });
         }
     }
@@ -278,7 +290,7 @@ export class OldPage extends Page {
 
     async getSrc(user: User): Promise<string> {
         if (!(await this.checkAC(user, EAccessControl.READ)))
-            throw new Error("You cannot read page.");
+            throw new WikiError(this.fulltitle, EAccessControl.READ);
         this.readOnly = !(await this.checkAC(user, EAccessControl.UPDATE));
         if (this.srcStr)
             return this.srcStr;
@@ -295,7 +307,7 @@ export class OldPage extends Page {
         else
             return SingletonMysql.transaction(async conn => {
                 if (!(await this.checkAC(user, EAccessControl.UPDATE)))
-                    throw new Error('You have not enough AC to edit new page.');
+                    throw new WikiError(this.fulltitle, EAccessControl.UPDATE);
                 else {
                     await this.saveTags(conn);
                     await this.saveRevision(conn, user);

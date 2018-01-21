@@ -128,7 +128,6 @@ export default class Aladin {
         return data.map(item => {
             let authors: Author[] = item.author.split(',').map(str => {
                 let [_, name, type] = /^(.*) (.*?)$/.exec(str);
-                console.log(name, type);
                 return [name, type];
             });
             return new Book(item.title, authors, item.publisher, item.pubDate, item.isbn13, item.cover);

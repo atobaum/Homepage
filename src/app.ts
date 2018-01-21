@@ -45,7 +45,7 @@ app.use(session({
 }));
 app.use((req: express.Request, res, next) => {
     if (req.session.user) {
-        req.user = new User(req.session.user.id, req.session.user.username, req.session.user.adim);
+        req.user = new User(req.session.user.id, req.session.user.username, req.session.user.admin);
         res.locals.user = req.session.user;
         req.userId = req.session.user.id;
         next();
@@ -70,6 +70,7 @@ app.get('/note', (req, res) => res.render('note/main'));
 app.get('/login', function (req, res) {
     res.render('login');
 });
+
 app.get('/auth/logout', function (req: any, res) {
     req.session.destroy();
     res.redirect(req.header('Referer'));
