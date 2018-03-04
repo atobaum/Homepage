@@ -37,6 +37,7 @@ abstract class Lexer {
                 toks.push(new Components.Error('Infinite Loop in ' + this.name + ' Lexer', "Error occurred in processing " + src));
                 break;
             }
+        console.log(toks);
         return toks;
     }
 }

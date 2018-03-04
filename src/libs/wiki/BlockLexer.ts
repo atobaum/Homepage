@@ -17,12 +17,12 @@ function table(cap, em, il) {
 }
 export default class BlockLexer extends Lexer {
     TokenList = [
-        [/^(={2,6}) (.+) ={2,6}\s*(\r?\n|$)/, (cap, em, il) => em.makeToken(ETokenType.SECTION, [cap[1].length - 1, il.scan(cap[2])])], //section
-        [/^(\s+)([*-]) (.+)(\r?\n|$)/, (cap, _, il) => new Components.Li(il.scan(cap[3]), cap[2] == '-', cap[1].length)], //list
+        [/^(\s*\r?\n)+/, cap => new Components.EmptyLine()], //emptyline
+        [/^([=#]{1,6}) (.+)\s*(\r?\n|$)/, (cap, em, il) => em.makeToken(ETokenType.SECTION, [cap[1].length, il.scan(cap[2])])], //headings
+        [/^(\s*)([*-]) (.+)(\r?\n|$)/, (cap, _, il) => new Components.Li(il.scan(cap[3]), cap[2] == '-', cap[1].length)], //list
         // [ETokenType.INDENT, /^:{1,}(.+)(\r?\n|$)/],
         [/^-{3,}\s*(\r?\n|$)/, cap => new Components.SelfClosingSimpleTag('hr', null)], //hr
-        [/^\|\|.*?(\r?\n|$)/, table], //table
-        [/^(\s*\r?\n)+/, cap => new Components.EmptyLine()], //emptyline
+        [/^\|.*?(\r?\n|$)/, table], //table
         // [/^{{(\S*?)(?:\((\S*?)\))?\s+([\s\S]*?)}}/],
         // [/^## .*(\r?\n|$)/, cap=>new Components.Text('123')], //comment
         [/^```(.*)(?:\r?\n|$)([\s\S]+?)(?:\r?\n|$)```(\r?\n|$)/, (cap) => new Components.Code(cap[2], cap[1])], //blockcode
