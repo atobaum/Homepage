@@ -173,7 +173,7 @@ export abstract class Page extends IPage {
         let titles = IPage.parseTitle(fulltitle);
         let res = await SingletonMysql.query("SELECT * FROM fullpage WHERE ns_title = ? and page_title = ?", titles);
         let rows = res[0];
-        if (rows.length === 0) {
+        if (rows.length === 0) { //결과 없을 때
             res = await SingletonMysql.query("SELECT * FROM namespace WHERE ns_title = ?", [titles[0]]);
             rows = res[0];
             if (rows.length === 0)
@@ -205,6 +205,10 @@ export abstract class Page extends IPage {
             // this.created = row.created;
             return this;
         })
+    }
+
+    getPAC(){
+        return this.PAC;
     }
 
     /**
@@ -321,6 +325,13 @@ export class OldPage extends Page {
                     return this;
                 }
             });
+    }
+
+    setPAC(pac:number){
+        if(pac !== this.PAC[1]){
+            return SingletonMysql.query("UPDATE page SET page_PAC = ? WHERE page_id = ?", [pac, this.pageId]);
+        } else
+            return Promise.resolve(true);
     }
 }
 

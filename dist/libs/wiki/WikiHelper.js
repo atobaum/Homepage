@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const SingletonMysql_1 = require("../common/SingletonMysql");
 const Page_1 = require("./Page");
@@ -27,6 +35,28 @@ class WikiHelper {
                 }
             }
             return res;
+        });
+    }
+    static getPAC(user, title) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!user)
+                return false;
+            let page = yield Page_1.Page.load(title);
+            if (page instanceof Page_1.OldPage) {
+                return page.getPAC()[1];
+            }
+            return false;
+        });
+    }
+    static setPAC(user, title, pagePAC) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!user)
+                return false;
+            let page = yield Page_1.Page.load(title);
+            if (page instanceof Page_1.OldPage) {
+                return page.setPAC(pagePAC);
+            }
+            return false;
         });
     }
 }

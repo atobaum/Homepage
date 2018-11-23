@@ -1,5 +1,5 @@
 import SingletonMysql from "../common/SingletonMysql";
-import {IPage} from "./Page";
+import {IPage, OldPage, Page} from "./Page";
 import User from "../common/User";
 /**
  * Created by Le Reveur on 2017-10-17.
@@ -28,6 +28,25 @@ export default class WikiHelper {
                 }
                 return res;
             });
+    }
+
+    static async getPAC(user: User, title: string){
+        if(!user) return false;
+        let page = await Page.load(title);
+        if(page instanceof OldPage){
+            return page.getPAC()[1];
+        }
+        return false;
+    }
+
+
+    static async setPAC(user: User, title: string, pagePAC: number){
+        if(!user) return false;
+        let page = await Page.load(title);
+        if(page instanceof OldPage){
+            return page.setPAC(pagePAC);
+        }
+        return false;
     }
 }
 //     getPageList(catTitle) {

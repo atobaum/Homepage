@@ -67,4 +67,37 @@ router.post('/edit', (req, res) => __awaiter(this, void 0, void 0, function* () 
         }
     }
 }));
+router.get('/admin', (req, res) => {
+    if (!req.user.getAdmin()) {
+        res.json({ ok: 0, error: new Error("You are not amin.") });
+        return;
+    }
+    console.log(req.query.action);
+    switch (req.query.action) {
+        case 'getPAC':
+            WikiHelper_1.default.getPAC(req.user, req.query.title)
+                .then(result => {
+                if (result)
+                    res.json({ ok: 1, result: result });
+                else
+                    res.json({ ok: 0 });
+            })
+                .catch(e => {
+                res.json({ ok: 0, error: e });
+            });
+            break;
+        case 'setPAC':
+            WikiHelper_1.default.setPAC(req.user, req.query.title, req.query.pac)
+                .then(result => {
+                if (result)
+                    res.json({ ok: 1 });
+                else
+                    res.json({ ok: 0 });
+            })
+                .catch(e => {
+                res.json({ ok: 0, error: e });
+            });
+            break;
+    }
+});
 exports.default = router;

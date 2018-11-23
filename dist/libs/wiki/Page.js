@@ -197,6 +197,9 @@ class Page extends IPage {
             return this;
         }));
     }
+    getPAC() {
+        return this.PAC;
+    }
     /**
      *
      * admin이면 pass. 로그인 되있어도 pass...
@@ -310,6 +313,13 @@ class OldPage extends Page {
                     return this;
                 }
             }));
+    }
+    setPAC(pac) {
+        if (pac !== this.PAC[1]) {
+            return SingletonMysql_1.default.query("UPDATE page SET page_PAC = ? WHERE page_id = ?", [pac, this.pageId]);
+        }
+        else
+            return Promise.resolve(true);
     }
 }
 exports.OldPage = OldPage;

@@ -1,6 +1,7 @@
 /**
  * Created by Le Reveur on 2017-07-18.
  */
+"use strick";
 $(function(){
     var wiki_title = $("meta[name='wiki_title']").attr('content');
     $('.wiki-syntaxhl code').each(function(i, elem){Prism.highlightElement(elem)});
@@ -42,7 +43,6 @@ $(function(){
                     newTitle: newTitle
                 },
                 success: function (res) {
-                    "use strict";
                     if (res.ok) {
                         window.location = '/wiki/view/' + res.title + '?updateCache';
                     } else {
@@ -59,15 +59,40 @@ $(function(){
 
     $('#btn_change_ac').click(function () {
         $.get({
-            url: '/wiki/api/admin',
+            url: '/api/wiki/admin',
             data: {
-                action: 'changeAC',
-                title: wiki_title
+                action: 'getPAC',
+                title: wiki_title,
             },
             success: function (res) {
-                "use strict";
                 if (res.ok) {
-                    alert('Success changing cache');
+                    let newPAC = prompt(`Current PAC of this page, '${wiki_title}' is ${res.result}`);
+                    if(0 > newPAC || 32 <= newPAC){
+                        alert("PAC는 0에서 31까지...");
+                        return;
+                    }
+
+                    $.get({
+                        url: "/api/wiki/admin",
+                        data: {
+                            action: 'setPAC',
+                            title: wiki_title,
+                            pac: newPAC
+                        },
+                        success: function (res) {
+                            if (res.ok) {
+                                alert("성공");
+                            } else {
+                                alert("실패");
+                                console.log(res);
+                            }
+                        },
+                        error: function (res) {
+                            alert(res.error);
+                        }
+                    });
+                }else{
+                    alert(res.error);
                 }
             },
             error: function (xhr, status, error) {
