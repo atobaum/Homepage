@@ -1,5 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {value: true});
+Object.defineProperty(exports, "__esModule", { value: true });
 const Components_1 = require("../Components");
 /**
  * Created by Le Reveur on 2017-10-17.

@@ -15,7 +15,7 @@ export class WikiError extends Error {
     }
 }
 export enum EAccessControl {
-    CREATE = 8, READ = 4, UPDATE = 2, DELETE = 1
+    LIST = 16, CREATE = 8, READ = 4, UPDATE = 2, DELETE = 1
 }
 
 export abstract class IPage {
@@ -207,8 +207,15 @@ export abstract class Page extends IPage {
         })
     }
 
+    /**
+     *
+     * admin이면 pass. 로그인 되있어도 pass...
+     * @param user
+     * @param type
+     * @returns {Promise<boolean>}
+     */
     checkAC(user: User, type: EAccessControl): Promise<boolean> {
-        if (user && user.getAdmin())
+        if (user && user.getAdmin()) //admin이면 pass!!
             return Promise.resolve(true);
         else if ((this.PAC[1] && this.PAC[1] & type) || (!this.PAC[1] && this.PAC[0] & type)) {
             if (user)

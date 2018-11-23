@@ -1,32 +1,13 @@
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-        return new (P || (P = Promise))(function (resolve, reject) {
-            function fulfilled(value) {
-                try {
-                    step(generator.next(value));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-
-            function rejected(value) {
-                try {
-                    step(generator["throw"](value));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-
-            function step(result) {
-                result.done ? resolve(result.value) : new P(function (resolve) {
-                    resolve(result.value);
-                }).then(fulfilled, rejected);
-            }
-
-            step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-    };
-Object.defineProperty(exports, "__esModule", {value: true});
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Created by Le Reveur on 2017-10-20.
  */
@@ -48,7 +29,7 @@ class Aladin {
         this.apikey = apikey;
     }
     search(query, searchType = ESearchType.ALL) {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             let queryOption = {
                 uri: 'https://apis.daum.net/search/book',
                 qs: {
@@ -80,4 +61,4 @@ class Aladin {
     }
 }
 exports.default = Aladin;
-
+;

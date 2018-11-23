@@ -1,32 +1,13 @@
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-        return new (P || (P = Promise))(function (resolve, reject) {
-            function fulfilled(value) {
-                try {
-                    step(generator.next(value));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-
-            function rejected(value) {
-                try {
-                    step(generator["throw"](value));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-
-            function step(result) {
-                result.done ? resolve(result.value) : new P(function (resolve) {
-                    resolve(result.value);
-                }).then(fulfilled, rejected);
-            }
-
-            step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-    };
-Object.defineProperty(exports, "__esModule", {value: true});
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 const SingletonMysql_1 = require("../common/SingletonMysql");
 const Author_1 = require("./Author");
 const common_1 = require("../common");
@@ -61,7 +42,7 @@ class Book {
         }
     }
     static load(isbn13) {
-        return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function*() {
+        return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function* () {
             let [rows] = yield conn.query('SELECT * FROM books JOIN publishers ON publishers.id = books.publisher_id WHERE books.isbn13 = ?', [isbn13]);
             if (rows.length === 0) {
                 let error = new Error("There's no such book.");
@@ -83,12 +64,12 @@ class Book {
         return this.isbn13;
     }
     save() {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             switch (this.saveType) {
                 case common_1.ESaveType.READONLY:
                     throw new Error("This book is readonly.");
                 case common_1.ESaveType.NEW:
-                    return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function*() {
+                    return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function* () {
                         let rows;
                         if ((yield conn.query('SELECT isbn13 FROM books WHERE isbn13=?', [this.isbn13]))[0].length) {
                             let err = new Error("Book already exists and you tried to save new Book.");

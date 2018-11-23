@@ -1,32 +1,13 @@
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-        return new (P || (P = Promise))(function (resolve, reject) {
-            function fulfilled(value) {
-                try {
-                    step(generator.next(value));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-
-            function rejected(value) {
-                try {
-                    step(generator["throw"](value));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-
-            function step(result) {
-                result.done ? resolve(result.value) : new P(function (resolve) {
-                    resolve(result.value);
-                }).then(fulfilled, rejected);
-            }
-
-            step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-    };
-Object.defineProperty(exports, "__esModule", {value: true});
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 const request = require("request-promise-native");
 const Book_1 = require("./Book");
 /** @module aladin
@@ -71,14 +52,14 @@ class Aladin {
                     throw new Error('지원하지 않는 저자 타입: ' + type);
             }
             for (let i in names) {
-                result.push({name: names[i], type: type});
+                result.push({ name: names[i], type: type });
             }
         });
         return result;
     }
     ;
     bookInfo(isbn) {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             let queryOption = {
                 uri: Aladin.host + "ItemLookUp.aspx",
                 qs: {
@@ -136,7 +117,7 @@ class Aladin {
      * @property {string} books[].coverURL
      */
     search(type, keyword) {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             let queryOption = {
                 uri: Aladin.host + "ItemSearch.aspx",
                 qs: {
@@ -155,7 +136,6 @@ class Aladin {
             return data.map(item => {
                 let authors = item.author.split(',').map(str => {
                     let [_, name, type] = /^(.*) (.*?)$/.exec(str);
-                    console.log(name, type);
                     return [name, type];
                 });
                 return new Book_1.Book(item.title, authors, item.publisher, item.pubDate, item.isbn13, item.cover);
@@ -166,4 +146,4 @@ class Aladin {
 }
 Aladin.host = 'http://www.aladin.co.kr/ttb/api/';
 exports.default = Aladin;
-
+;

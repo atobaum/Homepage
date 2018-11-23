@@ -2,7 +2,7 @@
  * Created by Le Reveur on 2017-05-03.
  */
 "use strict";
-Object.defineProperty(exports, "__esModule", {value: true});
+Object.defineProperty(exports, "__esModule", { value: true });
 const InlineLexer = require("./InlineLexer");
 const Components = require("./Components");
 const Components_1 = require("./Components");
@@ -18,12 +18,12 @@ class BlockLexer extends Lexer_1.default {
     constructor(envManager) {
         super(envManager, 'Block', new InlineLexer.InlineLexer(envManager));
         this.TokenList = [
-            [/^(={2,6}) (.+) ={2,6}\s*(\r?\n|$)/, (cap, em, il) => em.makeToken(Components_1.ETokenType.SECTION, [cap[1].length - 1, il.scan(cap[2])])],
-            [/^(\s+)([*-]) (.+)(\r?\n|$)/, (cap, _, il) => new Components.Li(il.scan(cap[3]), cap[2] == '-', cap[1].length)],
+            [/^(\s*\r?\n)+/, cap => new Components.EmptyLine()],
+            [/^([=#]{1,6}) (.+)\s*(\r?\n|$)/, (cap, em, il) => em.makeToken(Components_1.ETokenType.SECTION, [cap[1].length, il.scan(cap[2])])],
+            [/^(\s*)([*-]) (.+)(\r?\n|$)/, (cap, _, il) => new Components.Li(il.scan(cap[3]), cap[2] == '-', cap[1].length)],
             // [ETokenType.INDENT, /^:{1,}(.+)(\r?\n|$)/],
             [/^-{3,}\s*(\r?\n|$)/, cap => new Components.SelfClosingSimpleTag('hr', null)],
-            [/^\|\|.*?(\r?\n|$)/, table],
-            [/^(\s*\r?\n)+/, cap => new Components.EmptyLine()],
+            [/^\|.*?(\r?\n|$)/, table],
             // [/^{{(\S*?)(?:\((\S*?)\))?\s+([\s\S]*?)}}/],
             // [/^## .*(\r?\n|$)/, cap=>new Components.Text('123')], //comment
             [/^```(.*)(?:\r?\n|$)([\s\S]+?)(?:\r?\n|$)```(\r?\n|$)/, (cap) => new Components.Code(cap[2], cap[1])],

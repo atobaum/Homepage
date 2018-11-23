@@ -1,5 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {value: true});
+Object.defineProperty(exports, "__esModule", { value: true });
 const SingletonMysql_1 = require("../common/SingletonMysql");
 const Page_1 = require("./Page");
 /**
@@ -12,18 +12,22 @@ class WikiHelper {
      * @async
      * @param title
      */
-    static searchTitles(title) {
+    static searchTitles(user, title) {
         let parsedTitle = Page_1.IPage.parseTitle(title);
-        return SingletonMysql_1.default.query('SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%' + parsedTitle[0] + '%" AND page_title LIKE "' + parsedTitle[1] + '%" AND deleted = 0 LIMIT 7')
+        return SingletonMysql_1.default.query('SELECT ns_title, page_title, ns_PAC, page_PAC FROM fullpage WHERE ns_title LIKE "%' + parsedTitle[0] + '%" AND page_title LIKE "' + parsedTitle[1] + '%" AND deleted = 0 LIMIT 7')
             .then(([rows]) => {
-                return rows.map((item) => {
+            let res = [];
+            for (let item of rows) {
+                if (user || (item.page_PAC && (item.page_PAC & 16)) || (!item.page_PAC && (item.ns_PAC & 16))) {
                     let title = (item.ns_title === 'Main' ? '' : item.ns_title + ':') + item.page_title;
-                    return {
+                    res.push({
                         title: title,
                         url: '/wiki/view/' + title
-                    };
-                });
-            });
+                    });
+                }
+            }
+            return res;
+        });
     }
 }
 exports.default = WikiHelper;

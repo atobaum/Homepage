@@ -1,11 +1,9 @@
 /**
  * Created by Le Reveur on 2017-07-18.
  */
-$(function () {
+$(function(){
     var wiki_title = $("meta[name='wiki_title']").attr('content');
-    $('.wiki-syntaxhl code').each(function (i, elem) {
-        Prism.highlightElement(elem)
-    });
+    $('.wiki-syntaxhl code').each(function(i, elem){Prism.highlightElement(elem)});
     $('#btn_etc').click(function () {
         $('#modal_etc').modal('show');
     });

@@ -1,5 +1,6 @@
 import SingletonMysql from "../common/SingletonMysql";
 import {IPage} from "./Page";
+import User from "../common/User";
 /**
  * Created by Le Reveur on 2017-10-17.
  */
@@ -11,17 +12,21 @@ export default class WikiHelper {
      * @async
      * @param title
      */
-    static searchTitles(title) {
+    static searchTitles(user: User, title: string) {
         let parsedTitle = IPage.parseTitle(title);
-        return SingletonMysql.query('SELECT ns_title, page_title FROM fullpage WHERE ns_title LIKE "%' + parsedTitle[0] + '%" AND page_title LIKE "' + parsedTitle[1] + '%" AND deleted = 0 LIMIT 7')
+        return SingletonMysql.query('SELECT ns_title, page_title, ns_PAC, page_PAC FROM fullpage WHERE ns_title LIKE "%' + parsedTitle[0] + '%" AND page_title LIKE "' + parsedTitle[1] + '%" AND deleted = 0 LIMIT 7')
             .then(([rows]) => {
-                return rows.map((item) => {
-                    let title = (item.ns_title === 'Main' ? '' : item.ns_title + ':') + item.page_title;
-                    return {
-                        title: title,
-                        url: '/wiki/view/' + title
-                    };
-                });
+                let res = [];
+                for(let item of rows){
+                    if(user || (item.page_PAC && (item.page_PAC & 16)) || (!item.page_PAC && (item.ns_PAC & 16))){ //로그인 되있으면 pass
+                        let title = (item.ns_title === 'Main' ? '' : item.ns_title + ':') + item.page_title;
+                        res.push({
+                            title: title,
+                            url: '/wiki/view/' + title
+                        });
+                    }
+                }
+                return res;
             });
     }
 }

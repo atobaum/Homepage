@@ -41,7 +41,7 @@ app.use(session({
 }));
 app.use((req, res, next) => {
     if (req.session.user) {
-        req.user = new User_1.default(req.session.user.id, req.session.user.username, req.session.user.adim);
+        req.user = new User_1.default(req.session.user.id, req.session.user.username, req.session.user.admin);
         res.locals.user = req.session.user;
         req.userId = req.session.user.id;
         next();
@@ -61,6 +61,32 @@ app.get('/', function (req, res) {
 app.use('/wiki', require('./routers/wiki').default);
 app.get('/bookshelf', (req, res) => res.render('bookshelf/main'));
 app.get('/note', (req, res) => res.render('note/main'));
+app.get('/dump', (req, res) => {
+    if (req.user.getAdmin()) {
+        let dump = require("mysqldump");
+        dump({
+            host: config.db.host,
+            port: config.db.port,
+            user: config.db.user,
+            password: config.db.password,
+            database: config.db.database,
+            dest: "./data.sql",
+            getDump: true
+        }, (err, data) => {
+            let date = new Date();
+            let datetime = date.getFullYear() + (date.getMonth() < 9 ? "0" : '') + (date.getMonth() + 1) + (date.getDate() < 10 ? "0" : '') + date.getDate() + "_" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+            res.setHeader('Content-disposition', 'attachment; filename=db_dump_' + encodeURIComponent(datetime) + '.sql');
+            res.setHeader('Content-type', 'text/plain');
+            res.charset = 'UTF-8';
+            res.write(data);
+            res.end();
+        });
+    }
+    else {
+        res.json({ error: 0 });
+    }
+    // res.download("./data.sql", "data.sql", console.log)
+});
 app.get('/login', function (req, res) {
     res.render('login');
 });

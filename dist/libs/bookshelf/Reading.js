@@ -1,32 +1,13 @@
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-        return new (P || (P = Promise))(function (resolve, reject) {
-            function fulfilled(value) {
-                try {
-                    step(generator.next(value));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-
-            function rejected(value) {
-                try {
-                    step(generator["throw"](value));
-                } catch (e) {
-                    reject(e);
-                }
-            }
-
-            function step(result) {
-                result.done ? resolve(result.value) : new P(function (resolve) {
-                    resolve(result.value);
-                }).then(fulfilled, rejected);
-            }
-
-            step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-    };
-Object.defineProperty(exports, "__esModule", {value: true});
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 const SingletonMysql_1 = require("../common/SingletonMysql");
 const Book_1 = require("./Book");
 const common_1 = require("../common");
@@ -53,7 +34,7 @@ class Reading {
         return this;
     }
     static load(id, userId) {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             let rows = (yield SingletonMysql_1.default.query('SELECT * FROM readings WHERE id = ?', [id]))[0];
             if (rows.length === 0) {
                 throw new Error('잘못된 id:' + id);
@@ -64,7 +45,7 @@ class Reading {
     }
     ;
     static makeFromDbRow(reading, userId) {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             if (reading.deleted == 1)
                 throw new Error('DELETED_DATA');
             if (reading.is_secret && reading.user_id !== userId) {
@@ -83,7 +64,7 @@ class Reading {
         return SingletonMysql_1.default.query('UPDATE readings SET deleted=1 WHERE id=?', [this.id]);
     }
     save() {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             let data = {
                 date_started: this.date[0],
                 date_finished: this.date[1],
@@ -98,11 +79,11 @@ class Reading {
                 data.book_id = this.book.getIsbn13();
                 data.user_id = this.user.getId();
                 yield SingletonMysql_1.default.query('INSERT INTO readings SET ?', [data]);
-
+                return;
             }
             else if (this.saveType === common_1.ESaveType.EDIT) {
                 yield SingletonMysql_1.default.query('UPDATE readings SET ? WHERE id=? AND user_id=?', [data, this.id, this.user.getId()]);
-
+                return;
             }
         });
     }

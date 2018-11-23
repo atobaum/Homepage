@@ -13,8 +13,17 @@ const Parser_1 = require("./Parser");
 /**
  * Created by Le Reveur on 2017-10-15.
  */
+class WikiError extends Error {
+    constructor(title, AC) {
+        super();
+        this.title = title;
+        this.AC = AC;
+    }
+}
+exports.WikiError = WikiError;
 var EAccessControl;
 (function (EAccessControl) {
+    EAccessControl[EAccessControl["LIST"] = 16] = "LIST";
     EAccessControl[EAccessControl["CREATE"] = 8] = "CREATE";
     EAccessControl[EAccessControl["READ"] = 4] = "READ";
     EAccessControl[EAccessControl["UPDATE"] = 2] = "UPDATE";
@@ -149,7 +158,7 @@ class Page extends IPage {
         });
     }
     static load(fulltitle) {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             if (!fulltitle)
                 throw new Error("Title should be not empty. In load of class Page");
             let titles = IPage.parseTitle(fulltitle);
@@ -174,7 +183,7 @@ class Page extends IPage {
     }
     loadSrc() {
         let tmp = this;
-        return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function*() {
+        return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function* () {
             let rows, row;
             row = (yield conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [this.pageId, this.revId]))[0][0];
             if (!row)
@@ -188,8 +197,17 @@ class Page extends IPage {
             return this;
         }));
     }
+    /**
+     *
+     * admin이면 pass. 로그인 되있어도 pass...
+     * @param user
+     * @param type
+     * @returns {Promise<boolean>}
+     */
     checkAC(user, type) {
-        if ((this.PAC[1] && this.PAC[1] & type) || (!this.PAC[1] && this.PAC[0] & type)) {
+        if (user && user.getAdmin())
+            return Promise.resolve(true);
+        else if ((this.PAC[1] && this.PAC[1] & type) || (!this.PAC[1] && this.PAC[0] & type)) {
             if (user)
                 return Promise.resolve(true);
             else {
@@ -204,7 +222,7 @@ class Page extends IPage {
 exports.Page = Page;
 class NewPage extends Page {
     getSrc(user) {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             if (this.srcStr)
                 return this.srcStr;
             else
@@ -218,11 +236,11 @@ class NewPage extends Page {
         this.titles[0] = data.ns_title;
     }
     save(user) {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             if (!this.srcStr)
                 throw new Error("Source is not set.");
             else {
-                return SingletonMysql_1.default.transaction((conn) => __awaiter(this, void 0, void 0, function*() {
+                return SingletonMysql_1.default.transaction((conn) => __awaiter(this, void 0, void 0, function* () {
                     if (yield this.checkAC(user, EAccessControl.CREATE)) {
                         let [rows] = yield conn.query('SELECT * FROM namespace WHERE ns_title = ?', [this.titles[0]]);
                         if (rows.length === 0)
@@ -241,7 +259,7 @@ class NewPage extends Page {
                         return yield this.saveRevision(conn, user);
                     }
                     else
-                        throw new Error('You have not enough AC to create new page.');
+                        throw new WikiError(this.fulltitle, EAccessControl.CREATE);
                 }));
             }
         });
@@ -266,9 +284,9 @@ class OldPage extends Page {
         return true;
     }
     getSrc(user) {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             if (!(yield this.checkAC(user, EAccessControl.READ)))
-                throw new Error("You cannot read page.");
+                throw new WikiError(this.fulltitle, EAccessControl.READ);
             this.readOnly = !(yield this.checkAC(user, EAccessControl.UPDATE));
             if (this.srcStr)
                 return this.srcStr;
@@ -283,9 +301,9 @@ class OldPage extends Page {
         if (!this.srcStr)
             throw new Error("Source is not set");
         else
-            return SingletonMysql_1.default.transaction((conn) => __awaiter(this, void 0, void 0, function*() {
+            return SingletonMysql_1.default.transaction((conn) => __awaiter(this, void 0, void 0, function* () {
                 if (!(yield this.checkAC(user, EAccessControl.UPDATE)))
-                    throw new Error('You have not enough AC to edit new page.');
+                    throw new WikiError(this.fulltitle, EAccessControl.UPDATE);
                 else {
                     yield this.saveTags(conn);
                     yield this.saveRevision(conn, user);
@@ -300,7 +318,7 @@ class Revision {
     }
     ;
     static load(conn, pageId, revId) {
-        return __awaiter(this, void 0, void 0, function*() {
+        return __awaiter(this, void 0, void 0, function* () {
             let [rows] = yield conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [pageId, revId]);
             if (rows.length === 0)
                 throw new Error("Non-exists revision: page " + pageId + ", rev: " + revId);

@@ -1,5 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", {value: true});
+Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Created by Le Reveur on 2017-10-16.
  */
@@ -14,7 +14,7 @@ class Math extends Components_1.Token {
     }
     render() {
         try {
-            return katex.renderToString(this.text, {displayMode: this.block});
+            return katex.renderToString(this.text, { displayMode: this.block });
         }
         catch (e) {
             return (new Basic_1.Error('KaTeX Error', e.message)).render();

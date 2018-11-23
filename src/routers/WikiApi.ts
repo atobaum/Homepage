@@ -18,7 +18,7 @@ router.post('/parse', async (req, res) => {
 });
 
 router.get('/titleSearch', (req, res) => {
-    WikiHelper.searchTitles(req.query.q)
+    WikiHelper.searchTitles(req.user, req.query.q)
         .then(result => {
             res.json({ok: 1, result: result})
         })
