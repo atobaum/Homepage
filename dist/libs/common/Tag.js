@@ -26,7 +26,6 @@ class TagManager {
             return rows.map(row => Tag.loadFromDb(row));
         });
     }
-
     static async create(conn, name) {
         let [rows] = await SingletonMysql_1.default.query("INSERT INTO tag SET ?", {name: name});
         return Tag.loadFromDb({name: name, id: rows.insertId, count: 0});

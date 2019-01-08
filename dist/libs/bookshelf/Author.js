@@ -26,7 +26,6 @@ class Author {
     static formatAuthors(authors) {
         return authors.map(author => author.toString()).join(', ');
     }
-
     async searchPerson(type, keyword) {
         return (await SingletonMysql_1.default.query('SELECT * FROM people WHERE ? LIKE "' + keyword + '%"', [type]))[0];
     }

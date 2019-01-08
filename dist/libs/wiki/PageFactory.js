@@ -13,7 +13,6 @@ class PageFactory {
         await page.loadPageInfo();
         return await page.loadSrc();
     }
-
     static async edit(data, user) {
         if (!data.id)
             throw new Error('Error: required in function "edit" id');
@@ -23,7 +22,7 @@ class PageFactory {
         page.status = EPageStat.SET_SRC;
         page.major = data.major;
         await page.save();
-
+        return;
     }
     static loadSrc() {
         let tmp = this;
@@ -42,7 +41,6 @@ class PageFactory {
             return this;
         });
     }
-
     static async getRenderedPage(fulltitle, user) {
         let page = new Page_1.Page(fulltitle, false, user);
         await page.loadPageInfo();

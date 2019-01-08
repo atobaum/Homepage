@@ -29,7 +29,6 @@ class WikiHelper {
             return res;
         });
     }
-
     static async getPAC(user, title) {
         if (!user)
             return false;
@@ -39,7 +38,6 @@ class WikiHelper {
         }
         return false;
     }
-
     static async setPAC(user, title, pagePAC) {
         if (!user)
             return false;

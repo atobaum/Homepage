@@ -25,7 +25,6 @@ class Reading {
         this.id = id;
         return this;
     }
-
     static async load(id, userId) {
         let rows = (await SingletonMysql_1.default.query('SELECT * FROM readings WHERE id = ?', [id]))[0];
         if (rows.length === 0) {
@@ -35,7 +34,6 @@ class Reading {
         return Reading.makeFromDbRow(reading, userId);
     }
     ;
-
     static async makeFromDbRow(reading, userId) {
         if (reading.deleted == 1)
             throw new Error('DELETED_DATA');
@@ -53,7 +51,6 @@ class Reading {
     delete() {
         return SingletonMysql_1.default.query('UPDATE readings SET deleted=1 WHERE id=?', [this.id]);
     }
-
     async save() {
         let data = {
             date_started: this.date[0],
@@ -69,11 +66,11 @@ class Reading {
             data.book_id = this.book.getIsbn13();
             data.user_id = this.user.getId();
             await SingletonMysql_1.default.query('INSERT INTO readings SET ?', [data]);
-
+            return;
         }
         else if (this.saveType === common_1.ESaveType.EDIT) {
             await SingletonMysql_1.default.query('UPDATE readings SET ? WHERE id=? AND user_id=?', [data, this.id, this.user.getId()]);
-
+            return;
         }
     }
 }

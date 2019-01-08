@@ -20,7 +20,6 @@ class Aladin {
     constructor(apikey) {
         this.apikey = apikey;
     }
-
     async search(query, searchType = ESearchType.ALL) {
         let queryOption = {
             uri: 'https://apis.daum.net/search/book',
@@ -52,4 +51,4 @@ class Aladin {
     }
 }
 exports.default = Aladin;
-
+;
