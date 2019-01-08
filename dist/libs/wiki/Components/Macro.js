@@ -10,11 +10,9 @@ class MacroTitle extends Components_1.Token {
     render() {
         return '';
     }
-
     plainText() {
         return '';
     }
-
     constructor(title, em) {
         super();
         em.editEnv(Components_1.ETokenType.TITLE, new Env_1.TitleEnv([null, title]));

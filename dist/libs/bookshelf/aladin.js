@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const request = require("request-promise-native");
 const Book_1 = require("./Book");
@@ -58,50 +50,49 @@ class Aladin {
         return result;
     }
     ;
-    bookInfo(isbn) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let queryOption = {
-                uri: Aladin.host + "ItemLookUp.aspx",
-                qs: {
-                    output: 'js',
-                    ttbkey: this.TTBKey,
-                    itemIdType: "ISBN13",
-                    ItemId: isbn,
-                    Version: 20131101
-                },
-                json: true
+
+    async bookInfo(isbn) {
+        let queryOption = {
+            uri: Aladin.host + "ItemLookUp.aspx",
+            qs: {
+                output: 'js',
+                ttbkey: this.TTBKey,
+                itemIdType: "ISBN13",
+                ItemId: isbn,
+                Version: 20131101
+            },
+            json: true
+        };
+        try {
+            let item = await request(queryOption);
+            if (item.errorCode) {
+                return new Error(item.errorMessage);
+            }
+            item = item[0];
+            let result = {
+                title: item.title,
+                publisher: item.publisher,
+                published_date: item.pubDate,
+                isbn13: item.isbn13,
+                cover_URL: item.cover
             };
             try {
-                let item = yield request(queryOption);
-                if (item.errorCode) {
-                    return new Error(item.errorMessage);
-                }
-                item = item[0];
-                let result = {
-                    title: item.title,
-                    publisher: item.publisher,
-                    published_date: item.pubDate,
-                    isbn13: item.isbn13,
-                    cover_URL: item.cover
-                };
-                try {
-                    let authors = this.parseAuthors(item.author);
-                    result.authors = authors;
-                }
-                catch (e) {
-                    result.authorsText = item.author;
-                }
-                if (item.subInfo) {
-                    result.subtitle = item.subInfo.subTitle;
-                    result.original_title = item.subInfo.originalTitle;
-                    result.pages = item.subInfo.itemPage;
-                }
-                return result;
+                let authors = this.parseAuthors(item.author);
+                result.authors = authors;
             }
             catch (e) {
-                throw e;
+                result.authorsText = item.author;
             }
-        });
+            if (item.subInfo) {
+                result.subtitle = item.subInfo.subTitle;
+                result.original_title = item.subInfo.originalTitle;
+                result.pages = item.subInfo.itemPage;
+            }
+            return result;
+        }
+        catch (e) {
+            throw e;
+        }
     }
     ;
     /**
@@ -116,30 +107,28 @@ class Aladin {
      * @property {string} books[].isbn13
      * @property {string} books[].coverURL
      */
-    search(type, keyword) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let queryOption = {
-                uri: Aladin.host + "ItemSearch.aspx",
-                qs: {
-                    output: 'js',
-                    Version: '20131101',
-                    Cover: 'Small',
-                    MaxResults: 10,
-                    SearchTarget: 'Book',
-                    ttbkey: this.TTBKey,
-                    QueryType: type,
-                    Query: keyword
-                },
-                json: true
-            };
-            let data = (yield request(queryOption)).item;
-            return data.map(item => {
-                let authors = item.author.split(',').map(str => {
-                    let [_, name, type] = /^(.*) (.*?)$/.exec(str);
-                    return [name, type];
-                });
-                return new Book_1.Book(item.title, authors, item.publisher, item.pubDate, item.isbn13, item.cover);
+    async search(type, keyword) {
+        let queryOption = {
+            uri: Aladin.host + "ItemSearch.aspx",
+            qs: {
+                output: 'js',
+                Version: '20131101',
+                Cover: 'Small',
+                MaxResults: 10,
+                SearchTarget: 'Book',
+                ttbkey: this.TTBKey,
+                QueryType: type,
+                Query: keyword
+            },
+            json: true
+        };
+        let data = (await request(queryOption)).item;
+        return data.map(item => {
+            let authors = item.author.split(',').map(str => {
+                let [_, name, type] = /^(.*) (.*?)$/.exec(str);
+                return [name, type];
             });
+            return new Book_1.Book(item.title, authors, item.publisher, item.pubDate, item.isbn13, item.cover);
         });
     }
     ;

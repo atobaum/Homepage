@@ -2,14 +2,6 @@
  * Created by Le Reveur on 2017-10-15.
  */
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 let mysql = require('mysql');
 let mysql2 = require('mysql2/promise');
@@ -51,39 +43,37 @@ class SingletonMysql {
     static query(query, params) {
         return SingletonMysql.getPool().query(query, params);
     }
-    static queries(work) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let conn, result;
-            try {
-                conn = yield SingletonMysql.getConn();
-                result = yield work(conn);
-            }
-            catch (e) {
-                throw e;
-            }
-            finally {
-                conn.release();
-            }
-            return result;
-        });
-    }
-    static transaction(work) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let conn = yield SingletonMysql.getConn();
-            let result;
-            try {
-                yield conn.beginTransaction();
-                result = yield work(conn);
-                yield conn.commit();
-            }
-            catch (e) {
-                yield conn.rollback();
-                conn.release();
-                throw e;
-            }
+
+    static async queries(work) {
+        let conn, result;
+        try {
+            conn = await SingletonMysql.getConn();
+            result = await work(conn);
+        }
+        catch (e) {
+            throw e;
+        }
+        finally {
             conn.release();
-            return result;
-        });
+        }
+        return result;
+    }
+
+    static async transaction(work) {
+        let conn = await SingletonMysql.getConn();
+        let result;
+        try {
+            await conn.beginTransaction();
+            result = await work(conn);
+            await conn.commit();
+        }
+        catch (e) {
+            await conn.rollback();
+            conn.release();
+            throw e;
+        }
+        conn.release();
+        return result;
     }
 }
 SingletonMysql.pool = null;

@@ -10,7 +10,6 @@ class EnvManager {
         this.envList.set(env.key, env);
         this.priority.push(env.key);
     }
-
     editEnv(key, newEnv) {
         this.envList.set(key, newEnv);
     }
