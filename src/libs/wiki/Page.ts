@@ -138,34 +138,42 @@ export abstract class Page extends IPage {
     protected async saveTags(conn): Promise<boolean> {
         if (!this.pageId)
             throw new Error('Page id is ' + this.pageId + ' in "saveTags".');
-        let [rows] = await conn.query('SELECT * FROM wiki_tags WHERE wiki_id=?', [this.pageId]);
-        let oldTags = rows.map((row) => {
-            row.name = row.name.toLowerCase();
-            return row;
-        });
-        let oldTagsNames = oldTags.map(tag => tag.name);
-        let newTags = this.tags.map(a => a.toLowerCase());
-        if (newTags.length) {
-            [rows] = await conn.query('SELECT * FROM tag WHERE name IN (?)', [newTags]);
-            var existingTags: string[] = rows.map(tag => tag.name);
-        }
-        let toDelete = oldTags.filter((tag) => newTags.indexOf(tag.name) < 0);
-        let toSave: string[] = this.tags.filter(tag => oldTagsNames.indexOf(tag.toLowerCase()) < 0);
-        let toCreate: string[] = toSave.filter(tag => existingTags.indexOf(tag.toLowerCase()) < 0);
 
-        // console.log(newTags, oldTags);
-        // console.log(existingTags);
-        // console.log(toDelete, toCreate, toSave);
+        try {
+            let [rows] = await conn.query('SELECT * FROM wiki_tags WHERE wiki_id=?', [this.pageId]);
+            let oldTagsLowCase = rows.map((row) => {
+                row.name = row.name.toLowerCase();
+                return row;
+            });
+            let oldTagsNameLowCase: string[] = oldTagsLowCase.map(i => i.name);
+            let newTagsLowCase = this.tags.map(t => t.toLowerCase());
 
-        if (toDelete.length)
-            await conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN (?)", [this.pageId, toDelete.map(tag => tag.tag_id)]);
-        if (toCreate.length)
-            await conn.query("INSERT INTO tag (name) VALUES ? ", [toCreate.map(str => [str])]);
-        if (toSave.length) {
-            [rows] = await conn.query('SELECT * FROM tag WHERE name IN (?)', [toSave]);
-            await conn.query("INSERT INTO tag_to_wiki (tag_id, wiki_id) VALUES ? ", [rows.map(row => [row.id, this.pageId])]);
+            if (this.tags.length) {
+                [rows] = await conn.query('SELECT * FROM tag WHERE name IN (?)', [newTagsLowCase]);
+                var existingTagsLowCase: string[] = rows.map(tag => tag.name.toLowerCase());
+            }
+
+            let toDelete = oldTagsLowCase.filter((OTag) => newTagsLowCase.indexOf(OTag.name) < 0);
+            let toSave: string[] = this.tags.filter(tag => oldTagsNameLowCase.indexOf(tag.toLowerCase()) < 0);
+            let toCreate: string[] = toSave.filter(tag => existingTagsLowCase.indexOf(tag.toLowerCase()) < 0);
+
+            console.log(this.tags, oldTagsNameLowCase);
+            console.log(existingTagsLowCase);
+            console.log(toDelete, toCreate, toSave);
+
+            if (toDelete.length)
+                await conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN (?)", [this.pageId, toDelete.map(tag => tag.tag_id)]);
+            if (toCreate.length)
+                await conn.query("INSERT INTO tag (name) VALUES ? ", [toCreate.map(str => [str])]);
+            if (toSave.length) {
+                [rows] = await conn.query('SELECT * FROM tag WHERE name IN (?)', [toSave]);
+                await conn.query("INSERT INTO tag_to_wiki (tag_id, wiki_id) VALUES ? ", [rows.map(row => [row.id, this.pageId])]);
+            }
+            return true;
+        } catch (e) {
+            console.log(e);
+            throw e;
         }
-        return true;
     }
 
     static async load(fulltitle): Promise<Page> {
