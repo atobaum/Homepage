@@ -1,8 +1,8 @@
 {
   "name": "hanjitori.com",
   "description": "Hompage for my homepage: hanjitori.com",
-  "version": "0.9.0",
-  "author": "hanjitori <lereveurdesetoiles@gmail.com> (http://www.hanjitori.com/)",
+  "version": "0.10.0",
+  "author": "hanjitori <kuuften@gmail.com> (http://www.hanjitori.com/)",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
