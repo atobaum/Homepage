@@ -85,7 +85,6 @@ class TempPage extends IPage {
     constructor(fulltitle, tags) {
         super(fulltitle, tags);
     }
-
     async getSrc(user) {
         if (this.srcStr)
             return this.srcStr;
@@ -116,7 +115,6 @@ class Page extends IPage {
         else
             return SingletonMysql_1.default.query("INSERT INTO revision SET ?", [revision]);
     }
-
     async saveTags(conn) {
         if (!this.pageId)
             throw new Error('Page id is ' + this.pageId + ' in "saveTags".');
@@ -150,7 +148,6 @@ class Page extends IPage {
             throw e;
         }
     }
-
     static async load(fulltitle) {
         if (!fulltitle)
             throw new Error("Title should be not empty. In load of class Page");
@@ -227,7 +224,6 @@ class NewPage extends Page {
         this.nsId = data.ns_id;
         this.titles[0] = data.ns_title;
     }
-
     async save(user) {
         if (!this.srcStr)
             throw new Error("Source is not set.");
@@ -274,7 +270,6 @@ class OldPage extends Page {
         this.edited = true;
         return true;
     }
-
     async getSrc(user) {
         if (!(await this.checkAC(user, EAccessControl.READ)))
             throw new WikiError(this.fulltitle, EAccessControl.READ);
@@ -314,7 +309,6 @@ class Revision {
     constructor() {
     }
     ;
-
     static async load(conn, pageId, revId) {
         let [rows] = await conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [pageId, revId]);
         if (rows.length === 0)

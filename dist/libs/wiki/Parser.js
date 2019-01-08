@@ -9,7 +9,6 @@ const Env = require("./Env");
 class Parser {
     constructor() {
     }
-
     static async render(titles, src, as = false) {
         let em = new EnvManager_1.EnvManager();
         em.addEnv(new Env.LinkEnv(titles[0]));

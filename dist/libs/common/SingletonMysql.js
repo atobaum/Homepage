@@ -43,7 +43,6 @@ class SingletonMysql {
     static query(query, params) {
         return SingletonMysql.getPool().query(query, params);
     }
-
     static async queries(work) {
         let conn, result;
         try {
@@ -58,7 +57,6 @@ class SingletonMysql {
         }
         return result;
     }
-
     static async transaction(work) {
         let conn = await SingletonMysql.getConn();
         let result;

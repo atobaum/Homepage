@@ -101,7 +101,7 @@ gulp.task('watch', function(){
             .pipe(gulp.dest(evt.path.replace('src', 'dist')));
     });
 });
-gulp.task('compile', ['clean', 'typescript', 'copy-js', 'uglify-js', 'uglify-css', 'copy-pug']);
+gulp.task('compile', ['clean', 'copy-js', 'uglify-js', 'uglify-css', 'copy-pug', 'typescript']);
 
 gulp.task('compile-dev', ['typescript', 'copy-js', 'copy-client-js', 'uglify-css', 'copy-pug']);
 

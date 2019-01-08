@@ -50,7 +50,6 @@ class Aladin {
         return result;
     }
     ;
-
     async bookInfo(isbn) {
         let queryOption = {
             uri: Aladin.host + "ItemLookUp.aspx",
@@ -135,4 +134,4 @@ class Aladin {
 }
 Aladin.host = 'http://www.aladin.co.kr/ttb/api/';
 exports.default = Aladin;
-
+;

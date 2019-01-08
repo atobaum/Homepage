@@ -20,7 +20,6 @@ class BookshelfSearch {
         let totalReadings = (await SingletonMysql_1.default.query('SELECT count(*) FROM readings'))[0][0]['count(*)'];
         return [result, totalReadings];
     }
-
     static async unfinishedReadings(user) {
         let rows = (await SingletonMysql_1.default.query('SELECT * FROM readings WHERE user_id = ? AND date_finished IS NULL AND deleted = 0 ORDER BY date_started', [user.getId()]))[0];
         let result = await Promise.all(rows.map(reading => Reading_1.default.makeFromDbRow(reading)));

@@ -13,7 +13,7 @@ class SectionEnv {
     }
     afterScan(toks) {
         toks.unshift(this.toc.root);
-
+        return;
     }
     makeToken([level, toks]) {
         let section = new Components_1.Section(toks);
@@ -52,7 +52,6 @@ class LinkEnv {
         this.links.push(link);
         return link;
     }
-
     async afterScan(toks, conn) {
         if (!this.links.length)
             return;

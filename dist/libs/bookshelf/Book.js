@@ -55,7 +55,6 @@ class Book {
     getIsbn13() {
         return this.isbn13;
     }
-
     async save() {
         switch (this.saveType) {
             case common_1.ESaveType.READONLY:
