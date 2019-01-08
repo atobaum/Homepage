@@ -85,7 +85,7 @@ export class TitleEnv implements Env<Components.SimpleTag> {
     fulltitle: string;
 
     constructor(titles) {
-        this.fulltitle = `${(titles[0] !== 'Main' ? titles[0] + ':' : '') + titles[1]}`
+        this.fulltitle = `${(titles[0] && titles[0] !== 'Main' ? titles[0] + ':' : '') + titles[1]}`
     }
 
     afterScan(toks: Token[]) {

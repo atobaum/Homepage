@@ -2,7 +2,7 @@
  * Created by Le Reveur on 2017-10-16.
  */
 import {Token} from "../Components";
-import {Error} from "./Basic";
+import {ErrorToken} from "./Basic";
 let katex = require("katex");
 
 export class Math extends Token {
@@ -18,7 +18,7 @@ export class Math extends Token {
         try {
             return katex.renderToString(this.text, {displayMode: this.block});
         } catch (e) {
-            return (new Error('KaTeX Error', e.message)).render();
+            return (new ErrorToken('KaTeX Error', e.message)).render();
         }
     }
 

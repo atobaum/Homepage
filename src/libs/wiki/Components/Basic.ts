@@ -145,7 +145,7 @@ export class Section extends BigToken {
     }
 }
 
-export class Error extends Token {
+export class ErrorToken extends Token {
     private title: string;
     private text: string;
     constructor(title, text) {

@@ -62,7 +62,7 @@ var Lexer = /** @class */ (function () {
                     continue WhileLoop;
                 }
             }
-            toks.push(new Components.Error('Infinite Loop in InlineParser', "Error occurred in processing " + src));
+            toks.push(new Components.ErrorToken('Infinite Loop in InlineParser', "Error occurred in processing " + src));
             break;
         }
         return toks;

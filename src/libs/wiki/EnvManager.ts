@@ -13,7 +13,7 @@ export interface Env<T extends Token> {
 
 export class EnvManager {
     private envList: Map<ETokenType, Env<Token>>;
-    private priority: Env<Token>[];
+    private priority: ETokenType[];
 
     constructor() {
         this.envList = new Map();
@@ -22,14 +22,18 @@ export class EnvManager {
 
     addEnv(env: Env<Token>): void {
         this.envList.set(env.key, env);
-        this.priority.push(env);
+        this.priority.push(env.key);
+    }
+
+    editEnv(key: ETokenType, newEnv: Env<Token>) {
+        this.envList.set(key, newEnv);
     }
 
     afterScan(toks: Token[]): Promise<void> {
         return SingletonMysql.queries(conn => {
             let promise = [];
             for (let i = 0; i < this.priority.length; i++) {
-                promise.push(this.priority[i].afterScan(toks, conn));
+                promise.push(this.envList.get(this.priority[i]).afterScan(toks, conn));
             }
             return Promise.all(promise);
         }).then(() => null);
@@ -37,7 +41,7 @@ export class EnvManager {
 
     save(): Promise<void> {
         return SingletonMysql.queries(conn => {
-            return Promise.all(this.priority.map(env => env.save(conn)));
+            return Promise.all(this.priority.map(key => this.envList.get(key).save(conn)));
         }).then(() => null);
     }
 

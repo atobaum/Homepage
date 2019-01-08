@@ -11,7 +11,7 @@ let linkSyntax = /^(?:(.*?):)?(.*?)(\#[^\#]+?)?$/;
 function escape(cap) {
     let char: string;
     switch (cap[1]) {
-        case 't':
+        case 't':   //tab
             char = '&emsp;';
             break;
         default:
@@ -21,7 +21,7 @@ function escape(cap) {
 }
 export class InlineLexer extends Lexer {
     TokenList = [
-        [/^\\([>\$\\\`'\^_~\(\)*{}\[\]#t])/, escape], //escape
+        [/^\\([>\$\\\`'\^_~\(\)*{}\[\]#t])/, escape], //escape >$\`'^_~()*{}[]#t
         [/^'''''(?!')([\s\S]*?)'''''/, (cap) => new Components.TagDecorator('i', null, new Components.SimpleTag('strong', null, cap[1]))], //italic bold
         [/^'''(?!')([\s\S]*?)'''/, cap => new Components.SimpleTag('strong', null, cap[1])], //bold
         [/^''(?!')([\s\S]*?)''/, cap => new Components.SimpleTag('i', null, cap[1])], //italic
@@ -52,6 +52,7 @@ export class InlineLexer extends Lexer {
         [/^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)], //blocklatex
         [/^`(.*)`/, cap => new Components.InlineCode(cap[1])], //inline code
         // [ETokenType.MACRO, /^{{(.*?)(?:\((.*?)\))?(?: ([^\$\$]*?))?}}/],
+        [/^\\([\w]+)(?:\{([\w]+?)\})?\s?/, (cap, em, il) => Components.Macro.build(cap[1], cap[2], em)], //macro
         [/^.+?(?={{|\\|\$|''|__|\^\^|,,| {2}|\[\[|~~|`| {2,}|\(\(|\n|$)/, cap => new Components.Text(cap[0])] //text
     ] as [[RegExp, (cap: any, em: any, lexer: any) => Token]];
 
