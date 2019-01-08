@@ -6,14 +6,14 @@ export class Code extends Token {
     private lang: string;
     private text: string;
 
-    constructor(text, lang = 'javascript') {
+    constructor(text, lang) {
         super();
         this.lang = lang;
         this.text = text;
     }
 
     render() {
-        return `<pre class="wiki-syntaxhl line-numbers language-${this.lang}"><code>${escapeHTML(this.text)}</code></pre>`;
+        return `<pre${this.lang ? ' class="wiki-syntaxhl"' : ''}><code${this.lang ? ' class="lang-' + this.lang + '"' : ''}>${escapeHTML(this.text)}</code></pre>`;
     }
 
     plainText() {

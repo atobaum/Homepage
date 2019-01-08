@@ -1,10 +1,12 @@
 /**
  * Created by Le Reveur on 2017-07-18.
  */
-"use strick";
+"use strict";
 $(function(){
     var wiki_title = $("meta[name='wiki_title']").attr('content');
-    $('.wiki-syntaxhl code').each(function(i, elem){Prism.highlightElement(elem)});
+    $('pre.wiki-syntaxhl').each(function (i, elem) {
+        Prism.highlightElement(elem)
+    });
     $('#btn_etc').click(function () {
         $('#modal_etc').modal('show');
     });
@@ -33,7 +35,7 @@ $(function(){
     });
 
     $('#btn_change_title').click(function () {
-        var newTitle = prompt("새 제목을 입력하세요.");
+        let newTitle = prompt("새 제목을 입력하세요.");
         if (newTitle) {
             $.get({
                 url: '/wiki/api/admin',

@@ -5,6 +5,9 @@ i.icon{
     margin: 0;
 }
 
+.wiki_content {
+}
+
 .wiki_toc{
     padding-right: 25px !important;
 }
@@ -15,18 +18,30 @@ i.icon{
 
 .wiki_fns{
     list-style: none;
-    padding: 0px;
+    padding: 0;
 }
 
-code {
-    background-color: rgb(226, 226, 226);
-    color: rgb(216, 0, 0);
+.wiki_content code {
+    margin: 0 2px;
+    padding: 0 2px;
+    border: 1px solid #ddd;
+    background-color: #f5f2f0;
+    border-radius: 3px;
 }
 
+.wiki_content pre code {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+}
 
-pre {
-    background-color: rgb(226, 226, 226);
-    color: rgb(216, 0, 0);
+.wiki_content pre {
+    background-color: #f5f2f0;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    margin: 14px 0;
+    padding: 5px 10px;
 }
 
 .wiki_article_menu {

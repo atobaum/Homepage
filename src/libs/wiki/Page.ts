@@ -148,18 +148,15 @@ export abstract class Page extends IPage {
             let oldTagsNameLowCase: string[] = oldTagsLowCase.map(i => i.name);
             let newTagsLowCase = this.tags.map(t => t.toLowerCase());
 
+            let existingTagsLowCase: string[] = [];
             if (this.tags.length) {
                 [rows] = await conn.query('SELECT * FROM tag WHERE name IN (?)', [newTagsLowCase]);
-                var existingTagsLowCase: string[] = rows.map(tag => tag.name.toLowerCase());
+                existingTagsLowCase = rows.map(tag => tag.name.toLowerCase());
             }
 
             let toDelete = oldTagsLowCase.filter((OTag) => newTagsLowCase.indexOf(OTag.name) < 0);
             let toSave: string[] = this.tags.filter(tag => oldTagsNameLowCase.indexOf(tag.toLowerCase()) < 0);
             let toCreate: string[] = toSave.filter(tag => existingTagsLowCase.indexOf(tag.toLowerCase()) < 0);
-
-            console.log(this.tags, oldTagsNameLowCase);
-            console.log(existingTagsLowCase);
-            console.log(toDelete, toCreate, toSave);
 
             if (toDelete.length)
                 await conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN (?)", [this.pageId, toDelete.map(tag => tag.tag_id)]);
@@ -171,7 +168,6 @@ export abstract class Page extends IPage {
             }
             return true;
         } catch (e) {
-            console.log(e);
             throw e;
         }
     }
@@ -199,9 +195,8 @@ export abstract class Page extends IPage {
     }
 
     loadSrc(): Promise<any> {
-        let tmp = this;
         return SingletonMysql.queries(async conn => {
-            let rows, row;
+            let row;
             row = (await conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [this.pageId, this.revId]))[0][0];
             if (!row)
                 throw new Error('Invalid page id and rev_id: ' + this.pageId + ' , ' + this.revId + ' , ' + "title: " + this.titles);
