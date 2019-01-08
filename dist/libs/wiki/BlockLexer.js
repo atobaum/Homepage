@@ -29,6 +29,7 @@ class BlockLexer extends Lexer_1.default {
             [/^```(.*)(?:\r?\n|$)([\s\S]+?)(?:\r?\n|$)```(\r?\n|$)/, (cap) => new Components.Code(cap[2], cap[1])],
             [/^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)],
             [/^> (.*)(\r?\n|$)/, (cap, _, il) => new Components.Quote(il.scan(cap[1]))],
+            [/^\\([\w]+)(?:\{([\w]+?)\})?\s?/, (cap, em, il) => Components.Macro.build(cap[1], cap[2], em)],
             [/^(.*?)(?:\r?\n|$)/, (cap, _, il) => new Components.Line(il.scan(cap[1]))] //linetext
         ];
     }

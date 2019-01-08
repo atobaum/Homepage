@@ -61,4 +61,4 @@ class Aladin {
     }
 }
 exports.default = Aladin;
-;
+

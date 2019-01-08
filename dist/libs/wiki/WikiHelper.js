@@ -43,7 +43,7 @@ class WikiHelper {
                 return false;
             let page = yield Page_1.Page.load(title);
             if (page instanceof Page_1.OldPage) {
-                return page.getPAC()[1];
+                return page.getPAC();
             }
             return false;
         });

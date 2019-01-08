@@ -21,7 +21,7 @@ class SectionEnv {
     }
     afterScan(toks) {
         toks.unshift(this.toc.root);
-        return;
+
     }
     makeToken([level, toks]) {
         let section = new Components_1.Section(toks);
@@ -84,7 +84,7 @@ exports.LinkEnv = LinkEnv;
 class TitleEnv {
     constructor(titles) {
         this.key = Components_1.ETokenType.TITLE;
-        this.fulltitle = `${(titles[0] !== 'Main' ? titles[0] + ':' : '') + titles[1]}`;
+        this.fulltitle = `${(titles[0] && titles[0] !== 'Main' ? titles[0] + ':' : '') + titles[1]}`;
     }
     afterScan(toks) {
         toks.unshift(new Components.SimpleTag('h1', 'class="wiki_title"', this.fulltitle));

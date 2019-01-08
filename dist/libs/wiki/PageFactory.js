@@ -33,7 +33,7 @@ class PageFactory {
             page.status = EPageStat.SET_SRC;
             page.major = data.major;
             yield page.save();
-            return;
+
         });
     }
     static loadSrc() {

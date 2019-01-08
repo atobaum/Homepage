@@ -34,13 +34,13 @@ export default class WikiHelper {
         if(!user) return false;
         let page = await Page.load(title);
         if(page instanceof OldPage){
-            return page.getPAC()[1];
+            return page.getPAC();
         }
         return false;
     }
 
 
-    static async setPAC(user: User, title: string, pagePAC: number){
+    static async setPAC(user: User, title: string, pagePAC: number | null) {
         if(!user) return false;
         let page = await Page.load(title);
         if(page instanceof OldPage){

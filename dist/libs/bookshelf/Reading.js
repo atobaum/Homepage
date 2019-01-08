@@ -79,11 +79,11 @@ class Reading {
                 data.book_id = this.book.getIsbn13();
                 data.user_id = this.user.getId();
                 yield SingletonMysql_1.default.query('INSERT INTO readings SET ?', [data]);
-                return;
+
             }
             else if (this.saveType === common_1.ESaveType.EDIT) {
                 yield SingletonMysql_1.default.query('UPDATE readings SET ? WHERE id=? AND user_id=?', [data, this.id, this.user.getId()]);
-                return;
+
             }
         });
     }

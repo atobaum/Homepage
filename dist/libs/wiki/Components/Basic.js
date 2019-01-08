@@ -117,7 +117,7 @@ class Section extends Components_1.BigToken {
     }
 }
 exports.Section = Section;
-class Error extends Components_1.Token {
+class ErrorToken extends Components_1.Token {
     constructor(title, text) {
         super();
         this.title = title;
@@ -130,7 +130,7 @@ class Error extends Components_1.Token {
         return '';
     }
 }
-exports.Error = Error;
+exports.ErrorToken = ErrorToken;
 class Footnote extends Components_1.BigToken {
     constructor(toks) {
         super(toks);

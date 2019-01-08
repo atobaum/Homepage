@@ -5,13 +5,13 @@ const Components_1 = require("../Components");
  * Created by Le Reveur on 2017-11-01.
  */
 class Code extends Components_1.Token {
-    constructor(text, lang = 'javascript') {
+    constructor(text, lang) {
         super();
         this.lang = lang;
         this.text = text;
     }
     render() {
-        return `<pre class="wiki-syntaxhl line-numbers language-${this.lang}"><code>${escapeHTML(this.text)}</code></pre>`;
+        return `<pre${this.lang ? ' class="wiki-syntaxhl"' : ''}><code${this.lang ? ' class="lang-' + this.lang + '"' : ''}>${escapeHTML(this.text)}</code></pre>`;
     }
     plainText() {
         return this.text;

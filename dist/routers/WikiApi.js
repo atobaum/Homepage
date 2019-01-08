@@ -72,7 +72,6 @@ router.get('/admin', (req, res) => {
         res.json({ ok: 0, error: new Error("You are not amin.") });
         return;
     }
-    console.log(req.query.action);
     switch (req.query.action) {
         case 'getPAC':
             WikiHelper_1.default.getPAC(req.user, req.query.title)
@@ -87,7 +86,7 @@ router.get('/admin', (req, res) => {
             });
             break;
         case 'setPAC':
-            WikiHelper_1.default.setPAC(req.user, req.query.title, req.query.pac)
+            WikiHelper_1.default.setPAC(req.user, req.query.title, req.query.pac == "null" ? null : req.query.pac)
                 .then(result => {
                 if (result)
                     res.json({ ok: 1 });

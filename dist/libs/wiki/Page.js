@@ -88,7 +88,7 @@ class IPage {
 exports.IPage = IPage;
 class TempPage extends IPage {
     save(user) {
-        return Promise.reject(new Error("Temporary page cannot saved."));
+        return Promise.reject(new Error("Temporary page cannot be saved."));
     }
     constructor(fulltitle, tags) {
         super(fulltitle, tags);
@@ -129,32 +129,35 @@ class Page extends IPage {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.pageId)
                 throw new Error('Page id is ' + this.pageId + ' in "saveTags".');
-            let [rows] = yield conn.query('SELECT * FROM wiki_tags WHERE wiki_id=?', [this.pageId]);
-            let oldTags = rows.map((row) => {
-                row.name = row.name.toLowerCase();
-                return row;
-            });
-            let oldTagsNames = oldTags.map(tag => tag.name);
-            let newTags = this.tags.map(a => a.toLowerCase());
-            if (newTags.length) {
-                [rows] = yield conn.query('SELECT * FROM tag WHERE name IN (?)', [newTags]);
-                var existingTags = rows.map(tag => tag.name);
+            try {
+                let [rows] = yield conn.query('SELECT * FROM wiki_tags WHERE wiki_id=?', [this.pageId]);
+                let oldTagsLowCase = rows.map((row) => {
+                    row.name = row.name.toLowerCase();
+                    return row;
+                });
+                let oldTagsNameLowCase = oldTagsLowCase.map(i => i.name);
+                let newTagsLowCase = this.tags.map(t => t.toLowerCase());
+                let existingTagsLowCase = [];
+                if (this.tags.length) {
+                    [rows] = yield conn.query('SELECT * FROM tag WHERE name IN (?)', [newTagsLowCase]);
+                    existingTagsLowCase = rows.map(tag => tag.name.toLowerCase());
+                }
+                let toDelete = oldTagsLowCase.filter((OTag) => newTagsLowCase.indexOf(OTag.name) < 0);
+                let toSave = this.tags.filter(tag => oldTagsNameLowCase.indexOf(tag.toLowerCase()) < 0);
+                let toCreate = toSave.filter(tag => existingTagsLowCase.indexOf(tag.toLowerCase()) < 0);
+                if (toDelete.length)
+                    yield conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN (?)", [this.pageId, toDelete.map(tag => tag.tag_id)]);
+                if (toCreate.length)
+                    yield conn.query("INSERT INTO tag (name) VALUES ? ", [toCreate.map(str => [str])]);
+                if (toSave.length) {
+                    [rows] = yield conn.query('SELECT * FROM tag WHERE name IN (?)', [toSave]);
+                    yield conn.query("INSERT INTO tag_to_wiki (tag_id, wiki_id) VALUES ? ", [rows.map(row => [row.id, this.pageId])]);
+                }
+                return true;
             }
-            let toDelete = oldTags.filter((tag) => newTags.indexOf(tag.name) < 0);
-            let toSave = this.tags.filter(tag => oldTagsNames.indexOf(tag.toLowerCase()) < 0);
-            let toCreate = toSave.filter(tag => existingTags.indexOf(tag.toLowerCase()) < 0);
-            // console.log(newTags, oldTags);
-            // console.log(existingTags);
-            // console.log(toDelete, toCreate, toSave);
-            if (toDelete.length)
-                yield conn.query("DELETE FROM tag_to_wiki WHERE wiki_id=? AND tag_id IN (?)", [this.pageId, toDelete.map(tag => tag.tag_id)]);
-            if (toCreate.length)
-                yield conn.query("INSERT INTO tag (name) VALUES ? ", [toCreate.map(str => [str])]);
-            if (toSave.length) {
-                [rows] = yield conn.query('SELECT * FROM tag WHERE name IN (?)', [toSave]);
-                yield conn.query("INSERT INTO tag_to_wiki (tag_id, wiki_id) VALUES ? ", [rows.map(row => [row.id, this.pageId])]);
+            catch (e) {
+                throw e;
             }
-            return true;
         });
     }
     static load(fulltitle) {
@@ -182,9 +185,8 @@ class Page extends IPage {
         });
     }
     loadSrc() {
-        let tmp = this;
         return SingletonMysql_1.default.queries((conn) => __awaiter(this, void 0, void 0, function* () {
-            let rows, row;
+            let row;
             row = (yield conn.query("SELECT * FROM revision WHERE page_id = ? AND rev_id = ?", [this.pageId, this.revId]))[0][0];
             if (!row)
                 throw new Error('Invalid page id and rev_id: ' + this.pageId + ' , ' + this.revId + ' , ' + "title: " + this.titles);

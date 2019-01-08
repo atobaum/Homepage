@@ -17,7 +17,7 @@ class Math extends Components_1.Token {
             return katex.renderToString(this.text, { displayMode: this.block });
         }
         catch (e) {
-            return (new Basic_1.Error('KaTeX Error', e.message)).render();
+            return (new Basic_1.ErrorToken('KaTeX Error', e.message)).render();
         }
     }
     plainText() {

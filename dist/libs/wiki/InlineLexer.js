@@ -10,7 +10,7 @@ let linkSyntax = /^(?:(.*?):)?(.*?)(\#[^\#]+?)?$/;
 function escape(cap) {
     let char;
     switch (cap[1]) {
-        case 't':
+        case 't'://tab
             char = '&emsp;';
             break;
         default:
@@ -53,6 +53,7 @@ class InlineLexer extends Lexer_1.default {
             [/^\$\$([^\$]+?)\$\$/, cap => new Components.Math(cap[1], false)],
             [/^`(.*)`/, cap => new Components.InlineCode(cap[1])],
             // [ETokenType.MACRO, /^{{(.*?)(?:\((.*?)\))?(?: ([^\$\$]*?))?}}/],
+            [/^\\([\w]+)(?:\{([\w]+?)\})?\s?/, (cap, em, il) => Components.Macro.build(cap[1], cap[2], em)],
             [/^.+?(?={{|\\|\$|''|__|\^\^|,,| {2}|\[\[|~~|`| {2,}|\(\(|\n|$)/, cap => new Components.Text(cap[0])] //text
         ];
         this.inlineLexer = this;

@@ -89,7 +89,7 @@ export abstract class IPage {
 
 export class TempPage extends IPage {
     save(user: User): Promise<IPage> {
-        return Promise.reject(new Error("Temporary page cannot saved."));
+        return Promise.reject(new Error("Temporary page cannot be saved."));
     }
 
     constructor(fulltitle, tags?) {

@@ -88,3 +88,4 @@ __export(require("./Components/TOC"));
 __export(require("./Components/List"));
 __export(require("./Components/Syntax"));
 __export(require("./Components/Quote"));
+__export(require("./Components/Macro"));

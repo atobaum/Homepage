@@ -146,4 +146,4 @@ class Aladin {
 }
 Aladin.host = 'http://www.aladin.co.kr/ttb/api/';
 exports.default = Aladin;
-;
+
